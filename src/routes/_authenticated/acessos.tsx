@@ -32,7 +32,7 @@ export const Route = createFileRoute("/_authenticated/acessos")({
   }),
 });
 
-const ROLES: AppRole[] = ["admin", "gestor_ti", "auditoria"];
+const ROLES: AppRole[] = ["admin", "gestor_ti", "padrao", "visitante"];
 
 type Profile = { id: string; nome: string | null; email: string | null; created_at: string };
 type UserRoleRow = { user_id: string; role: AppRole };
@@ -42,6 +42,8 @@ function roleBadge(r: AppRole) {
   const map: Record<AppRole, string> = {
     admin: "bg-primary/15 text-primary border-primary/30",
     gestor_ti: "bg-[color:var(--success)]/15 text-[color:var(--success)] border-[color:var(--success)]/30",
+    padrao: "bg-secondary text-secondary-foreground border-border",
+    visitante: "bg-muted text-muted-foreground",
     auditoria: "bg-muted text-muted-foreground",
   };
   return (
@@ -62,7 +64,7 @@ function AcessosPage() {
   const [inviteOpen, setInviteOpen] = useState(false);
   const [invEmail, setInvEmail] = useState("");
   const [invNome, setInvNome] = useState("");
-  const [invRoles, setInvRoles] = useState<Set<AppRole>>(new Set(["auditoria"]));
+  const [invRoles, setInvRoles] = useState<Set<AppRole>>(new Set(["visitante"]));
   const [inviting, setInviting] = useState(false);
   const invite = useServerFn(inviteUser);
 
@@ -181,7 +183,7 @@ function AcessosPage() {
       setInviteOpen(false);
       setInvEmail("");
       setInvNome("");
-      setInvRoles(new Set(["auditoria"]));
+      setInvRoles(new Set(["visitante"]));
       qc.invalidateQueries({ queryKey: ["acessos-profiles"] });
       qc.invalidateQueries({ queryKey: ["acessos-roles"] });
     } catch (e) {
@@ -268,7 +270,8 @@ function AcessosPage() {
                   <div className="text-xs text-muted-foreground">
                     {role === "admin" && "Acesso total, inclusive gestão de acessos e configuração do sistema."}
                     {role === "gestor_ti" && "Cria e edita ativos, licenças, contratos e alocações."}
-                    {role === "auditoria" && "Apenas leitura — dashboards, relatórios e logs de auditoria."}
+                    {role === "padrao" && "Leitura completa da plataforma — dashboards, catálogo, alocações e relatórios."}
+                    {role === "visitante" && "Acesso mínimo de visualização — apenas dashboards e listas básicas."}
                   </div>
                 </div>
               </label>

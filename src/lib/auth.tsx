@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
-export type AppRole = "admin" | "gestor_ti" | "auditoria";
+export type AppRole = "admin" | "gestor_ti" | "padrao" | "visitante" | "auditoria";
 
 interface AuthCtx {
   session: Session | null;
@@ -75,5 +75,12 @@ export function useAuth() {
 }
 
 export function roleLabel(r: AppRole): string {
-  return r === "admin" ? "Administrador" : r === "gestor_ti" ? "Gestor de TI" : "Auditoria";
+  const map: Record<AppRole, string> = {
+    admin: "Admin",
+    gestor_ti: "Gestão",
+    padrao: "Padrão",
+    visitante: "Visitante",
+    auditoria: "Visitante",
+  };
+  return map[r] ?? r;
 }

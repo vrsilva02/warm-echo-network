@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-type AppRole = "admin" | "gestor_ti" | "auditoria";
+type AppRole = "admin" | "gestor_ti" | "padrao" | "visitante";
 
 type InviteInput = {
   email: string;
@@ -14,7 +14,7 @@ function validate(input: unknown): InviteInput {
   const v = input as Partial<InviteInput> | undefined;
   const email = (v?.email ?? "").trim().toLowerCase();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error("E-mail inválido");
-  const allowed: AppRole[] = ["admin", "gestor_ti", "auditoria"];
+  const allowed: AppRole[] = ["admin", "gestor_ti", "padrao", "visitante"];
   const roles = Array.isArray(v?.roles) ? (v!.roles as AppRole[]).filter((r) => allowed.includes(r)) : [];
   if (roles.length === 0) throw new Error("Selecione ao menos um perfil");
   const nome = typeof v?.nome === "string" ? v!.nome.trim() : undefined;
@@ -43,7 +43,7 @@ export const inviteUser = createServerFn({ method: "POST" })
     const newUserId = invited.user?.id;
     if (!newUserId) throw new Error("Falha ao criar usuário convidado.");
 
-    // handle_new_user trigger cria profile + role default 'auditoria'. Ajusta para as roles escolhidas.
+    // handle_new_user trigger cria profile + role default 'visitante'. Ajusta para as roles escolhidas.
     await supabaseAdmin.from("user_roles").delete().eq("user_id", newUserId);
     const { error: ierr } = await supabaseAdmin
       .from("user_roles")
