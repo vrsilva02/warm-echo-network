@@ -29,6 +29,7 @@ type Ativo = {
   hostname: string;
   tipo: string;
   numero_serie: string | null;
+  numero_patrimonio: string | null;
   setor: string | null;
   status_ciclo_vida: string;
   usuario_responsavel_id: string | null;
@@ -42,6 +43,7 @@ const initial = {
   hostname: "",
   tipo: "Notebook",
   numero_serie: "",
+  numero_patrimonio: "",
   setor: "",
   status_ciclo_vida: "em_estoque",
   usuario_responsavel_id: null as string | null,
@@ -82,7 +84,7 @@ function AtivosPage() {
     queryFn: async () => (await supabase.from("usuarios").select("id,nome").eq("status", "ativo").order("nome")).data ?? [],
   });
 
-  const filtered = useFilteredList(rows, q, ["hostname", "tipo", "setor", "numero_serie", "status_ciclo_vida"]);
+  const filtered = useFilteredList(rows, q, ["hostname", "tipo", "setor", "numero_serie", "numero_patrimonio", "status_ciclo_vida"]);
 
   function openNew() {
     setEditing(null);
@@ -95,6 +97,7 @@ function AtivosPage() {
       hostname: r.hostname,
       tipo: r.tipo,
       numero_serie: r.numero_serie ?? "",
+      numero_patrimonio: r.numero_patrimonio ?? "",
       setor: r.setor ?? "",
       status_ciclo_vida: r.status_ciclo_vida,
       usuario_responsavel_id: r.usuario_responsavel_id,
@@ -107,6 +110,7 @@ function AtivosPage() {
       hostname: form.hostname.trim(),
       tipo: form.tipo,
       numero_serie: form.numero_serie || null,
+      numero_patrimonio: form.numero_patrimonio.trim() || null,
       setor: form.setor || null,
       status_ciclo_vida: form.status_ciclo_vida,
       usuario_responsavel_id: form.usuario_responsavel_id,
@@ -137,10 +141,11 @@ function AtivosPage() {
       />
       <ListToolbar query={q} onQueryChange={setQ} />
       <DataTable
-        columns={["Hostname", "Tipo", "Setor", "Responsável", "Status", "Ações"]}
+        columns={["Hostname", "Patrimônio", "Tipo", "Setor", "Responsável", "Status", "Ações"]}
         empty={isLoading ? "Carregando…" : "Nenhum ativo."}
         rows={filtered.map((r) => [
           <span key="h" className="font-medium">{r.hostname}</span>,
+          <span key="p" className="font-mono text-xs">{r.numero_patrimonio ?? "—"}</span>,
           r.tipo,
           r.setor ?? "—",
           r.usuarios?.nome ?? "—",
@@ -179,6 +184,14 @@ function AtivosPage() {
             <Label>Nº série</Label>
             <Input value={form.numero_serie} onChange={(e) => setForm({ ...form, numero_serie: e.target.value })} />
           </div>
+        </div>
+        <div>
+          <Label>Nº patrimônio</Label>
+          <Input
+            value={form.numero_patrimonio}
+            onChange={(e) => setForm({ ...form, numero_patrimonio: e.target.value })}
+            placeholder="Ex.: PAT-000123"
+          />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
