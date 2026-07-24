@@ -53,8 +53,10 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const pathname = useRouterState({ select: (r) => r.location.pathname });
-  const { user, roles, signOut } = useAuth();
+  const { user, roles, signOut, isAdmin } = useAuth();
   const primaryRole = roles[0];
+
+  const admin = [{ title: "Gestão de Acessos", url: "/acessos", icon: UserCog }] as const;
 
   const isActive = (path: string) => pathname === path || pathname.startsWith(path + "/");
 
