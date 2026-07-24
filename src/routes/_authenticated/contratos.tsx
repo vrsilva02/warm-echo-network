@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
+import { useConfirm } from "@/components/confirm-dialog";
 
 export const Route = createFileRoute("/_authenticated/contratos")({
   component: Page,
@@ -50,6 +51,7 @@ function urgencyBadge(dataFim: string | null) {
 function Page() {
   const { canWrite } = useAuth();
   const qc = useQueryClient();
+  const confirm = useConfirm();
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Row | null>(null);
@@ -97,9 +99,22 @@ function Page() {
     qc.invalidateQueries({ queryKey: ["contratos"] });
     qc.invalidateQueries({ queryKey: ["dashboard"] });
   }
-  async function remove(id: string) {
-    if (!confirm("Excluir contrato?")) return;
-    const { error } = await supabase.from("contratos").delete().eq("id", id);
+  async function remove(row: Row) {
+    const { count } = await supabase.from("licencas").select("id", { count: "exact", head: true }).eq("contrato_id", row.id);
+    const ok = await confirm({
+      title: "Excluir contrato?",
+      description: "Licenças vinculadas ficarão sem contrato associado. Ação irreversível.",
+      tone: "danger",
+      impact: [
+        { label: "Fornecedor", value: row.fornecedor },
+        { label: "Contrato", value: row.numero_contrato ?? "—" },
+        { label: "Seats contratados", value: row.quantidade_seats },
+        { label: "Licenças vinculadas", value: count ?? 0, tone: (count ?? 0) > 0 ? "danger" : "default" },
+      ],
+      confirmLabel: "Excluir",
+    });
+    if (!ok) return;
+    const { error } = await supabase.from("contratos").delete().eq("id", row.id);
     if (error) return toast.error(error.message);
     qc.invalidateQueries({ queryKey: ["contratos"] });
   }
@@ -127,7 +142,7 @@ function Page() {
           <div key="a" className="flex gap-1">
             {canWrite && <>
               <Button size="icon" variant="ghost" onClick={() => openEdit(r)}><Pencil className="h-4 w-4" /></Button>
-              <Button size="icon" variant="ghost" onClick={() => remove(r.id)}><Trash2 className="h-4 w-4" /></Button>
+              <Button size="icon" variant="ghost" onClick={() => remove(r)}><Trash2 className="h-4 w-4" /></Button>
             </>}
           </div>,
         ])}

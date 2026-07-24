@@ -14,6 +14,8 @@ import { Pencil, Trash2, Building2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { useConfirm } from "@/components/confirm-dialog";
+import { Combobox } from "@/components/combobox";
 
 export const Route = createFileRoute("/_authenticated/produtos")({
   component: Page,
@@ -44,6 +46,7 @@ const initial = { nome_oficial: "", categoria: "Office", fabricante_id: null as 
 function Page() {
   const { canWrite } = useAuth();
   const qc = useQueryClient();
+  const confirm = useConfirm();
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Produto | null>(null);
@@ -88,9 +91,24 @@ function Page() {
     qc.invalidateQueries({ queryKey: ["produtos"] });
     qc.invalidateQueries({ queryKey: ["dashboard"] });
   }
-  async function remove(id: string) {
-    if (!confirm("Excluir produto?")) return;
-    const { error } = await supabase.from("produtos_catalogo").delete().eq("id", id);
+  async function remove(row: Produto) {
+    const [{ count: licCount }, { count: aliasCount }] = await Promise.all([
+      supabase.from("licencas").select("id", { count: "exact", head: true }).eq("produto_id", row.id),
+      supabase.from("produtos_aliases").select("id", { count: "exact", head: true }).eq("produto_id", row.id),
+    ]);
+    const ok = await confirm({
+      title: "Excluir produto do catálogo?",
+      description: "Licenças e aliases vinculados serão afetados. Ação irreversível.",
+      tone: "danger",
+      impact: [
+        { label: "Produto", value: row.nome_oficial },
+        { label: "Blocos de licenças", value: licCount ?? 0, tone: (licCount ?? 0) > 0 ? "danger" : "default" },
+        { label: "Aliases de reconciliação", value: aliasCount ?? 0 },
+      ],
+      confirmLabel: "Excluir",
+    });
+    if (!ok) return;
+    const { error } = await supabase.from("produtos_catalogo").delete().eq("id", row.id);
     if (error) return toast.error(error.message);
     qc.invalidateQueries({ queryKey: ["produtos"] });
   }
@@ -145,7 +163,7 @@ function Page() {
           <div key="a" className="flex gap-1">
             {canWrite && <>
               <Button size="icon" variant="ghost" onClick={() => openEdit(r)}><Pencil className="h-4 w-4" /></Button>
-              <Button size="icon" variant="ghost" onClick={() => remove(r.id)}><Trash2 className="h-4 w-4" /></Button>
+              <Button size="icon" variant="ghost" onClick={() => remove(r)}><Trash2 className="h-4 w-4" /></Button>
             </>}
           </div>,
         ])}
@@ -162,13 +180,13 @@ function Page() {
           </div>
           <div>
             <Label>Fabricante</Label>
-            <Select value={form.fabricante_id ?? "none"} onValueChange={(v) => setForm({ ...form, fabricante_id: v === "none" ? null : v })}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">— Nenhum —</SelectItem>
-                {(fabricantes ?? []).map((f) => <SelectItem key={f.id} value={f.id}>{f.nome}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            <Combobox
+              placeholder="Nenhum"
+              searchPlaceholder="Buscar fabricante…"
+              value={form.fabricante_id}
+              onChange={(v) => setForm({ ...form, fabricante_id: v })}
+              options={(fabricantes ?? []).map((f) => ({ value: f.id, label: f.nome }))}
+            />
           </div>
         </div>
         <div className="grid grid-cols-2 gap-3">

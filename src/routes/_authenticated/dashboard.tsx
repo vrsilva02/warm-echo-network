@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Tooltip as UITooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Info } from "lucide-react";
 import {
   BarChart,
   Bar,
@@ -99,13 +101,14 @@ function DashboardPage() {
       <PageHeader title="Dashboard" description="Posição efetiva de licenças, contratos e ativos em tempo real." />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <KpiCard title="Licenças Windows" value={totais.Windows ?? 0} icon={<KeySquare className="h-4 w-4" />} />
-        <KpiCard title="Licenças Office" value={totais.Office ?? 0} icon={<KeySquare className="h-4 w-4" />} />
-        <KpiCard title="Licenças EDR" value={totais.EDR ?? 0} icon={<KeySquare className="h-4 w-4" />} />
+        <KpiCard title="Licenças Windows" value={totais.Windows ?? 0} icon={<KeySquare className="h-4 w-4" />} hint="Soma de seats comprados em contratos ativos para produtos da categoria Windows." />
+        <KpiCard title="Licenças Office" value={totais.Office ?? 0} icon={<KeySquare className="h-4 w-4" />} hint="Soma de seats comprados em contratos ativos para produtos da categoria Office." />
+        <KpiCard title="Licenças EDR" value={totais.EDR ?? 0} icon={<KeySquare className="h-4 w-4" />} hint="Soma de seats comprados em contratos ativos para produtos de EDR/segurança." />
         <KpiCard
           title="Compliance geral"
           value={`${compliance}%`}
           icon={compliance >= 90 ? <CheckCircle2 className="h-4 w-4 text-[color:var(--success)]" /> : <AlertTriangle className="h-4 w-4 text-[color:var(--warning)]" />}
+          hint="Percentual de seats dentro do direito contratado. Valores abaixo de 100% indicam alocações acima do comprado (over-deployment)."
         />
       </div>
 
@@ -114,11 +117,13 @@ function DashboardPage() {
           title="Contratos vencendo em 30 dias"
           value={data?.contratosVencendo30 ?? 0}
           icon={<FileWarning className="h-4 w-4 text-[color:var(--warning)]" />}
+          hint="Contratos com data de término nos próximos 30 dias. Planeje renovação para evitar quebra de compliance."
         />
         <KpiCard
           title="Licenças ociosas (>90d)"
           value={data?.licencasOciosas ?? 0}
           icon={<Snowflake className="h-4 w-4 text-primary" />}
+          hint="Alocações ativas sem uso registrado há mais de 90 dias — candidatas a reaproveitamento."
         />
       </div>
 
@@ -237,15 +242,27 @@ function DashboardPage() {
   );
 }
 
-function KpiCard({ title, value, icon }: { title: string; value: number | string; icon: React.ReactNode }) {
+function KpiCard({ title, value, icon, hint }: { title: string; value: number | string; icon: React.ReactNode; hint?: string }) {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-xs font-medium text-muted-foreground">{title}</CardTitle>
+        <CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+          {title}
+          {hint && (
+            <UITooltip>
+              <TooltipTrigger asChild>
+                <button type="button" aria-label="Sobre este indicador" className="text-muted-foreground/60 hover:text-foreground">
+                  <Info className="h-3.5 w-3.5" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent className="max-w-xs text-xs">{hint}</TooltipContent>
+            </UITooltip>
+          )}
+        </CardTitle>
         <span className="text-muted-foreground">{icon}</span>
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-semibold">{value}</div>
+        <div className="text-2xl font-semibold tabular-nums">{value}</div>
       </CardContent>
     </Card>
   );

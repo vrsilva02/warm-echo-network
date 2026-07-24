@@ -12,10 +12,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Combobox } from "@/components/combobox";
 import { Trash2, Link2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
 import { logAction } from "@/lib/audit";
+import { useConfirm } from "@/components/confirm-dialog";
 
 export const Route = createFileRoute("/_authenticated/alocacoes")({
   component: Page,
@@ -52,6 +54,7 @@ const initial = {
 function Page() {
   const { canWrite } = useAuth();
   const qc = useQueryClient();
+  const confirm = useConfirm();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(initial);
 
@@ -96,9 +99,20 @@ function Page() {
     qc.invalidateQueries({ queryKey: ["alocacoes"] });
     qc.invalidateQueries({ queryKey: ["dashboard"] });
   }
-  async function encerrar(id: string) {
-    if (!confirm("Encerrar esta alocação (liberar a licença)?")) return;
-    const { error } = await supabase.from("alocacoes").update({ data_fim: new Date().toISOString().slice(0, 10) }).eq("id", id);
+  async function encerrar(row: Row) {
+    const ok = await confirm({
+      title: "Encerrar alocação?",
+      description: "A licença ficará livre para reuso a partir de hoje.",
+      tone: "warn",
+      impact: [
+        { label: "Produto", value: row.licencas?.produtos_catalogo?.nome_oficial ?? "—" },
+        { label: "Vínculo", value: row.usuarios?.nome ?? row.ativos?.hostname ?? "—" },
+        { label: "Licenças liberadas", value: "+1", tone: "warn" },
+      ],
+      confirmLabel: "Encerrar",
+    });
+    if (!ok) return;
+    const { error } = await supabase.from("alocacoes").update({ data_fim: new Date().toISOString().slice(0, 10) }).eq("id", row.id);
     if (error) return toast.error(error.message);
     toast.success("Alocação encerrada");
     qc.invalidateQueries({ queryKey: ["alocacoes"] });
@@ -107,7 +121,18 @@ function Page() {
   async function bulkEncerrar(sel: Row[], clear: () => void) {
     const ativas = sel.filter((r) => !r.data_fim);
     if (ativas.length === 0) return toast.info("Nenhuma alocação ativa na seleção");
-    if (!confirm(`Encerrar ${ativas.length} alocação(ões) e liberar as licenças?`)) return;
+    const ok = await confirm({
+      title: `Encerrar ${ativas.length} alocação(ões)?`,
+      description: "As licenças correspondentes ficarão livres para reuso.",
+      tone: "warn",
+      impact: [
+        { label: "Alocações a encerrar", value: ativas.length },
+        { label: "Alocações já encerradas ignoradas", value: sel.length - ativas.length },
+        { label: "Seats liberados", value: `+${ativas.length}`, tone: "warn" },
+      ],
+      confirmLabel: "Encerrar todas",
+    });
+    if (!ok) return;
     const today = new Date().toISOString().slice(0, 10);
     const ids = ativas.map((r) => r.id);
     const { error } = await supabase.from("alocacoes").update({ data_fim: today }).in("id", ids);
@@ -166,7 +191,7 @@ function Page() {
       accessor: (r) => (
         <div className="flex gap-1">
           {canWrite && !r.data_fim && (
-            <Button size="icon" variant="ghost" onClick={() => encerrar(r.id)} title="Encerrar">
+            <Button size="icon" variant="ghost" onClick={() => encerrar(r)} title="Encerrar">
               <Trash2 className="h-4 w-4" />
             </Button>
           )}
@@ -211,37 +236,39 @@ function Page() {
       <CrudDialog title="Nova alocação" open={open} onOpenChange={setOpen} onSubmit={save} trigger={null}>
         <div>
           <Label>Licença *</Label>
-          <Select value={form.licenca_id} onValueChange={(v) => setForm({ ...form, licenca_id: v })}>
-            <SelectTrigger><SelectValue placeholder="Selecione…" /></SelectTrigger>
-            <SelectContent>
-              {(licencas ?? []).map((l: any) => (
-                <SelectItem key={l.id} value={l.id}>
-                  {l.produtos_catalogo?.nome_oficial ?? l.id.slice(0, 8)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Combobox
+            placeholder="Selecione uma licença…"
+            searchPlaceholder="Buscar produto…"
+            clearable={false}
+            value={form.licenca_id || null}
+            onChange={(v) => setForm({ ...form, licenca_id: v ?? "" })}
+            options={(licencas ?? []).map((l: any) => ({
+              value: l.id,
+              label: l.produtos_catalogo?.nome_oficial ?? l.id.slice(0, 8),
+              hint: l.id.slice(0, 8),
+            }))}
+          />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <Label>Colaborador</Label>
-            <Select value={form.usuario_id ?? "none"} onValueChange={(v) => setForm({ ...form, usuario_id: v === "none" ? null : v })}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">— Nenhum —</SelectItem>
-                {(usuarios ?? []).map((u) => <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            <Combobox
+              placeholder="Nenhum"
+              searchPlaceholder="Buscar colaborador…"
+              value={form.usuario_id}
+              onChange={(v) => setForm({ ...form, usuario_id: v })}
+              options={(usuarios ?? []).map((u) => ({ value: u.id, label: u.nome }))}
+            />
           </div>
           <div>
             <Label>Ativo</Label>
-            <Select value={form.ativo_id ?? "none"} onValueChange={(v) => setForm({ ...form, ativo_id: v === "none" ? null : v })}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">— Nenhum —</SelectItem>
-                {(ativos ?? []).map((a) => <SelectItem key={a.id} value={a.id}>{a.hostname}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            <Combobox
+              placeholder="Nenhum"
+              searchPlaceholder="Buscar hostname…"
+              value={form.ativo_id}
+              onChange={(v) => setForm({ ...form, ativo_id: v })}
+              options={(ativos ?? []).map((a) => ({ value: a.id, label: a.hostname }))}
+            />
           </div>
         </div>
         <div className="grid grid-cols-2 gap-3">

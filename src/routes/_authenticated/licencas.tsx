@@ -15,6 +15,8 @@ import { KeyRound, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
 import { logAction } from "@/lib/audit";
+import { useConfirm } from "@/components/confirm-dialog";
+import { Combobox } from "@/components/combobox";
 
 export const Route = createFileRoute("/_authenticated/licencas")({
   component: Page,
@@ -48,6 +50,7 @@ function daysUntil(iso: string | null): number | null {
 function Page() {
   const { canWrite } = useAuth();
   const qc = useQueryClient();
+  const confirm = useConfirm();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Row | null>(null);
   const [form, setForm] = useState(initial);
@@ -101,14 +104,39 @@ function Page() {
     qc.invalidateQueries({ queryKey: ["licencas"] });
     qc.invalidateQueries({ queryKey: ["dashboard"] });
   }
-  async function remove(id: string) {
-    if (!confirm("Excluir licença?")) return;
-    const { error } = await supabase.from("licencas").delete().eq("id", id);
+  async function remove(row: Row) {
+    const { count } = await supabase
+      .from("alocacoes").select("id", { count: "exact", head: true })
+      .eq("licenca_id", row.id).is("data_fim", null);
+    const ok = await confirm({
+      title: "Excluir bloco de licenças?",
+      description: "As alocações vinculadas ficarão órfãs. Considere manter e apenas encerrar alocações.",
+      tone: "danger",
+      impact: [
+        { label: "Produto", value: row.produtos_catalogo?.nome_oficial ?? "—" },
+        { label: "Quantidade do bloco", value: row.quantidade },
+        { label: "Alocações ativas", value: count ?? 0, tone: (count ?? 0) > 0 ? "danger" : "default" },
+      ],
+      confirmLabel: "Excluir",
+    });
+    if (!ok) return;
+    const { error } = await supabase.from("licencas").delete().eq("id", row.id);
     if (error) return toast.error(error.message);
     qc.invalidateQueries({ queryKey: ["licencas"] });
   }
   async function bulkDelete(sel: Row[], clear: () => void) {
-    if (!confirm(`Excluir ${sel.length} licença(s)?`)) return;
+    const totalSeats = sel.reduce((a, r) => a + (r.quantidade ?? 0), 0);
+    const ok = await confirm({
+      title: `Excluir ${sel.length} licença(s)?`,
+      description: "Ação irreversível. Alocações vinculadas ficarão órfãs.",
+      tone: "danger",
+      impact: [
+        { label: "Blocos", value: sel.length, tone: "danger" },
+        { label: "Seats totais afetados", value: totalSeats, tone: "danger" },
+      ],
+      confirmLabel: "Excluir todas",
+    });
+    if (!ok) return;
     const ids = sel.map((r) => r.id);
     const { error } = await supabase.from("licencas").delete().in("id", ids);
     if (error) return toast.error(error.message);
@@ -163,7 +191,7 @@ function Page() {
           {canWrite && (
             <>
               <Button size="icon" variant="ghost" onClick={() => openEdit(r)}><Pencil className="h-4 w-4" /></Button>
-              <Button size="icon" variant="ghost" onClick={() => remove(r.id)}><Trash2 className="h-4 w-4" /></Button>
+              <Button size="icon" variant="ghost" onClick={() => remove(r)}><Trash2 className="h-4 w-4" /></Button>
             </>
           )}
         </div>
@@ -208,20 +236,28 @@ function Page() {
       <CrudDialog title={editing ? "Editar licença" : "Nova licença"} open={open} onOpenChange={setOpen} onSubmit={save} trigger={null}>
         <div>
           <Label>Produto *</Label>
-          <Select value={form.produto_id} onValueChange={(v) => setForm({ ...form, produto_id: v })}>
-            <SelectTrigger><SelectValue placeholder="Selecione…" /></SelectTrigger>
-            <SelectContent>{(produtos ?? []).map((p) => <SelectItem key={p.id} value={p.id}>{p.nome_oficial}</SelectItem>)}</SelectContent>
-          </Select>
+          <Combobox
+            placeholder="Selecione…"
+            searchPlaceholder="Buscar produto…"
+            clearable={false}
+            value={form.produto_id || null}
+            onChange={(v) => setForm({ ...form, produto_id: v ?? "" })}
+            options={(produtos ?? []).map((p) => ({ value: p.id, label: p.nome_oficial }))}
+          />
         </div>
         <div>
           <Label>Contrato</Label>
-          <Select value={form.contrato_id ?? "none"} onValueChange={(v) => setForm({ ...form, contrato_id: v === "none" ? null : v })}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">— Nenhum —</SelectItem>
-              {(contratos ?? []).map((c) => <SelectItem key={c.id} value={c.id}>{c.fornecedor}{c.numero_contrato ? " · " + c.numero_contrato : ""}</SelectItem>)}
-            </SelectContent>
-          </Select>
+          <Combobox
+            placeholder="Nenhum"
+            searchPlaceholder="Buscar fornecedor/contrato…"
+            value={form.contrato_id}
+            onChange={(v) => setForm({ ...form, contrato_id: v })}
+            options={(contratos ?? []).map((c) => ({
+              value: c.id,
+              label: c.fornecedor,
+              hint: c.numero_contrato ?? undefined,
+            }))}
+          />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div><Label>Quantidade</Label><Input type="number" min={1} value={form.quantidade} onChange={(e) => setForm({ ...form, quantidade: Number(e.target.value) })} /></div>
