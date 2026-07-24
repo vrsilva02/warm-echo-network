@@ -764,66 +764,85 @@ function LicencaDialog({
     qc.invalidateQueries({ queryKey: ["dashboard"] });
   }
 
-  return (
-    <CrudDialog title={licencaId ? "Editar bloco de licenças" : "Nova licença"} open={open} onOpenChange={onOpenChange} onSubmit={save} trigger={null}>
-      <div>
-        <Label>Produto *</Label>
-        <Combobox
-          placeholder="Selecione…"
-          clearable={false}
-          value={form.produto_id || null}
-          onChange={(v) => setForm({ ...form, produto_id: v ?? "" })}
-          options={(produtos ?? []).map((p: any) => ({ value: p.id, label: p.nome_oficial, hint: `${p.categoria}${p.subtipo ? " · " + p.subtipo : ""}` }))}
-        />
-      </div>
-      <div>
-        <Label>Contrato</Label>
-        <Combobox
-          placeholder="Nenhum"
-          value={form.contrato_id}
-          onChange={(v) => setForm({ ...form, contrato_id: v })}
-          options={(contratos ?? []).map((c: any) => ({ value: c.id, label: c.fornecedor, hint: c.numero_contrato ?? undefined }))}
-        />
-      </div>
-      <div className="grid grid-cols-2 gap-3">
-        <div><Label>Quantidade</Label><Input type="number" min={1} value={form.quantidade} onChange={(e) => setForm({ ...form, quantidade: Number(e.target.value) })} /></div>
-        <div><Label>Custo unitário (R$)</Label><Input type="number" step="0.01" min={0} value={form.custo_unitario} onChange={(e) => setForm({ ...form, custo_unitario: e.target.value })} /></div>
-      </div>
-      <div className="grid grid-cols-2 gap-3">
-        <div><Label>Expiração</Label><Input type="date" value={form.data_expiracao} onChange={(e) => setForm({ ...form, data_expiracao: e.target.value })} /></div>
-        <div><Label>Chave de ativação</Label><Input value={form.chave_ativacao} onChange={(e) => setForm({ ...form, chave_ativacao: e.target.value })} /></div>
-      </div>
+  const [busy, setBusy] = useState(false);
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    try { await save(); } finally { setBusy(false); }
+  }
 
-      {isEDR && (
-        <div className="rounded-md border bg-muted/30 p-3 space-y-3">
-          <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground flex items-center gap-2">
-            <Settings2 className="h-3 w-3" /> Kaspersky / EDR
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>{licencaId ? "Editar bloco de licenças" : "Nova licença"}</DialogTitle>
+        </DialogHeader>
+        <form className="space-y-3" onSubmit={handleSubmit}>
+          <div>
+            <Label>Produto *</Label>
+            <Combobox
+              placeholder="Selecione…"
+              clearable={false}
+              value={form.produto_id || null}
+              onChange={(v) => setForm({ ...form, produto_id: v ?? "" })}
+              options={(produtos ?? []).map((p: any) => ({ value: p.id, label: p.nome_oficial, hint: `${p.categoria}${p.subtipo ? " · " + p.subtipo : ""}` }))}
+            />
           </div>
           <div>
-            <Label>Tipo de ativação</Label>
-            <Select value={form.tipo_ativacao} onValueChange={(v) => setForm({ ...form, tipo_ativacao: v })}>
-              <SelectTrigger><SelectValue placeholder="Selecione…" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="chave_ativacao">Chave de ativação</SelectItem>
-                <SelectItem value="arquivo_chave">Arquivo-chave</SelectItem>
-                <SelectItem value="assinatura">Assinatura</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label>Número do certificado</Label>
-            <Input value={form.numero_certificado} onChange={(e) => setForm({ ...form, numero_certificado: e.target.value })} />
+            <Label>Contrato</Label>
+            <Combobox
+              placeholder="Nenhum"
+              value={form.contrato_id}
+              onChange={(v) => setForm({ ...form, contrato_id: v })}
+              options={(contratos ?? []).map((c: any) => ({ value: c.id, label: c.fornecedor, hint: c.numero_contrato ?? undefined }))}
+            />
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div><Label>Limite de workstations</Label><Input type="number" min={0} value={form.limite_workstations} onChange={(e) => setForm({ ...form, limite_workstations: e.target.value })} /></div>
-            <div><Label>Limite de file servers</Label><Input type="number" min={0} value={form.limite_file_servers} onChange={(e) => setForm({ ...form, limite_file_servers: e.target.value })} /></div>
+            <div><Label>Quantidade</Label><Input type="number" min={1} value={form.quantidade} onChange={(e) => setForm({ ...form, quantidade: Number(e.target.value) })} /></div>
+            <div><Label>Custo unitário (R$)</Label><Input type="number" step="0.01" min={0} value={form.custo_unitario} onChange={(e) => setForm({ ...form, custo_unitario: e.target.value })} /></div>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div><Label>Dias de carência</Label><Input type="number" min={0} value={form.dias_carencia} onChange={(e) => setForm({ ...form, dias_carencia: e.target.value })} /></div>
-            <div><Label>Grupo de política</Label><Input value={form.politica_grupo} onChange={(e) => setForm({ ...form, politica_grupo: e.target.value })} /></div>
+            <div><Label>Expiração</Label><Input type="date" value={form.data_expiracao} onChange={(e) => setForm({ ...form, data_expiracao: e.target.value })} /></div>
+            <div><Label>Chave de ativação</Label><Input value={form.chave_ativacao} onChange={(e) => setForm({ ...form, chave_ativacao: e.target.value })} /></div>
           </div>
-        </div>
-      )}
-    </CrudDialog>
+
+          {isEDR && (
+            <div className="rounded-md border bg-muted/30 p-3 space-y-3">
+              <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground flex items-center gap-2">
+                <Settings2 className="h-3 w-3" /> Kaspersky / EDR
+              </div>
+              <div>
+                <Label>Tipo de ativação</Label>
+                <Select value={form.tipo_ativacao} onValueChange={(v) => setForm({ ...form, tipo_ativacao: v })}>
+                  <SelectTrigger><SelectValue placeholder="Selecione…" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="chave_ativacao">Chave de ativação</SelectItem>
+                    <SelectItem value="arquivo_chave">Arquivo-chave</SelectItem>
+                    <SelectItem value="assinatura">Assinatura</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Número do certificado</Label>
+                <Input value={form.numero_certificado} onChange={(e) => setForm({ ...form, numero_certificado: e.target.value })} />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div><Label>Limite de workstations</Label><Input type="number" min={0} value={form.limite_workstations} onChange={(e) => setForm({ ...form, limite_workstations: e.target.value })} /></div>
+                <div><Label>Limite de file servers</Label><Input type="number" min={0} value={form.limite_file_servers} onChange={(e) => setForm({ ...form, limite_file_servers: e.target.value })} /></div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div><Label>Dias de carência</Label><Input type="number" min={0} value={form.dias_carencia} onChange={(e) => setForm({ ...form, dias_carencia: e.target.value })} /></div>
+                <div><Label>Grupo de política</Label><Input value={form.politica_grupo} onChange={(e) => setForm({ ...form, politica_grupo: e.target.value })} /></div>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+            <Button type="submit" disabled={busy}>{busy ? "Salvando…" : "Salvar"}</Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
+
