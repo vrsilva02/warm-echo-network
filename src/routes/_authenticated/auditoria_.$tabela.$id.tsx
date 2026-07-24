@@ -94,11 +94,7 @@ function Page() {
 
       <PageHeader
         title="Timeline do registro"
-        description={
-          <span className="font-mono text-xs">
-            {tabela} • {id}
-          </span>
-        }
+        description={`${tabela} • ${id}`}
       />
 
       {isLoading ? (

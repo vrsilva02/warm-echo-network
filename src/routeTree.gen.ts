@@ -23,6 +23,7 @@ import { Route as AuthenticatedAuditoriaRouteImport } from './routes/_authentica
 import { Route as AuthenticatedAtivosRouteImport } from './routes/_authenticated/ativos'
 import { Route as AuthenticatedAlocacoesRouteImport } from './routes/_authenticated/alocacoes'
 import { Route as AuthenticatedAlertasRouteImport } from './routes/_authenticated/alertas'
+import { Route as AuthenticatedAuditoriaTabelaIdRouteImport } from './routes/_authenticated/auditoria_.$tabela.$id'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -95,6 +96,12 @@ const AuthenticatedAlertasRoute = AuthenticatedAlertasRouteImport.update({
   path: '/alertas',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedAuditoriaTabelaIdRoute =
+  AuthenticatedAuditoriaTabelaIdRouteImport.update({
+    id: '/auditoria_/$tabela/$id',
+    path: '/auditoria/$tabela/$id',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -110,6 +117,7 @@ export interface FileRoutesByFullPath {
   '/produtos': typeof AuthenticatedProdutosRoute
   '/reconciliacao': typeof AuthenticatedReconciliacaoRoute
   '/relatorios': typeof AuthenticatedRelatoriosRoute
+  '/auditoria/$tabela/$id': typeof AuthenticatedAuditoriaTabelaIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -125,6 +133,7 @@ export interface FileRoutesByTo {
   '/produtos': typeof AuthenticatedProdutosRoute
   '/reconciliacao': typeof AuthenticatedReconciliacaoRoute
   '/relatorios': typeof AuthenticatedRelatoriosRoute
+  '/auditoria/$tabela/$id': typeof AuthenticatedAuditoriaTabelaIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -142,6 +151,7 @@ export interface FileRoutesById {
   '/_authenticated/produtos': typeof AuthenticatedProdutosRoute
   '/_authenticated/reconciliacao': typeof AuthenticatedReconciliacaoRoute
   '/_authenticated/relatorios': typeof AuthenticatedRelatoriosRoute
+  '/_authenticated/auditoria_/$tabela/$id': typeof AuthenticatedAuditoriaTabelaIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -159,6 +169,7 @@ export interface FileRouteTypes {
     | '/produtos'
     | '/reconciliacao'
     | '/relatorios'
+    | '/auditoria/$tabela/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -174,6 +185,7 @@ export interface FileRouteTypes {
     | '/produtos'
     | '/reconciliacao'
     | '/relatorios'
+    | '/auditoria/$tabela/$id'
   id:
     | '__root__'
     | '/'
@@ -190,6 +202,7 @@ export interface FileRouteTypes {
     | '/_authenticated/produtos'
     | '/_authenticated/reconciliacao'
     | '/_authenticated/relatorios'
+    | '/_authenticated/auditoria_/$tabela/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -298,6 +311,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAlertasRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/auditoria_/$tabela/$id': {
+      id: '/_authenticated/auditoria_/$tabela/$id'
+      path: '/auditoria/$tabela/$id'
+      fullPath: '/auditoria/$tabela/$id'
+      preLoaderRoute: typeof AuthenticatedAuditoriaTabelaIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
@@ -313,6 +333,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedProdutosRoute: typeof AuthenticatedProdutosRoute
   AuthenticatedReconciliacaoRoute: typeof AuthenticatedReconciliacaoRoute
   AuthenticatedRelatoriosRoute: typeof AuthenticatedRelatoriosRoute
+  AuthenticatedAuditoriaTabelaIdRoute: typeof AuthenticatedAuditoriaTabelaIdRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
@@ -327,6 +348,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedProdutosRoute: AuthenticatedProdutosRoute,
   AuthenticatedReconciliacaoRoute: AuthenticatedReconciliacaoRoute,
   AuthenticatedRelatoriosRoute: AuthenticatedRelatoriosRoute,
+  AuthenticatedAuditoriaTabelaIdRoute: AuthenticatedAuditoriaTabelaIdRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
