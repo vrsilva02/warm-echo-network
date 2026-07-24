@@ -11,13 +11,13 @@ export async function logAction(
   acao: AuditAction,
   tabela: string,
   metadata: Record<string, unknown>,
-  registroId: string | null = null,
+  registroId?: string | null,
 ) {
   try {
     await supabase.rpc("fn_log_action", {
       p_acao: acao,
       p_tabela: tabela,
-      p_registro_id: registroId,
+      p_registro_id: (registroId ?? "00000000-0000-0000-0000-000000000000") as string,
       p_metadata: metadata as any,
     });
   } catch (err) {
