@@ -236,20 +236,28 @@ function Page() {
       <CrudDialog title={editing ? "Editar licença" : "Nova licença"} open={open} onOpenChange={setOpen} onSubmit={save} trigger={null}>
         <div>
           <Label>Produto *</Label>
-          <Select value={form.produto_id} onValueChange={(v) => setForm({ ...form, produto_id: v })}>
-            <SelectTrigger><SelectValue placeholder="Selecione…" /></SelectTrigger>
-            <SelectContent>{(produtos ?? []).map((p) => <SelectItem key={p.id} value={p.id}>{p.nome_oficial}</SelectItem>)}</SelectContent>
-          </Select>
+          <Combobox
+            placeholder="Selecione…"
+            searchPlaceholder="Buscar produto…"
+            clearable={false}
+            value={form.produto_id || null}
+            onChange={(v) => setForm({ ...form, produto_id: v ?? "" })}
+            options={(produtos ?? []).map((p) => ({ value: p.id, label: p.nome_oficial }))}
+          />
         </div>
         <div>
           <Label>Contrato</Label>
-          <Select value={form.contrato_id ?? "none"} onValueChange={(v) => setForm({ ...form, contrato_id: v === "none" ? null : v })}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">— Nenhum —</SelectItem>
-              {(contratos ?? []).map((c) => <SelectItem key={c.id} value={c.id}>{c.fornecedor}{c.numero_contrato ? " · " + c.numero_contrato : ""}</SelectItem>)}
-            </SelectContent>
-          </Select>
+          <Combobox
+            placeholder="Nenhum"
+            searchPlaceholder="Buscar fornecedor/contrato…"
+            value={form.contrato_id}
+            onChange={(v) => setForm({ ...form, contrato_id: v })}
+            options={(contratos ?? []).map((c) => ({
+              value: c.id,
+              label: c.fornecedor,
+              hint: c.numero_contrato ?? undefined,
+            }))}
+          />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div><Label>Quantidade</Label><Input type="number" min={1} value={form.quantidade} onChange={(e) => setForm({ ...form, quantidade: Number(e.target.value) })} /></div>
