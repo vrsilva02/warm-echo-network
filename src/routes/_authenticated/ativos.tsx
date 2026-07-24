@@ -141,10 +141,11 @@ function AtivosPage() {
       />
       <ListToolbar query={q} onQueryChange={setQ} />
       <DataTable
-        columns={["Hostname", "Tipo", "Setor", "Responsável", "Status", "Ações"]}
+        columns={["Hostname", "Patrimônio", "Tipo", "Setor", "Responsável", "Status", "Ações"]}
         empty={isLoading ? "Carregando…" : "Nenhum ativo."}
         rows={filtered.map((r) => [
           <span key="h" className="font-medium">{r.hostname}</span>,
+          <span key="p" className="font-mono text-xs">{r.numero_patrimonio ?? "—"}</span>,
           r.tipo,
           r.setor ?? "—",
           r.usuarios?.nome ?? "—",
