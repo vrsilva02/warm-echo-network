@@ -136,6 +136,7 @@ function AtivosPage() {
     if (ids.length === 0) return toast.info("Nada a baixar");
     const { error } = await supabase.from("ativos").update({ status_ciclo_vida: "baixado" }).in("id", ids);
     if (error) return toast.error(error.message);
+    void logAction("BULK_UPDATE", "ativos", { operacao: "baixar", ids, total: ids.length });
     toast.success(`${ids.length} ativo(s) baixado(s)`);
     clear();
     qc.invalidateQueries({ queryKey: ["ativos"] });
@@ -144,8 +145,10 @@ function AtivosPage() {
   }
   async function bulkDelete(rows: Ativo[], clear: () => void) {
     if (!confirm(`Excluir ${rows.length} ativo(s)? Ação irreversível.`)) return;
-    const { error } = await supabase.from("ativos").delete().in("id", rows.map((r) => r.id));
+    const ids = rows.map((r) => r.id);
+    const { error } = await supabase.from("ativos").delete().in("id", ids);
     if (error) return toast.error(error.message);
+    void logAction("BULK_DELETE", "ativos", { ids, total: ids.length });
     toast.success("Excluídos");
     clear();
     qc.invalidateQueries({ queryKey: ["ativos"] });
