@@ -1,16 +1,17 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/page-header";
 import { DataTable } from "@/components/data-table";
+import { DiffView } from "@/components/diff-view";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Download, Eye, FileText } from "lucide-react";
+import { Download, Eye, FileText, History, Loader2 } from "lucide-react";
 import { downloadCSV, downloadPDF } from "@/lib/export";
 
 export const Route = createFileRoute("/_authenticated/auditoria")({
@@ -18,11 +19,12 @@ export const Route = createFileRoute("/_authenticated/auditoria")({
   head: () => ({
     meta: [
       { title: "Auditoria — ITAM/SAM" },
-      { name: "description", content: "Log imutável e detalhado das ações no sistema, com filtros e exportação." },
+      { name: "description", content: "Log imutável e detalhado das ações no sistema, com filtros, timeline e exportação." },
     ],
   }),
 });
 
+const PAGE_SIZE = 50;
 const TABELAS = ["ativos", "usuarios", "licencas", "contratos", "alocacoes", "produtos_catalogo", "fabricantes"];
 const ACOES = ["INSERT", "UPDATE", "DELETE"];
 
@@ -46,53 +48,6 @@ function acaoBadge(acao: string) {
   return <Badge variant="outline" className={map[acao] ?? ""}>{acao}</Badge>;
 }
 
-function DiffView({ before, after }: { before: any; after: any }) {
-  const keys = Array.from(new Set([...Object.keys(before ?? {}), ...Object.keys(after ?? {})])).sort();
-  const changed = (k: string) => JSON.stringify(before?.[k]) !== JSON.stringify(after?.[k]);
-  const fmt = (v: any) => (v === null || v === undefined ? "—" : typeof v === "object" ? JSON.stringify(v) : String(v));
-
-  if (!before && after) {
-    return (
-      <div className="space-y-1 text-sm">
-        {keys.map((k) => (
-          <div key={k} className="grid grid-cols-[160px_1fr] gap-2 border-b border-border/40 py-1">
-            <span className="text-muted-foreground font-mono text-xs">{k}</span>
-            <span className="text-success">{fmt(after?.[k])}</span>
-          </div>
-        ))}
-      </div>
-    );
-  }
-  if (before && !after) {
-    return (
-      <div className="space-y-1 text-sm">
-        {keys.map((k) => (
-          <div key={k} className="grid grid-cols-[160px_1fr] gap-2 border-b border-border/40 py-1">
-            <span className="text-muted-foreground font-mono text-xs">{k}</span>
-            <span className="text-destructive line-through">{fmt(before?.[k])}</span>
-          </div>
-        ))}
-      </div>
-    );
-  }
-  return (
-    <div className="space-y-1 text-sm">
-      {keys.map((k) => (
-        <div
-          key={k}
-          className={`grid grid-cols-[160px_1fr_1fr] gap-2 border-b border-border/40 py-1 ${
-            changed(k) ? "bg-warning/5" : ""
-          }`}
-        >
-          <span className="text-muted-foreground font-mono text-xs">{k}</span>
-          <span className={changed(k) ? "text-destructive line-through" : ""}>{fmt(before?.[k])}</span>
-          <span className={changed(k) ? "text-success" : ""}>{fmt(after?.[k])}</span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
 function Page() {
   const [tabela, setTabela] = useState<string>("todas");
   const [acao, setAcao] = useState<string>("todas");
@@ -105,53 +60,83 @@ function Page() {
   const [ate, setAte] = useState<string>(() => new Date().toISOString().slice(0, 10));
   const [detail, setDetail] = useState<LogRow | null>(null);
 
-  const { data, isLoading } = useQuery({
+  // Ordenação consistente: created_at desc + id desc (desempate estável para
+  // eventos no mesmo instante). Paginação por range() com pageParam numérico.
+  const query = useInfiniteQuery({
     queryKey: ["auditoria", tabela, acao, usuario, desde, ate],
-    queryFn: async () => {
+    initialPageParam: 0,
+    queryFn: async ({ pageParam }) => {
+      const from = pageParam * PAGE_SIZE;
+      const to = from + PAGE_SIZE - 1;
       let q = supabase
         .from("auditoria_log")
-        .select("*")
+        .select("*", { count: "exact" })
         .order("created_at", { ascending: false })
-        .limit(1000);
+        .order("id", { ascending: false })
+        .range(from, to);
       if (tabela !== "todas") q = q.eq("tabela_afetada", tabela);
       if (acao !== "todas") q = q.eq("acao", acao);
       if (usuario.trim()) q = q.ilike("usuario_sistema", `%${usuario.trim()}%`);
       if (desde) q = q.gte("created_at", `${desde}T00:00:00`);
       if (ate) q = q.lte("created_at", `${ate}T23:59:59`);
-      const { data } = await q;
-      return (data ?? []) as LogRow[];
+      const { data, count, error } = await q;
+      if (error) throw error;
+      return { rows: (data ?? []) as LogRow[], count: count ?? 0, page: pageParam };
+    },
+    getNextPageParam: (last) => {
+      const loaded = (last.page + 1) * PAGE_SIZE;
+      return loaded < last.count ? last.page + 1 : undefined;
     },
   });
 
-  const kpis = useMemo(() => {
-    const rows = data ?? [];
-    return {
-      total: rows.length,
+  const rows = useMemo(() => query.data?.pages.flatMap((p) => p.rows) ?? [], [query.data]);
+  const total = query.data?.pages[0]?.count ?? 0;
+
+  // Auto-load on scroll near bottom.
+  const sentinel = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const el = sentinel.current;
+    if (!el) return;
+    const io = new IntersectionObserver((entries) => {
+      if (entries[0]?.isIntersecting && query.hasNextPage && !query.isFetchingNextPage) {
+        query.fetchNextPage();
+      }
+    }, { rootMargin: "300px" });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [query]);
+
+  const kpis = useMemo(
+    () => ({
+      total,
+      carregados: rows.length,
       inserts: rows.filter((r) => r.acao === "INSERT").length,
       updates: rows.filter((r) => r.acao === "UPDATE").length,
       deletes: rows.filter((r) => r.acao === "DELETE").length,
-    };
-  }, [data]);
+    }),
+    [rows, total],
+  );
 
+  const cols = ["Quando", "Ação", "Tabela", "Registro", "Usuário"];
   const exportRows = () =>
-    (data ?? []).map((r) => [
+    rows.map((r) => [
       new Date(r.created_at).toLocaleString("pt-BR"),
       r.acao,
       r.tabela_afetada,
       r.registro_id ?? "",
       r.usuario_sistema ?? "",
     ]);
-  const cols = ["Quando", "Ação", "Tabela", "Registro", "Usuário"];
 
   return (
     <>
       <PageHeader
         title="Log de Auditoria"
-        description="Rastreamento imutável de todas as operações. Filtre, inspecione o diff e exporte para evidências."
+        description="Rastreamento imutável de todas as operações. Filtre, inspecione o diff, abra a timeline e exporte para evidências."
       />
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-        <KPI label="Eventos" value={kpis.total} />
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
+        <KPI label="Total (filtro)" value={kpis.total} />
+        <KPI label="Carregados" value={kpis.carregados} />
         <KPI label="Criações" value={kpis.inserts} tone="success" />
         <KPI label="Alterações" value={kpis.updates} tone="primary" />
         <KPI label="Exclusões" value={kpis.deletes} tone="destructive" />
@@ -183,7 +168,7 @@ function Page() {
             downloadPDF({
               filename: `auditoria_${desde}_${ate}.pdf`,
               title: "Log de Auditoria",
-              subtitle: `Período: ${desde} a ${ate}${tabela !== "todas" ? ` • Tabela: ${tabela}` : ""}${acao !== "todas" ? ` • Ação: ${acao}` : ""}`,
+              subtitle: `Período: ${desde} a ${ate}${tabela !== "todas" ? ` • Tabela: ${tabela}` : ""}${acao !== "todas" ? ` • Ação: ${acao}` : ""} • ${rows.length} de ${total}`,
               columns: cols,
               rows: exportRows(),
             })
@@ -195,8 +180,8 @@ function Page() {
 
       <DataTable
         columns={["Quando", "Ação", "Tabela", "Registro", "Usuário", ""]}
-        empty={isLoading ? "Carregando…" : "Nenhum evento no período/filtro."}
-        rows={(data ?? []).map((r) => [
+        empty={query.isLoading ? "Carregando…" : "Nenhum evento no período/filtro."}
+        rows={rows.map((r) => [
           <span key="w" className="font-mono text-xs whitespace-nowrap">
             {new Date(r.created_at).toLocaleString("pt-BR")}
           </span>,
@@ -206,21 +191,47 @@ function Page() {
             {r.registro_id?.slice(0, 8) ?? "—"}
           </span>,
           <span key="u" className="text-xs">{r.usuario_sistema ?? "sistema"}</span>,
-          <Button key="d" variant="ghost" size="sm" onClick={() => setDetail(r)}>
-            <Eye className="h-4 w-4" />
-          </Button>,
+          <div key="d" className="flex gap-1 justify-end">
+            <Button variant="ghost" size="sm" onClick={() => setDetail(r)} title="Ver diff">
+              <Eye className="h-4 w-4" />
+            </Button>
+            {r.registro_id && (
+              <Button variant="ghost" size="sm" asChild title="Timeline do registro">
+                <Link to="/auditoria/$tabela/$id" params={{ tabela: r.tabela_afetada, id: r.registro_id }}>
+                  <History className="h-4 w-4" />
+                </Link>
+              </Button>
+            )}
+          </div>,
         ])}
       />
+
+      <div ref={sentinel} className="flex items-center justify-center py-6 text-xs text-muted-foreground">
+        {query.isFetchingNextPage ? (
+          <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Carregando mais…</span>
+        ) : query.hasNextPage ? (
+          <Button variant="outline" size="sm" onClick={() => query.fetchNextPage()}>Carregar mais</Button>
+        ) : rows.length > 0 ? (
+          `Fim da lista — ${rows.length} de ${total}`
+        ) : null}
+      </div>
 
       <Dialog open={!!detail} onOpenChange={(o) => !o && setDetail(null)}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
+            <DialogTitle className="flex items-center gap-2 flex-wrap">
               {detail && acaoBadge(detail.acao)}
               <span className="font-mono text-sm">{detail?.tabela_afetada}</span>
               <span className="text-xs text-muted-foreground font-normal">
                 {detail && new Date(detail.created_at).toLocaleString("pt-BR")} • {detail?.usuario_sistema ?? "sistema"}
               </span>
+              {detail?.registro_id && (
+                <Button variant="link" size="sm" asChild className="ml-auto">
+                  <Link to="/auditoria/$tabela/$id" params={{ tabela: detail.tabela_afetada, id: detail.registro_id }}>
+                    <History className="h-4 w-4 mr-1" /> Ver timeline
+                  </Link>
+                </Button>
+              )}
             </DialogTitle>
           </DialogHeader>
           {detail && (
