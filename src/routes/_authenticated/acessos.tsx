@@ -270,7 +270,8 @@ function AcessosPage() {
                   <div className="text-xs text-muted-foreground">
                     {role === "admin" && "Acesso total, inclusive gestão de acessos e configuração do sistema."}
                     {role === "gestor_ti" && "Cria e edita ativos, licenças, contratos e alocações."}
-                    {role === "auditoria" && "Apenas leitura — dashboards, relatórios e logs de auditoria."}
+                    {role === "padrao" && "Leitura completa da plataforma — dashboards, catálogo, alocações e relatórios."}
+                    {role === "visitante" && "Acesso mínimo de visualização — apenas dashboards e listas básicas."}
                   </div>
                 </div>
               </label>
