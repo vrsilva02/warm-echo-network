@@ -13,6 +13,7 @@ import {
   LogOut,
   ShieldCheck,
   Package,
+  UserCog,
 } from "lucide-react";
 import {
   Sidebar,
