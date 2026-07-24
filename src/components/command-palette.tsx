@@ -114,7 +114,7 @@ export function CommandPalette() {
           kind: "usuario",
           id: u.id,
           label: u.nome ?? u.email ?? "",
-          hint: u.departamento ?? u.email ?? undefined,
+          hint: u.setor ?? u.email ?? undefined,
           url: "/colaboradores",
         }),
       );
@@ -122,7 +122,7 @@ export function CommandPalette() {
         out.push({
           kind: "produto",
           id: p.id,
-          label: p.nome,
+          label: p.nome_oficial,
           hint: p.categoria ?? undefined,
           url: "/produtos",
         }),
