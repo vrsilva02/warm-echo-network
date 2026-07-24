@@ -391,9 +391,15 @@ export type Database = {
           created_at: string | null
           custo_unitario: number | null
           data_expiracao: string | null
+          dias_carencia: number | null
           id: string
+          limite_file_servers: number | null
+          limite_workstations: number | null
+          numero_certificado: string | null
+          politica_grupo: string | null
           produto_id: string | null
           quantidade: number
+          tipo_ativacao: string | null
         }
         Insert: {
           chave_ativacao?: string | null
@@ -401,9 +407,15 @@ export type Database = {
           created_at?: string | null
           custo_unitario?: number | null
           data_expiracao?: string | null
+          dias_carencia?: number | null
           id?: string
+          limite_file_servers?: number | null
+          limite_workstations?: number | null
+          numero_certificado?: string | null
+          politica_grupo?: string | null
           produto_id?: string | null
           quantidade?: number
+          tipo_ativacao?: string | null
         }
         Update: {
           chave_ativacao?: string | null
@@ -411,9 +423,15 @@ export type Database = {
           created_at?: string | null
           custo_unitario?: number | null
           data_expiracao?: string | null
+          dias_carencia?: number | null
           id?: string
+          limite_file_servers?: number | null
+          limite_workstations?: number | null
+          numero_certificado?: string | null
+          politica_grupo?: string | null
           produto_id?: string | null
           quantidade?: number
+          tipo_ativacao?: string | null
         }
         Relationships: [
           {
@@ -504,6 +522,7 @@ export type Database = {
           id: string
           modelo_licenciamento: string
           nome_oficial: string
+          subtipo: string | null
           tipo_licenciamento: string
         }
         Insert: {
@@ -513,6 +532,7 @@ export type Database = {
           id?: string
           modelo_licenciamento: string
           nome_oficial: string
+          subtipo?: string | null
           tipo_licenciamento: string
         }
         Update: {
@@ -522,6 +542,7 @@ export type Database = {
           id?: string
           modelo_licenciamento?: string
           nome_oficial?: string
+          subtipo?: string | null
           tipo_licenciamento?: string
         }
         Relationships: [
@@ -554,6 +575,54 @@ export type Database = {
           email?: string | null
           id?: string
           nome?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      relatorios_recorrentes: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          criado_por: string | null
+          destinatarios: string[]
+          filtros: Json
+          formato: string
+          frequencia: string
+          id: string
+          nome: string
+          proximo_envio: string | null
+          tipo: string
+          ultimo_envio: string | null
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          criado_por?: string | null
+          destinatarios?: string[]
+          filtros?: Json
+          formato?: string
+          frequencia?: string
+          id?: string
+          nome: string
+          proximo_envio?: string | null
+          tipo: string
+          ultimo_envio?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          criado_por?: string | null
+          destinatarios?: string[]
+          filtros?: Json
+          formato?: string
+          frequencia?: string
+          id?: string
+          nome?: string
+          proximo_envio?: string | null
+          tipo?: string
+          ultimo_envio?: string | null
           updated_at?: string
         }
         Relationships: []
