@@ -86,6 +86,7 @@ function Page() {
       data_fim: r.data_fim ?? "",
       quantidade_seats: r.quantidade_seats,
       valor_total: r.valor_total?.toString() ?? "",
+      unidade_id: r.unidade_id,
     });
     setOpen(true);
   }
@@ -98,6 +99,7 @@ function Page() {
       data_fim: form.data_fim || null,
       quantidade_seats: Number(form.quantidade_seats) || 0,
       valor_total: form.valor_total ? Number(form.valor_total) : null,
+      unidade_id: form.unidade_id,
     };
     const { error } = editing
       ? await supabase.from("contratos").update(payload).eq("id", editing.id)
