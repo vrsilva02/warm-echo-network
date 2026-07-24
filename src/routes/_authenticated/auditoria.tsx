@@ -25,7 +25,7 @@ export const Route = createFileRoute("/_authenticated/auditoria")({
 });
 
 const PAGE_SIZE = 50;
-const TABELAS = ["ativos", "usuarios", "licencas", "contratos", "alocacoes", "produtos_catalogo", "fabricantes"];
+const TABELAS = ["ativos", "usuarios", "licencas", "contratos", "alocacoes", "produtos_catalogo", "fabricantes", "user_roles"];
 const ACOES = ["INSERT", "UPDATE", "DELETE"];
 
 type LogRow = {
