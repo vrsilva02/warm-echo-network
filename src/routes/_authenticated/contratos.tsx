@@ -10,10 +10,12 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, FileStack } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
 import { useConfirm } from "@/components/confirm-dialog";
+import { AditivosDialog } from "@/components/aditivos-dialog";
+import { Combobox } from "@/components/combobox";
 
 export const Route = createFileRoute("/_authenticated/contratos")({
   component: Page,
@@ -34,10 +36,11 @@ type Row = {
   data_fim: string | null;
   quantidade_seats: number;
   valor_total: number | null;
+  unidade_id: string | null;
 };
 
 const TIPOS = ["EA", "MPSA", "Open Value", "NCE", "Perpetua", "SaaS", "Outro"];
-const initial = { fornecedor: "", numero_contrato: "", tipo_contrato: "SaaS", data_inicio: "", data_fim: "", quantidade_seats: 0, valor_total: "" };
+const initial = { fornecedor: "", numero_contrato: "", tipo_contrato: "SaaS", data_inicio: "", data_fim: "", quantidade_seats: 0, valor_total: "", unidade_id: null as string | null };
 
 function urgencyBadge(dataFim: string | null) {
   if (!dataFim) return <Badge variant="outline">sem vencimento</Badge>;
@@ -55,6 +58,7 @@ function Page() {
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Row | null>(null);
+  const [aditivo, setAditivo] = useState<Row | null>(null);
   const [form, setForm] = useState(initial);
 
   const { data: rows, isLoading } = useQuery({
@@ -64,6 +68,10 @@ function Page() {
       if (error) throw error;
       return data as Row[];
     },
+  });
+  const { data: unidades } = useQuery({
+    queryKey: ["unidades-lite"],
+    queryFn: async () => (await supabase.from("unidades").select("id, nome").eq("ativo", true).order("nome")).data ?? [],
   });
   const filtered = useFilteredList(rows, q, ["fornecedor", "numero_contrato", "tipo_contrato"]);
 
@@ -78,6 +86,7 @@ function Page() {
       data_fim: r.data_fim ?? "",
       quantidade_seats: r.quantidade_seats,
       valor_total: r.valor_total?.toString() ?? "",
+      unidade_id: r.unidade_id,
     });
     setOpen(true);
   }
@@ -90,6 +99,7 @@ function Page() {
       data_fim: form.data_fim || null,
       quantidade_seats: Number(form.quantidade_seats) || 0,
       valor_total: form.valor_total ? Number(form.valor_total) : null,
+      unidade_id: form.unidade_id,
     };
     const { error } = editing
       ? await supabase.from("contratos").update(payload).eq("id", editing.id)
@@ -140,6 +150,9 @@ function Page() {
           r.valor_total ? `R$ ${r.valor_total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}` : "—",
           urgencyBadge(r.data_fim),
           <div key="a" className="flex gap-1">
+            <Button size="icon" variant="ghost" title="Aditivos" onClick={() => setAditivo(r)}>
+              <FileStack className="h-4 w-4" />
+            </Button>
             {canWrite && <>
               <Button size="icon" variant="ghost" onClick={() => openEdit(r)}><Pencil className="h-4 w-4" /></Button>
               <Button size="icon" variant="ghost" onClick={() => remove(r)}><Trash2 className="h-4 w-4" /></Button>
@@ -166,8 +179,26 @@ function Page() {
           <div><Label>Início</Label><Input type="date" required value={form.data_inicio} onChange={(e) => setForm({ ...form, data_inicio: e.target.value })} /></div>
           <div><Label>Fim</Label><Input type="date" value={form.data_fim} onChange={(e) => setForm({ ...form, data_fim: e.target.value })} /></div>
         </div>
-        <div><Label>Valor total (R$)</Label><Input type="number" step="0.01" value={form.valor_total} onChange={(e) => setForm({ ...form, valor_total: e.target.value })} /></div>
+        <div className="grid grid-cols-2 gap-3">
+          <div><Label>Valor total (R$)</Label><Input type="number" step="0.01" value={form.valor_total} onChange={(e) => setForm({ ...form, valor_total: e.target.value })} /></div>
+          <div>
+            <Label>Unidade</Label>
+            <Combobox
+              placeholder="Nenhuma"
+              searchPlaceholder="Buscar unidade…"
+              value={form.unidade_id}
+              onChange={(v) => setForm({ ...form, unidade_id: v })}
+              options={(unidades ?? []).map((u) => ({ value: u.id, label: u.nome }))}
+            />
+          </div>
+        </div>
       </CrudDialog>
+      <AditivosDialog
+        contratoId={aditivo?.id ?? null}
+        contratoLabel={aditivo ? `${aditivo.fornecedor}${aditivo.numero_contrato ? " · " + aditivo.numero_contrato : ""}` : ""}
+        open={!!aditivo}
+        onOpenChange={(v) => !v && setAditivo(null)}
+      />
     </>
   );
 }

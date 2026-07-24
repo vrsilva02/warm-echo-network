@@ -14,6 +14,8 @@ import {
   ShieldCheck,
   Package,
   UserCog,
+  ClipboardList,
+  Building2,
 } from "lucide-react";
 import {
   Sidebar,
@@ -40,6 +42,7 @@ const main = [
   { title: "Contratos", url: "/contratos", icon: FileText },
   { title: "Licenças", url: "/licencas", icon: KeySquare },
   { title: "Alocações", url: "/alocacoes", icon: Link2 },
+  { title: "Solicitações", url: "/solicitacoes", icon: ClipboardList },
 ] as const;
 
 const fase2 = [
@@ -56,7 +59,10 @@ export function AppSidebar() {
   const { user, roles, signOut, isAdmin } = useAuth();
   const primaryRole = roles[0];
 
-  const admin = [{ title: "Gestão de Acessos", url: "/acessos", icon: UserCog }] as const;
+  const admin = [
+    { title: "Unidades", url: "/unidades", icon: Building2 },
+    { title: "Gestão de Acessos", url: "/acessos", icon: UserCog },
+  ] as const;
 
   const isActive = (path: string) => pathname === path || pathname.startsWith(path + "/");
 

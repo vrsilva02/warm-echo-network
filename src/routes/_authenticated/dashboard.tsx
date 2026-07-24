@@ -47,17 +47,21 @@ function useDashboardData() {
   return useQuery({
     queryKey: ["dashboard"],
     queryFn: async () => {
-      const [elp, ativos, vencendo, ociosas] = await Promise.all([
+      const [elp, ativos, vencendo, ociosas, ocioseFin, risco] = await Promise.all([
         supabase.from("vw_elp").select("*"),
         supabase.from("ativos").select("status_ciclo_vida"),
         supabase.from("vw_contratos_vencendo").select("id,dias_para_vencer,urgencia"),
         supabase.from("vw_licencas_ociosas").select("licenca_id"),
+        supabase.from("vw_ociosidade_financeira").select("*"),
+        supabase.rpc("fn_risco_compliance", { _categoria: null as unknown as string }),
       ]);
       return {
         elp: (elp.data ?? []) as ElpRow[],
         ativos: ativos.data ?? [],
         contratosVencendo30: (vencendo.data ?? []).filter((r: any) => r.dias_para_vencer <= 30).length,
         licencasOciosas: ociosas.data?.length ?? 0,
+        ocioseFin: (ocioseFin.data ?? []) as Array<{ produto_id: string; nome_oficial: string; categoria: string; licencas_ociosas: number; valor_ocioso: number }>,
+        risco: (risco.data ?? []) as Array<{ categoria: string; deficit_pct: number; criticidade_media: number; score: number }>,
       };
     },
   });
@@ -112,19 +116,91 @@ function DashboardPage() {
         />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <KpiCard
           title="Contratos vencendo em 30 dias"
           value={data?.contratosVencendo30 ?? 0}
           icon={<FileWarning className="h-4 w-4 text-[color:var(--warning)]" />}
-          hint="Contratos com data de término nos próximos 30 dias. Planeje renovação para evitar quebra de compliance."
+          hint="Contratos com data de término nos próximos 30 dias."
         />
         <KpiCard
           title="Licenças ociosas (>90d)"
           value={data?.licencasOciosas ?? 0}
           icon={<Snowflake className="h-4 w-4 text-primary" />}
-          hint="Alocações ativas sem uso registrado há mais de 90 dias — candidatas a reaproveitamento."
+          hint="Alocações ativas sem uso registrado há mais de 90 dias."
         />
+        <KpiCard
+          title="Valor financeiro ocioso"
+          value={`R$ ${(data?.ocioseFin ?? []).reduce((a, x) => a + Number(x.valor_ocioso ?? 0), 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`}
+          icon={<Snowflake className="h-4 w-4 text-[color:var(--warning)]" />}
+          hint="Soma de custo_unitário × licenças ociosas por produto (janela >90d sem alocação)."
+        />
+        <KpiCard
+          title="Score máx. de risco"
+          value={Math.round(Math.max(0, ...(data?.risco ?? []).map((r) => Number(r.score ?? 0))))}
+          icon={<AlertTriangle className="h-4 w-4 text-destructive" />}
+          hint="Maior score de risco de compliance entre categorias (0–100): déficit(%) × criticidade média do fabricante ÷ 5."
+        />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+        <Card>
+          <CardHeader><CardTitle className="text-sm">Top 5 produtos por valor ocioso</CardTitle></CardHeader>
+          <CardContent>
+            {(data?.ocioseFin ?? []).filter((x) => Number(x.valor_ocioso) > 0).length === 0 ? (
+              <div className="text-sm text-muted-foreground py-4 text-center">Sem ociosidade financeira registrada.</div>
+            ) : (
+              <Table>
+                <TableHeader><TableRow><TableHead>Produto</TableHead><TableHead>Categoria</TableHead><TableHead className="text-right">Ociosas</TableHead><TableHead className="text-right">Valor (R$)</TableHead></TableRow></TableHeader>
+                <TableBody>
+                  {(data?.ocioseFin ?? [])
+                    .filter((x) => Number(x.valor_ocioso) > 0)
+                    .sort((a, b) => Number(b.valor_ocioso) - Number(a.valor_ocioso))
+                    .slice(0, 5)
+                    .map((x) => (
+                      <TableRow key={x.produto_id}>
+                        <TableCell className="font-medium">{x.nome_oficial}</TableCell>
+                        <TableCell>{x.categoria}</TableCell>
+                        <TableCell className="text-right font-mono">{x.licencas_ociosas}</TableCell>
+                        <TableCell className="text-right font-mono">{Number(x.valor_ocioso).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</TableCell>
+                      </TableRow>
+                    ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader><CardTitle className="text-sm">Risco de compliance por categoria</CardTitle></CardHeader>
+          <CardContent>
+            {(data?.risco ?? []).length === 0 ? (
+              <div className="text-sm text-muted-foreground py-4 text-center">Sem dados suficientes para calcular risco.</div>
+            ) : (
+              <div className="space-y-2">
+                {(data?.risco ?? [])
+                  .sort((a, b) => Number(b.score) - Number(a.score))
+                  .map((r) => {
+                    const score = Number(r.score ?? 0);
+                    const tone = score >= 60 ? "bg-destructive" : score >= 30 ? "bg-[color:var(--warning)]" : "bg-[color:var(--success)]";
+                    return (
+                      <div key={r.categoria} className="text-xs">
+                        <div className="flex justify-between mb-1">
+                          <span className="font-medium">{r.categoria}</span>
+                          <span className="font-mono tabular-nums">
+                            {score.toFixed(0)} · déficit {Number(r.deficit_pct ?? 0).toFixed(0)}% · crit {Number(r.criticidade_media ?? 0).toFixed(1)}
+                          </span>
+                        </div>
+                        <div className="h-2 rounded-full bg-muted overflow-hidden">
+                          <div className={`h-full ${tone}`} style={{ width: `${Math.min(100, score)}%` }} />
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">

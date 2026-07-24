@@ -87,6 +87,7 @@ export type Database = {
           setor: string | null
           status_ciclo_vida: string
           tipo: string
+          unidade_id: string | null
           updated_at: string | null
           usuario_responsavel_id: string | null
         }
@@ -100,6 +101,7 @@ export type Database = {
           setor?: string | null
           status_ciclo_vida?: string
           tipo: string
+          unidade_id?: string | null
           updated_at?: string | null
           usuario_responsavel_id?: string | null
         }
@@ -113,10 +115,18 @@ export type Database = {
           setor?: string | null
           status_ciclo_vida?: string
           tipo?: string
+          unidade_id?: string | null
           updated_at?: string | null
           usuario_responsavel_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "ativos_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "ativos_usuario_responsavel_id_fkey"
             columns: ["usuario_responsavel_id"]
@@ -204,6 +214,7 @@ export type Database = {
           numero_contrato: string | null
           quantidade_seats: number
           tipo_contrato: string | null
+          unidade_id: string | null
           valor_total: number | null
         }
         Insert: {
@@ -215,6 +226,7 @@ export type Database = {
           numero_contrato?: string | null
           quantidade_seats?: number
           tipo_contrato?: string | null
+          unidade_id?: string | null
           valor_total?: number | null
         }
         Update: {
@@ -226,23 +238,92 @@ export type Database = {
           numero_contrato?: string | null
           quantidade_seats?: number
           tipo_contrato?: string | null
+          unidade_id?: string | null
           valor_total?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "contratos_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contratos_aditivos: {
+        Row: {
+          contrato_id: string
+          created_at: string
+          criado_por: string | null
+          delta_seats: number | null
+          delta_valor: number | null
+          descricao: string | null
+          id: string
+          nova_data_fim: string | null
+          numero: string
+          tipo: Database["public"]["Enums"]["aditivo_tipo"]
+          updated_at: string
+        }
+        Insert: {
+          contrato_id: string
+          created_at?: string
+          criado_por?: string | null
+          delta_seats?: number | null
+          delta_valor?: number | null
+          descricao?: string | null
+          id?: string
+          nova_data_fim?: string | null
+          numero: string
+          tipo: Database["public"]["Enums"]["aditivo_tipo"]
+          updated_at?: string
+        }
+        Update: {
+          contrato_id?: string
+          created_at?: string
+          criado_por?: string | null
+          delta_seats?: number | null
+          delta_valor?: number | null
+          descricao?: string | null
+          id?: string
+          nova_data_fim?: string | null
+          numero?: string
+          tipo?: Database["public"]["Enums"]["aditivo_tipo"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contratos_aditivos_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "contratos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contratos_aditivos_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "vw_contratos_vencendo"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       fabricantes: {
         Row: {
           created_at: string | null
+          criticidade: number
           id: string
           nome: string
         }
         Insert: {
           created_at?: string | null
+          criticidade?: number
           id?: string
           nome: string
         }
         Update: {
           created_at?: string | null
+          criticidade?: number
           id?: string
           nome?: string
         }
@@ -294,6 +375,13 @@ export type Database = {
             referencedRelation: "vw_elp"
             referencedColumns: ["produto_id"]
           },
+          {
+            foreignKeyName: "inventario_importado_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "vw_ociosidade_financeira"
+            referencedColumns: ["produto_id"]
+          },
         ]
       }
       licencas: {
@@ -301,6 +389,7 @@ export type Database = {
           chave_ativacao: string | null
           contrato_id: string | null
           created_at: string | null
+          custo_unitario: number | null
           data_expiracao: string | null
           id: string
           produto_id: string | null
@@ -310,6 +399,7 @@ export type Database = {
           chave_ativacao?: string | null
           contrato_id?: string | null
           created_at?: string | null
+          custo_unitario?: number | null
           data_expiracao?: string | null
           id?: string
           produto_id?: string | null
@@ -319,6 +409,7 @@ export type Database = {
           chave_ativacao?: string | null
           contrato_id?: string | null
           created_at?: string | null
+          custo_unitario?: number | null
           data_expiracao?: string | null
           id?: string
           produto_id?: string | null
@@ -351,6 +442,13 @@ export type Database = {
             columns: ["produto_id"]
             isOneToOne: false
             referencedRelation: "vw_elp"
+            referencedColumns: ["produto_id"]
+          },
+          {
+            foreignKeyName: "licencas_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "vw_ociosidade_financeira"
             referencedColumns: ["produto_id"]
           },
         ]
@@ -387,6 +485,13 @@ export type Database = {
             columns: ["produto_id"]
             isOneToOne: false
             referencedRelation: "vw_elp"
+            referencedColumns: ["produto_id"]
+          },
+          {
+            foreignKeyName: "produtos_aliases_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "vw_ociosidade_financeira"
             referencedColumns: ["produto_id"]
           },
         ]
@@ -449,6 +554,100 @@ export type Database = {
           email?: string | null
           id?: string
           nome?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      solicitacoes_licenca: {
+        Row: {
+          aprovador_id: string | null
+          created_at: string
+          decidido_em: string | null
+          id: string
+          justificativa: string
+          motivo_decisao: string | null
+          produto_id: string
+          quantidade: number
+          solicitante_id: string
+          status: Database["public"]["Enums"]["solicitacao_status"]
+          updated_at: string
+        }
+        Insert: {
+          aprovador_id?: string | null
+          created_at?: string
+          decidido_em?: string | null
+          id?: string
+          justificativa: string
+          motivo_decisao?: string | null
+          produto_id: string
+          quantidade: number
+          solicitante_id: string
+          status?: Database["public"]["Enums"]["solicitacao_status"]
+          updated_at?: string
+        }
+        Update: {
+          aprovador_id?: string | null
+          created_at?: string
+          decidido_em?: string | null
+          id?: string
+          justificativa?: string
+          motivo_decisao?: string | null
+          produto_id?: string
+          quantidade?: number
+          solicitante_id?: string
+          status?: Database["public"]["Enums"]["solicitacao_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "solicitacoes_licenca_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "produtos_catalogo"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "solicitacoes_licenca_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "vw_elp"
+            referencedColumns: ["produto_id"]
+          },
+          {
+            foreignKeyName: "solicitacoes_licenca_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "vw_ociosidade_financeira"
+            referencedColumns: ["produto_id"]
+          },
+        ]
+      }
+      unidades: {
+        Row: {
+          ativo: boolean
+          codigo: string | null
+          created_at: string
+          id: string
+          nome: string
+          uf: string | null
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          codigo?: string | null
+          created_at?: string
+          id?: string
+          nome: string
+          uf?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          codigo?: string | null
+          created_at?: string
+          id?: string
+          nome?: string
+          uf?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -576,6 +775,16 @@ export type Database = {
         }
         Relationships: []
       }
+      vw_ociosidade_financeira: {
+        Row: {
+          categoria: string | null
+          licencas_ociosas: number | null
+          nome_oficial: string | null
+          produto_id: string | null
+          valor_ocioso: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       can_read: { Args: { _user_id: string }; Returns: boolean }
@@ -588,6 +797,15 @@ export type Database = {
         }
         Returns: string
       }
+      fn_risco_compliance: {
+        Args: { _categoria: string }
+        Returns: {
+          categoria: string
+          criticidade_media: number
+          deficit_pct: number
+          score: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -599,7 +817,9 @@ export type Database = {
       is_gestor_or_admin: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
+      aditivo_tipo: "quantidade" | "prazo" | "valor" | "outro"
       app_role: "admin" | "gestor_ti" | "auditoria" | "padrao" | "visitante"
+      solicitacao_status: "pendente" | "aprovada" | "rejeitada" | "cancelada"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -727,7 +947,9 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      aditivo_tipo: ["quantidade", "prazo", "valor", "outro"],
       app_role: ["admin", "gestor_ti", "auditoria", "padrao", "visitante"],
+      solicitacao_status: ["pendente", "aprovada", "rejeitada", "cancelada"],
     },
   },
 } as const
