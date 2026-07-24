@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Tooltip as UITooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Info } from "lucide-react";
 import {
   BarChart,
   Bar,
@@ -237,15 +239,27 @@ function DashboardPage() {
   );
 }
 
-function KpiCard({ title, value, icon }: { title: string; value: number | string; icon: React.ReactNode }) {
+function KpiCard({ title, value, icon, hint }: { title: string; value: number | string; icon: React.ReactNode; hint?: string }) {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-xs font-medium text-muted-foreground">{title}</CardTitle>
+        <CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+          {title}
+          {hint && (
+            <UITooltip>
+              <TooltipTrigger asChild>
+                <button type="button" aria-label="Sobre este indicador" className="text-muted-foreground/60 hover:text-foreground">
+                  <Info className="h-3.5 w-3.5" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent className="max-w-xs text-xs">{hint}</TooltipContent>
+            </UITooltip>
+          )}
+        </CardTitle>
         <span className="text-muted-foreground">{icon}</span>
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-semibold">{value}</div>
+        <div className="text-2xl font-semibold tabular-nums">{value}</div>
       </CardContent>
     </Card>
   );
