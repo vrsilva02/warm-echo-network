@@ -3,15 +3,16 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/page-header";
-import { DataTable, ListToolbar, useFilteredList } from "@/components/data-table";
+import { AdvancedTable, type Column, type SavedView } from "@/components/advanced-table";
 import { CrudDialog } from "@/components/crud-dialog";
+import { EmptyState } from "@/components/empty-state";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Trash2 } from "lucide-react";
+import { Trash2, Link2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
 
@@ -50,7 +51,6 @@ const initial = {
 function Page() {
   const { canWrite } = useAuth();
   const qc = useQueryClient();
-  const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(initial);
 
@@ -78,8 +78,6 @@ function Page() {
     queryFn: async () => (await supabase.from("ativos").select("id,hostname").neq("status_ciclo_vida", "baixado").order("hostname")).data ?? [],
   });
 
-  const filtered = useFilteredList(rows, q, ["observacao"]);
-
   function openNew() { setForm(initial); setOpen(true); }
   async function save() {
     if (!form.licenca_id) return toast.error("Selecione a licença");
@@ -105,6 +103,80 @@ function Page() {
     qc.invalidateQueries({ queryKey: ["alocacoes"] });
     qc.invalidateQueries({ queryKey: ["dashboard"] });
   }
+  async function bulkEncerrar(sel: Row[], clear: () => void) {
+    const ativas = sel.filter((r) => !r.data_fim);
+    if (ativas.length === 0) return toast.info("Nenhuma alocação ativa na seleção");
+    if (!confirm(`Encerrar ${ativas.length} alocação(ões) e liberar as licenças?`)) return;
+    const today = new Date().toISOString().slice(0, 10);
+    const { error } = await supabase.from("alocacoes").update({ data_fim: today }).in("id", ativas.map((r) => r.id));
+    if (error) return toast.error(error.message);
+    toast.success(`${ativas.length} encerrada(s)`);
+    clear();
+    qc.invalidateQueries({ queryKey: ["alocacoes"] });
+    qc.invalidateQueries({ queryKey: ["dashboard"] });
+  }
+
+  const columns: Column<Row>[] = [
+    {
+      id: "produto", header: "Produto",
+      accessor: (r) => <span className="font-medium">{r.licencas?.produtos_catalogo?.nome_oficial ?? "—"}</span>,
+      sortValue: (r) => r.licencas?.produtos_catalogo?.nome_oficial ?? "",
+      searchValue: (r) => r.licencas?.produtos_catalogo?.nome_oficial,
+      exportValue: (r) => r.licencas?.produtos_catalogo?.nome_oficial,
+    },
+    {
+      id: "colab", header: "Colaborador",
+      accessor: (r) => r.usuarios?.nome ?? "—",
+      sortValue: (r) => r.usuarios?.nome ?? "",
+      searchValue: (r) => r.usuarios?.nome, exportValue: (r) => r.usuarios?.nome,
+    },
+    {
+      id: "ativo", header: "Ativo",
+      accessor: (r) => r.ativos?.hostname ?? "—",
+      sortValue: (r) => r.ativos?.hostname ?? "",
+      searchValue: (r) => r.ativos?.hostname, exportValue: (r) => r.ativos?.hostname,
+    },
+    {
+      id: "inicio", header: "Início",
+      accessor: (r) => r.data_inicio ?? "—",
+      sortValue: (r) => r.data_inicio ?? "", exportValue: (r) => r.data_inicio,
+    },
+    {
+      id: "fim", header: "Fim",
+      accessor: (r) => r.data_fim ?? "—",
+      sortValue: (r) => r.data_fim ?? "", exportValue: (r) => r.data_fim,
+    },
+    {
+      id: "status", header: "Status",
+      accessor: (r) => <Badge variant={!r.data_fim ? "default" : "secondary"}>{!r.data_fim ? "ativa" : "encerrada"}</Badge>,
+      sortValue: (r) => (!r.data_fim ? 0 : 1),
+      searchValue: (r) => (!r.data_fim ? "ativa" : "encerrada"),
+      exportValue: (r) => (!r.data_fim ? "ativa" : "encerrada"),
+    },
+    {
+      id: "obs", header: "Observação", defaultHidden: true,
+      accessor: (r) => r.observacao ?? "—",
+      searchValue: (r) => r.observacao, exportValue: (r) => r.observacao,
+    },
+    {
+      id: "acoes", header: "Ações", alwaysVisible: true,
+      accessor: (r) => (
+        <div className="flex gap-1">
+          {canWrite && !r.data_fim && (
+            <Button size="icon" variant="ghost" onClick={() => encerrar(r.id)} title="Encerrar">
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+      ),
+    },
+  ];
+
+  const views: SavedView<Row>[] = [
+    { id: "ativas", label: "Ativas", filter: (rs) => rs.filter((r) => !r.data_fim) },
+    { id: "encerradas", label: "Encerradas", filter: (rs) => rs.filter((r) => !!r.data_fim) },
+    { id: "sem_ativo", label: "Só colaborador", filter: (rs) => rs.filter((r) => !r.ativo_id && r.usuario_id) },
+  ];
 
   return (
     <>
@@ -113,28 +185,25 @@ function Page() {
         description="Cada vínculo consome um seat efetivo do produto até ser encerrado."
         actions={canWrite ? <Button size="sm" onClick={openNew}>Nova alocação</Button> : undefined}
       />
-      <ListToolbar query={q} onQueryChange={setQ} />
-      <DataTable
-        columns={["Produto", "Colaborador", "Ativo", "Início", "Fim", "Status", "Ações"]}
-        empty={isLoading ? "Carregando…" : "Nenhuma alocação."}
-        rows={filtered.map((r) => {
-          const ativo = !r.data_fim;
-          return [
-            r.licencas?.produtos_catalogo?.nome_oficial ?? "—",
-            r.usuarios?.nome ?? "—",
-            r.ativos?.hostname ?? "—",
-            r.data_inicio ?? "—",
-            r.data_fim ?? "—",
-            <Badge key="s" variant={ativo ? "default" : "secondary"}>{ativo ? "ativa" : "encerrada"}</Badge>,
-            <div key="a" className="flex gap-1">
-              {canWrite && ativo && (
-                <Button size="icon" variant="ghost" onClick={() => encerrar(r.id)} title="Encerrar">
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              )}
-            </div>,
-          ];
-        })}
+      <AdvancedTable<Row>
+        storageKey="alocacoes"
+        rows={rows}
+        isLoading={isLoading}
+        columns={columns}
+        getRowId={(r) => r.id}
+        savedViews={views}
+        exportFilename="alocacoes"
+        emptyState={
+          <EmptyState
+            icon={<Link2 className="h-6 w-6" />}
+            title="Nenhuma alocação"
+            description="Vincule licenças a colaboradores ou ativos para consumir seats."
+            action={canWrite ? <Button size="sm" onClick={openNew}>Nova alocação</Button> : undefined}
+          />
+        }
+        bulkActions={canWrite ? (sel, clear) => (
+          <Button size="sm" variant="outline" onClick={() => bulkEncerrar(sel, clear)}>Encerrar selecionadas</Button>
+        ) : undefined}
       />
       <CrudDialog title="Nova alocação" open={open} onOpenChange={setOpen} onSubmit={save} trigger={null}>
         <div>

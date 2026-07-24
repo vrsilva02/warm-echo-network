@@ -3,14 +3,15 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/page-header";
-import { DataTable, ListToolbar, useFilteredList } from "@/components/data-table";
+import { AdvancedTable, type Column, type SavedView } from "@/components/advanced-table";
 import { CrudDialog } from "@/components/crud-dialog";
+import { EmptyState } from "@/components/empty-state";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, Laptop } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
 
@@ -62,7 +63,6 @@ function statusBadge(s: string) {
 function AtivosPage() {
   const { canWrite } = useAuth();
   const qc = useQueryClient();
-  const [q, setQ] = useState("");
   const [editing, setEditing] = useState<Ativo | null>(null);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(initial);
@@ -83,8 +83,6 @@ function AtivosPage() {
     queryKey: ["usuarios-lite"],
     queryFn: async () => (await supabase.from("usuarios").select("id,nome").eq("status", "ativo").order("nome")).data ?? [],
   });
-
-  const filtered = useFilteredList(rows, q, ["hostname", "tipo", "setor", "numero_serie", "numero_patrimonio", "status_ciclo_vida"]);
 
   function openNew() {
     setEditing(null);
@@ -132,6 +130,89 @@ function AtivosPage() {
     qc.invalidateQueries({ queryKey: ["ativos"] });
   }
 
+  async function bulkBaixar(rows: Ativo[], clear: () => void) {
+    if (!confirm(`Baixar ${rows.length} ativo(s)? As licenças alocadas serão liberadas.`)) return;
+    const ids = rows.filter((r) => r.status_ciclo_vida !== "baixado").map((r) => r.id);
+    if (ids.length === 0) return toast.info("Nada a baixar");
+    const { error } = await supabase.from("ativos").update({ status_ciclo_vida: "baixado" }).in("id", ids);
+    if (error) return toast.error(error.message);
+    toast.success(`${ids.length} ativo(s) baixado(s)`);
+    clear();
+    qc.invalidateQueries({ queryKey: ["ativos"] });
+    qc.invalidateQueries({ queryKey: ["alocacoes"] });
+    qc.invalidateQueries({ queryKey: ["dashboard"] });
+  }
+  async function bulkDelete(rows: Ativo[], clear: () => void) {
+    if (!confirm(`Excluir ${rows.length} ativo(s)? Ação irreversível.`)) return;
+    const { error } = await supabase.from("ativos").delete().in("id", rows.map((r) => r.id));
+    if (error) return toast.error(error.message);
+    toast.success("Excluídos");
+    clear();
+    qc.invalidateQueries({ queryKey: ["ativos"] });
+  }
+
+  const columns: Column<Ativo>[] = [
+    {
+      id: "hostname", header: "Hostname",
+      accessor: (r) => <span className="font-medium">{r.hostname}</span>,
+      sortValue: (r) => r.hostname.toLowerCase(),
+      searchValue: (r) => r.hostname, exportValue: (r) => r.hostname,
+    },
+    {
+      id: "patrimonio", header: "Patrimônio",
+      accessor: (r) => <span className="font-mono text-xs">{r.numero_patrimonio ?? "—"}</span>,
+      sortValue: (r) => r.numero_patrimonio ?? "",
+      searchValue: (r) => r.numero_patrimonio, exportValue: (r) => r.numero_patrimonio,
+    },
+    {
+      id: "tipo", header: "Tipo",
+      accessor: (r) => r.tipo, sortValue: (r) => r.tipo,
+      searchValue: (r) => r.tipo, exportValue: (r) => r.tipo,
+    },
+    {
+      id: "serie", header: "Nº Série", defaultHidden: true,
+      accessor: (r) => <span className="font-mono text-xs">{r.numero_serie ?? "—"}</span>,
+      searchValue: (r) => r.numero_serie, exportValue: (r) => r.numero_serie,
+    },
+    {
+      id: "setor", header: "Setor",
+      accessor: (r) => r.setor ?? "—", sortValue: (r) => r.setor ?? "",
+      searchValue: (r) => r.setor, exportValue: (r) => r.setor,
+    },
+    {
+      id: "responsavel", header: "Responsável",
+      accessor: (r) => r.usuarios?.nome ?? "—",
+      sortValue: (r) => r.usuarios?.nome ?? "",
+      searchValue: (r) => r.usuarios?.nome, exportValue: (r) => r.usuarios?.nome,
+    },
+    {
+      id: "status", header: "Status",
+      accessor: (r) => statusBadge(r.status_ciclo_vida),
+      sortValue: (r) => r.status_ciclo_vida,
+      searchValue: (r) => r.status_ciclo_vida, exportValue: (r) => r.status_ciclo_vida,
+    },
+    {
+      id: "acoes", header: "Ações", alwaysVisible: true,
+      accessor: (r) => (
+        <div className="flex gap-1">
+          {canWrite && (
+            <>
+              <Button size="icon" variant="ghost" onClick={() => openEdit(r)}><Pencil className="h-4 w-4" /></Button>
+              <Button size="icon" variant="ghost" onClick={() => remove(r.id)}><Trash2 className="h-4 w-4" /></Button>
+            </>
+          )}
+        </div>
+      ),
+    },
+  ];
+
+  const views: SavedView<Ativo>[] = [
+    { id: "em_uso", label: "Em uso", filter: (rs) => rs.filter((r) => r.status_ciclo_vida === "em_uso") },
+    { id: "estoque", label: "Em estoque", filter: (rs) => rs.filter((r) => r.status_ciclo_vida === "em_estoque") },
+    { id: "manutencao", label: "Manutenção", filter: (rs) => rs.filter((r) => r.status_ciclo_vida === "em_manutencao") },
+    { id: "sem_patrimonio", label: "Sem patrimônio", filter: (rs) => rs.filter((r) => !r.numero_patrimonio) },
+  ];
+
   return (
     <>
       <PageHeader
@@ -139,26 +220,28 @@ function AtivosPage() {
         description="Notebooks, desktops, servidores e VDIs — com ciclo de vida controlado."
         actions={canWrite ? <Button size="sm" onClick={openNew}>Novo ativo</Button> : undefined}
       />
-      <ListToolbar query={q} onQueryChange={setQ} />
-      <DataTable
-        columns={["Hostname", "Patrimônio", "Tipo", "Setor", "Responsável", "Status", "Ações"]}
-        empty={isLoading ? "Carregando…" : "Nenhum ativo."}
-        rows={filtered.map((r) => [
-          <span key="h" className="font-medium">{r.hostname}</span>,
-          <span key="p" className="font-mono text-xs">{r.numero_patrimonio ?? "—"}</span>,
-          r.tipo,
-          r.setor ?? "—",
-          r.usuarios?.nome ?? "—",
-          statusBadge(r.status_ciclo_vida),
-          <div key="a" className="flex gap-1">
-            {canWrite && (
-              <>
-                <Button size="icon" variant="ghost" onClick={() => openEdit(r)}><Pencil className="h-4 w-4" /></Button>
-                <Button size="icon" variant="ghost" onClick={() => remove(r.id)}><Trash2 className="h-4 w-4" /></Button>
-              </>
-            )}
-          </div>,
-        ])}
+      <AdvancedTable<Ativo>
+        storageKey="ativos"
+        rows={rows}
+        isLoading={isLoading}
+        columns={columns}
+        getRowId={(r) => r.id}
+        savedViews={views}
+        exportFilename="ativos"
+        emptyState={
+          <EmptyState
+            icon={<Laptop className="h-6 w-6" />}
+            title="Nenhum ativo cadastrado"
+            description="Registre notebooks, desktops, servidores e VDIs para controlar o ciclo de vida."
+            action={canWrite ? <Button size="sm" onClick={openNew}>Novo ativo</Button> : undefined}
+          />
+        }
+        bulkActions={canWrite ? (sel, clear) => (
+          <>
+            <Button size="sm" variant="outline" onClick={() => bulkBaixar(sel, clear)}>Baixar selecionados</Button>
+            <Button size="sm" variant="outline" className="text-destructive" onClick={() => bulkDelete(sel, clear)}>Excluir</Button>
+          </>
+        ) : undefined}
       />
 
       <CrudDialog
