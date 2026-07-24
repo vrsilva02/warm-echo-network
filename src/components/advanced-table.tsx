@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Search, Columns3, Download, ArrowUp, ArrowDown, ArrowUpDown, X, ChevronUp, ChevronDown } from "lucide-react";
 import { TableSkeleton } from "@/components/skeletons";
 import { downloadCSV } from "@/lib/export";
+import { logAction } from "@/lib/audit";
 
 export type Column<T> = {
   id: string;
