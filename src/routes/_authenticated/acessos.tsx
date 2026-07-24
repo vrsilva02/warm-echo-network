@@ -1,6 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/page-header";
 import { DataTable, ListToolbar, useFilteredList } from "@/components/data-table";
@@ -14,17 +15,19 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ShieldAlert, KeyRound } from "lucide-react";
+import { ShieldAlert, KeyRound, UserPlus, History } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth, roleLabel, type AppRole } from "@/lib/auth";
+import { inviteUser } from "@/lib/admin-users.functions";
 
 export const Route = createFileRoute("/_authenticated/acessos")({
   component: AcessosPage,
   head: () => ({
     meta: [
       { title: "Gestão de Acessos — ITAM/SAM" },
-      { name: "description", content: "Controle de perfis e permissões dos usuários da plataforma." },
+      { name: "description", content: "Controle de perfis, convites e permissões dos usuários da plataforma." },
     ],
   }),
 });
@@ -33,7 +36,6 @@ const ROLES: AppRole[] = ["admin", "gestor_ti", "auditoria"];
 
 type Profile = { id: string; nome: string | null; email: string | null; created_at: string };
 type UserRoleRow = { user_id: string; role: AppRole };
-
 type UserRow = Profile & { roles: AppRole[] };
 
 function roleBadge(r: AppRole) {
@@ -56,6 +58,13 @@ function AcessosPage() {
   const [editing, setEditing] = useState<UserRow | null>(null);
   const [selected, setSelected] = useState<Set<AppRole>>(new Set());
   const [saving, setSaving] = useState(false);
+
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [invEmail, setInvEmail] = useState("");
+  const [invNome, setInvNome] = useState("");
+  const [invRoles, setInvRoles] = useState<Set<AppRole>>(new Set(["auditoria"]));
+  const [inviting, setInviting] = useState(false);
+  const invite = useServerFn(inviteUser);
 
   const { data: profiles, isLoading: lp } = useQuery({
     queryKey: ["acessos-profiles"],
@@ -101,6 +110,13 @@ function AcessosPage() {
     if (next.has(role)) next.delete(role);
     else next.add(role);
     setSelected(next);
+  }
+
+  function toggleInv(role: AppRole) {
+    const next = new Set(invRoles);
+    if (next.has(role)) next.delete(role);
+    else next.add(role);
+    setInvRoles(next);
   }
 
   async function save() {
@@ -149,6 +165,32 @@ function AcessosPage() {
     toast.success(`Link de redefinição enviado para ${email}`);
   }
 
+  async function sendInvite() {
+    if (invRoles.size === 0) return toast.error("Selecione ao menos um perfil.");
+    setInviting(true);
+    try {
+      await invite({
+        data: {
+          email: invEmail.trim(),
+          nome: invNome.trim() || undefined,
+          roles: [...invRoles],
+          redirectTo: `${window.location.origin}/auth`,
+        },
+      });
+      toast.success(`Convite enviado para ${invEmail}`);
+      setInviteOpen(false);
+      setInvEmail("");
+      setInvNome("");
+      setInvRoles(new Set(["auditoria"]));
+      qc.invalidateQueries({ queryKey: ["acessos-profiles"] });
+      qc.invalidateQueries({ queryKey: ["acessos-roles"] });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Falha ao enviar convite");
+    } finally {
+      setInviting(false);
+    }
+  }
+
   if (!isAdmin) {
     return (
       <>
@@ -166,7 +208,19 @@ function AcessosPage() {
     <>
       <PageHeader
         title="Gestão de Acessos"
-        description="Atribua perfis (Administrador, Gestor de TI, Auditoria) aos usuários da plataforma."
+        description="Convide usuários, atribua perfis e acompanhe a trilha de auditoria."
+        actions={
+          <div className="flex gap-2">
+            <Button variant="outline" asChild>
+              <Link to="/auditoria" search={{ tabela: "user_roles" }}>
+                <History className="mr-2 h-4 w-4" /> Trilha de perfis
+              </Link>
+            </Button>
+            <Button onClick={() => setInviteOpen(true)}>
+              <UserPlus className="mr-2 h-4 w-4" /> Convidar usuário
+            </Button>
+          </div>
+        }
       />
       <ListToolbar query={q} onQueryChange={setQ} />
       <DataTable
@@ -225,12 +279,61 @@ function AcessosPage() {
                 <li>É possível combinar perfis (ex.: Administrador + Auditoria).</li>
                 <li>Ao menos um perfil deve ser mantido.</li>
                 <li>Você não pode remover seu próprio perfil de Administrador.</li>
+                <li>Cada concessão ou revogação fica registrada na trilha de auditoria.</li>
               </ul>
             </div>
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setEditing(null)} disabled={saving}>Cancelar</Button>
             <Button onClick={save} disabled={saving}>{saving ? "Salvando…" : "Salvar"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Convidar novo usuário</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="inv-email">E-mail *</Label>
+              <Input
+                id="inv-email"
+                type="email"
+                autoFocus
+                value={invEmail}
+                onChange={(e) => setInvEmail(e.target.value)}
+                placeholder="usuario@empresa.com"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="inv-nome">Nome (opcional)</Label>
+              <Input
+                id="inv-nome"
+                value={invNome}
+                onChange={(e) => setInvNome(e.target.value)}
+                placeholder="Ex.: Maria Silva"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Perfis</Label>
+              {ROLES.map((role) => (
+                <label key={role} className="flex items-center gap-2 rounded-md border p-2 cursor-pointer hover:bg-muted/40">
+                  <Checkbox checked={invRoles.has(role)} onCheckedChange={() => toggleInv(role)} />
+                  <span className="text-sm">{roleLabel(role)}</span>
+                </label>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Enviaremos um e-mail com link de ativação. O usuário define a senha ao abrir o link.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setInviteOpen(false)} disabled={inviting}>Cancelar</Button>
+            <Button onClick={sendInvite} disabled={inviting || !invEmail.trim()}>
+              {inviting ? "Enviando…" : "Enviar convite"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
