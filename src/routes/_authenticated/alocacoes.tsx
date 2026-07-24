@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Trash2, Link2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
+import { logAction } from "@/lib/audit";
 
 export const Route = createFileRoute("/_authenticated/alocacoes")({
   component: Page,
