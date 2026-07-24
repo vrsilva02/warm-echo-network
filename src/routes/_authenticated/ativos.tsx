@@ -84,7 +84,7 @@ function AtivosPage() {
     queryFn: async () => (await supabase.from("usuarios").select("id,nome").eq("status", "ativo").order("nome")).data ?? [],
   });
 
-  const filtered = useFilteredList(rows, q, ["hostname", "tipo", "setor", "numero_serie", "status_ciclo_vida"]);
+  const filtered = useFilteredList(rows, q, ["hostname", "tipo", "setor", "numero_serie", "numero_patrimonio", "status_ciclo_vida"]);
 
   function openNew() {
     setEditing(null);
