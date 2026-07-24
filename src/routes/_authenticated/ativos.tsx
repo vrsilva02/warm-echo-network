@@ -29,6 +29,7 @@ type Ativo = {
   hostname: string;
   tipo: string;
   numero_serie: string | null;
+  numero_patrimonio: string | null;
   setor: string | null;
   status_ciclo_vida: string;
   usuario_responsavel_id: string | null;
@@ -42,6 +43,7 @@ const initial = {
   hostname: "",
   tipo: "Notebook",
   numero_serie: "",
+  numero_patrimonio: "",
   setor: "",
   status_ciclo_vida: "em_estoque",
   usuario_responsavel_id: null as string | null,
