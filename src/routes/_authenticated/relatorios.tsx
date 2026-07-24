@@ -163,16 +163,22 @@ function ContratosReport() {
       <CardHeader className="flex flex-row items-center justify-between gap-3 flex-wrap">
         <CardTitle className="text-base">Contratos a vencer</CardTitle>
         <div className="flex gap-2">
-          <Button size="sm" variant="outline" disabled={rows.length === 0} onClick={() => downloadCSV(`contratos-${hoje}.csv`, columns, rows.map(asArray))}>
+          <Button size="sm" variant="outline" disabled={rows.length === 0} onClick={() => {
+            downloadCSV(`contratos-${hoje}.csv`, columns, rows.map(asArray));
+            void logAction("EXPORT", "vw_contratos_vencendo", { formato: "csv", total: rows.length, filtros: { inicio, fim, tipo } });
+          }}>
             <Download className="h-4 w-4" /> CSV
           </Button>
-          <Button size="sm" disabled={rows.length === 0} onClick={() => downloadPDF({
-            filename: `contratos-${hoje}.pdf`,
-            title: "Contratos a vencer",
-            subtitle: filterLabel,
-            columns,
-            rows: rows.map(asArray),
-          })}>
+          <Button size="sm" disabled={rows.length === 0} onClick={() => {
+            downloadPDF({
+              filename: `contratos-${hoje}.pdf`,
+              title: "Contratos a vencer",
+              subtitle: filterLabel,
+              columns,
+              rows: rows.map(asArray),
+            });
+            void logAction("EXPORT", "vw_contratos_vencendo", { formato: "pdf", total: rows.length, filtros: { inicio, fim, tipo } });
+          }}>
             <FileText className="h-4 w-4" /> PDF
           </Button>
         </div>
