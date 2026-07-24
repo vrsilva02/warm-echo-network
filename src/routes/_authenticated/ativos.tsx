@@ -185,6 +185,14 @@ function AtivosPage() {
             <Input value={form.numero_serie} onChange={(e) => setForm({ ...form, numero_serie: e.target.value })} />
           </div>
         </div>
+        <div>
+          <Label>Nº patrimônio</Label>
+          <Input
+            value={form.numero_patrimonio}
+            onChange={(e) => setForm({ ...form, numero_patrimonio: e.target.value })}
+            placeholder="Ex.: PAT-000123"
+          />
+        </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <Label>Setor</Label>
