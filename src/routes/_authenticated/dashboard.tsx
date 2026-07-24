@@ -101,13 +101,14 @@ function DashboardPage() {
       <PageHeader title="Dashboard" description="Posição efetiva de licenças, contratos e ativos em tempo real." />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <KpiCard title="Licenças Windows" value={totais.Windows ?? 0} icon={<KeySquare className="h-4 w-4" />} />
-        <KpiCard title="Licenças Office" value={totais.Office ?? 0} icon={<KeySquare className="h-4 w-4" />} />
-        <KpiCard title="Licenças EDR" value={totais.EDR ?? 0} icon={<KeySquare className="h-4 w-4" />} />
+        <KpiCard title="Licenças Windows" value={totais.Windows ?? 0} icon={<KeySquare className="h-4 w-4" />} hint="Soma de seats comprados em contratos ativos para produtos da categoria Windows." />
+        <KpiCard title="Licenças Office" value={totais.Office ?? 0} icon={<KeySquare className="h-4 w-4" />} hint="Soma de seats comprados em contratos ativos para produtos da categoria Office." />
+        <KpiCard title="Licenças EDR" value={totais.EDR ?? 0} icon={<KeySquare className="h-4 w-4" />} hint="Soma de seats comprados em contratos ativos para produtos de EDR/segurança." />
         <KpiCard
           title="Compliance geral"
           value={`${compliance}%`}
           icon={compliance >= 90 ? <CheckCircle2 className="h-4 w-4 text-[color:var(--success)]" /> : <AlertTriangle className="h-4 w-4 text-[color:var(--warning)]" />}
+          hint="Percentual de seats dentro do direito contratado. Valores abaixo de 100% indicam alocações acima do comprado (over-deployment)."
         />
       </div>
 
@@ -116,11 +117,13 @@ function DashboardPage() {
           title="Contratos vencendo em 30 dias"
           value={data?.contratosVencendo30 ?? 0}
           icon={<FileWarning className="h-4 w-4 text-[color:var(--warning)]" />}
+          hint="Contratos com data de término nos próximos 30 dias. Planeje renovação para evitar quebra de compliance."
         />
         <KpiCard
           title="Licenças ociosas (>90d)"
           value={data?.licencasOciosas ?? 0}
           icon={<Snowflake className="h-4 w-4 text-primary" />}
+          hint="Alocações ativas sem uso registrado há mais de 90 dias — candidatas a reaproveitamento."
         />
       </div>
 
