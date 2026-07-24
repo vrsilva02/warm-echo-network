@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Search, Columns3, Download, ArrowUp, ArrowDown, ArrowUpDown, X, ChevronUp, ChevronDown } from "lucide-react";
 import { TableSkeleton } from "@/components/skeletons";
 import { downloadCSV } from "@/lib/export";
+import { logAction } from "@/lib/audit";
 
 export type Column<T> = {
   id: string;
@@ -173,6 +174,15 @@ export function AdvancedTable<T>({
       return v ?? "";
     }));
     downloadCSV(`${exportFilename ?? storageKey}-${new Date().toISOString().slice(0, 10)}.csv`, header, body);
+    void logAction("EXPORT", storageKey, {
+      formato: "csv",
+      total_registros: processed.length,
+      total_original: rows?.length ?? 0,
+      filtro_view: activeView?.id ?? null,
+      busca: query || null,
+      ordenacao: prefs.sort,
+      colunas: cols.map((c) => c.id),
+    });
   }
 
   const showBulk = bulkActions && selected.size > 0;

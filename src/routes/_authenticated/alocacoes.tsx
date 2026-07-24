@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Trash2, Link2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
+import { logAction } from "@/lib/audit";
 
 export const Route = createFileRoute("/_authenticated/alocacoes")({
   component: Page,
@@ -108,8 +109,10 @@ function Page() {
     if (ativas.length === 0) return toast.info("Nenhuma alocação ativa na seleção");
     if (!confirm(`Encerrar ${ativas.length} alocação(ões) e liberar as licenças?`)) return;
     const today = new Date().toISOString().slice(0, 10);
-    const { error } = await supabase.from("alocacoes").update({ data_fim: today }).in("id", ativas.map((r) => r.id));
+    const ids = ativas.map((r) => r.id);
+    const { error } = await supabase.from("alocacoes").update({ data_fim: today }).in("id", ids);
     if (error) return toast.error(error.message);
+    void logAction("BULK_UPDATE", "alocacoes", { operacao: "encerrar", ids, total: ids.length, data_fim: today });
     toast.success(`${ativas.length} encerrada(s)`);
     clear();
     qc.invalidateQueries({ queryKey: ["alocacoes"] });

@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { KeyRound, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
+import { logAction } from "@/lib/audit";
 
 export const Route = createFileRoute("/_authenticated/licencas")({
   component: Page,
@@ -108,8 +109,10 @@ function Page() {
   }
   async function bulkDelete(sel: Row[], clear: () => void) {
     if (!confirm(`Excluir ${sel.length} licença(s)?`)) return;
-    const { error } = await supabase.from("licencas").delete().in("id", sel.map((r) => r.id));
+    const ids = sel.map((r) => r.id);
+    const { error } = await supabase.from("licencas").delete().in("id", ids);
     if (error) return toast.error(error.message);
+    void logAction("BULK_DELETE", "licencas", { ids, total: ids.length });
     toast.success("Excluídas");
     clear();
     qc.invalidateQueries({ queryKey: ["licencas"] });

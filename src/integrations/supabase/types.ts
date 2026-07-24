@@ -579,6 +579,15 @@ export type Database = {
     }
     Functions: {
       can_read: { Args: { _user_id: string }; Returns: boolean }
+      fn_log_action: {
+        Args: {
+          p_acao: string
+          p_metadata: Json
+          p_registro_id: string
+          p_tabela: string
+        }
+        Returns: string
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

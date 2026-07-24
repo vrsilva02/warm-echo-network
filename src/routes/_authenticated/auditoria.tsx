@@ -26,7 +26,7 @@ export const Route = createFileRoute("/_authenticated/auditoria")({
 
 const PAGE_SIZE = 50;
 const TABELAS = ["ativos", "usuarios", "licencas", "contratos", "alocacoes", "produtos_catalogo", "fabricantes", "user_roles"];
-const ACOES = ["INSERT", "UPDATE", "DELETE"];
+const ACOES = ["INSERT", "UPDATE", "DELETE", "BULK_UPDATE", "BULK_DELETE", "EXPORT", "LOGIN"];
 
 type LogRow = {
   id: string;
@@ -44,8 +44,12 @@ function acaoBadge(acao: string) {
     INSERT: "bg-success/15 text-success border-success/30",
     UPDATE: "bg-primary/15 text-primary border-primary/30",
     DELETE: "bg-destructive/15 text-destructive border-destructive/30",
+    BULK_UPDATE: "bg-primary/15 text-primary border-primary/30",
+    BULK_DELETE: "bg-destructive/15 text-destructive border-destructive/30",
+    EXPORT: "bg-[color:var(--warning)]/15 text-[color:var(--warning)] border-[color:var(--warning)]/30",
+    LOGIN: "bg-muted text-muted-foreground",
   };
-  return <Badge variant="outline" className={map[acao] ?? ""}>{acao}</Badge>;
+  return <Badge variant="outline" className={map[acao] ?? ""}>{acao.replace("_", " ")}</Badge>;
 }
 
 function Page() {

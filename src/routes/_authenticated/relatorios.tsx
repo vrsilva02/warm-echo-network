@@ -12,6 +12,7 @@ import { DataTable } from "@/components/data-table";
 import { Badge } from "@/components/ui/badge";
 import { Download, FileText } from "lucide-react";
 import { downloadCSV, downloadPDF } from "@/lib/export";
+import { logAction } from "@/lib/audit";
 
 export const Route = createFileRoute("/_authenticated/relatorios")({
   component: Page,
@@ -67,16 +68,22 @@ function ElpReport() {
       <CardHeader className="flex flex-row items-center justify-between gap-3 flex-wrap">
         <CardTitle className="text-base">Effective License Position (ELP)</CardTitle>
         <div className="flex gap-2">
-          <Button size="sm" variant="outline" disabled={rows.length === 0} onClick={() => downloadCSV(`elp-${new Date().toISOString().slice(0, 10)}.csv`, columns, rows.map(asArray))}>
+          <Button size="sm" variant="outline" disabled={rows.length === 0} onClick={() => {
+            downloadCSV(`elp-${new Date().toISOString().slice(0, 10)}.csv`, columns, rows.map(asArray));
+            void logAction("EXPORT", "vw_elp", { formato: "csv", total: rows.length, filtros: { categoria, status } });
+          }}>
             <Download className="h-4 w-4" /> CSV
           </Button>
-          <Button size="sm" disabled={rows.length === 0} onClick={() => downloadPDF({
-            filename: `elp-${new Date().toISOString().slice(0, 10)}.pdf`,
-            title: "Effective License Position",
-            subtitle: filterLabel,
-            columns,
-            rows: rows.map(asArray),
-          })}>
+          <Button size="sm" disabled={rows.length === 0} onClick={() => {
+            downloadPDF({
+              filename: `elp-${new Date().toISOString().slice(0, 10)}.pdf`,
+              title: "Effective License Position",
+              subtitle: filterLabel,
+              columns,
+              rows: rows.map(asArray),
+            });
+            void logAction("EXPORT", "vw_elp", { formato: "pdf", total: rows.length, filtros: { categoria, status } });
+          }}>
             <FileText className="h-4 w-4" /> PDF
           </Button>
         </div>
@@ -156,16 +163,22 @@ function ContratosReport() {
       <CardHeader className="flex flex-row items-center justify-between gap-3 flex-wrap">
         <CardTitle className="text-base">Contratos a vencer</CardTitle>
         <div className="flex gap-2">
-          <Button size="sm" variant="outline" disabled={rows.length === 0} onClick={() => downloadCSV(`contratos-${hoje}.csv`, columns, rows.map(asArray))}>
+          <Button size="sm" variant="outline" disabled={rows.length === 0} onClick={() => {
+            downloadCSV(`contratos-${hoje}.csv`, columns, rows.map(asArray));
+            void logAction("EXPORT", "vw_contratos_vencendo", { formato: "csv", total: rows.length, filtros: { inicio, fim, tipo } });
+          }}>
             <Download className="h-4 w-4" /> CSV
           </Button>
-          <Button size="sm" disabled={rows.length === 0} onClick={() => downloadPDF({
-            filename: `contratos-${hoje}.pdf`,
-            title: "Contratos a vencer",
-            subtitle: filterLabel,
-            columns,
-            rows: rows.map(asArray),
-          })}>
+          <Button size="sm" disabled={rows.length === 0} onClick={() => {
+            downloadPDF({
+              filename: `contratos-${hoje}.pdf`,
+              title: "Contratos a vencer",
+              subtitle: filterLabel,
+              columns,
+              rows: rows.map(asArray),
+            });
+            void logAction("EXPORT", "vw_contratos_vencendo", { formato: "pdf", total: rows.length, filtros: { inicio, fim, tipo } });
+          }}>
             <FileText className="h-4 w-4" /> PDF
           </Button>
         </div>
