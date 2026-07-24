@@ -201,14 +201,17 @@ function Page() {
   }
 
   async function vincular(item: Item, produtoId: string) {
-    // cria alias novo e vincula
     if (item.produto_id !== produtoId) {
-      const { error: aliasErr } = await supabase.from("produtos_aliases").insert({
-        produto_id: produtoId,
-        alias: item.produto_nome_bruto,
-      });
-      // ignora conflito de alias já existente
-      if (aliasErr && !/duplicate/i.test(aliasErr.message)) console.warn(aliasErr);
+      const jaExiste = (aliases ?? []).some(
+        (a) => a.produto_id === produtoId && norm(a.alias) === norm(item.produto_nome_bruto),
+      );
+      if (!jaExiste) {
+        const { error: aliasErr } = await supabase.from("produtos_aliases").insert({
+          produto_id: produtoId,
+          alias: item.produto_nome_bruto,
+        });
+        if (aliasErr) console.warn(aliasErr);
+      }
     }
     const { error } = await supabase
       .from("inventario_importado")
