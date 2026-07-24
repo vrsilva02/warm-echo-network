@@ -13,6 +13,7 @@ import {
   LogOut,
   ShieldCheck,
   Package,
+  UserCog,
 } from "lucide-react";
 import {
   Sidebar,
@@ -52,8 +53,10 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const pathname = useRouterState({ select: (r) => r.location.pathname });
-  const { user, roles, signOut } = useAuth();
+  const { user, roles, signOut, isAdmin } = useAuth();
   const primaryRole = roles[0];
+
+  const admin = [{ title: "Gestão de Acessos", url: "/acessos", icon: UserCog }] as const;
 
   const isActive = (path: string) => pathname === path || pathname.startsWith(path + "/");
 
@@ -114,7 +117,28 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {isAdmin && (
+          <SidebarGroup>
+            <SidebarGroupLabel>Administração</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {admin.map((item) => (
+                  <SidebarMenuItem key={item.url}>
+                    <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={item.title}>
+                      <Link to={item.url}>
+                        <item.icon />
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
       </SidebarContent>
+
 
       <SidebarFooter>
         {!collapsed && user && (

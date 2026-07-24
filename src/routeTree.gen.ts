@@ -23,6 +23,7 @@ import { Route as AuthenticatedAuditoriaRouteImport } from './routes/_authentica
 import { Route as AuthenticatedAtivosRouteImport } from './routes/_authenticated/ativos'
 import { Route as AuthenticatedAlocacoesRouteImport } from './routes/_authenticated/alocacoes'
 import { Route as AuthenticatedAlertasRouteImport } from './routes/_authenticated/alertas'
+import { Route as AuthenticatedAcessosRouteImport } from './routes/_authenticated/acessos'
 import { Route as AuthenticatedAuditoriaTabelaIdRouteImport } from './routes/_authenticated/auditoria_.$tabela.$id'
 
 const AuthRoute = AuthRouteImport.update({
@@ -96,6 +97,11 @@ const AuthenticatedAlertasRoute = AuthenticatedAlertasRouteImport.update({
   path: '/alertas',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedAcessosRoute = AuthenticatedAcessosRouteImport.update({
+  id: '/acessos',
+  path: '/acessos',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedAuditoriaTabelaIdRoute =
   AuthenticatedAuditoriaTabelaIdRouteImport.update({
     id: '/auditoria_/$tabela/$id',
@@ -106,6 +112,7 @@ const AuthenticatedAuditoriaTabelaIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/acessos': typeof AuthenticatedAcessosRoute
   '/alertas': typeof AuthenticatedAlertasRoute
   '/alocacoes': typeof AuthenticatedAlocacoesRoute
   '/ativos': typeof AuthenticatedAtivosRoute
@@ -122,6 +129,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/acessos': typeof AuthenticatedAcessosRoute
   '/alertas': typeof AuthenticatedAlertasRoute
   '/alocacoes': typeof AuthenticatedAlocacoesRoute
   '/ativos': typeof AuthenticatedAtivosRoute
@@ -140,6 +148,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/auth': typeof AuthRoute
+  '/_authenticated/acessos': typeof AuthenticatedAcessosRoute
   '/_authenticated/alertas': typeof AuthenticatedAlertasRoute
   '/_authenticated/alocacoes': typeof AuthenticatedAlocacoesRoute
   '/_authenticated/ativos': typeof AuthenticatedAtivosRoute
@@ -158,6 +167,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/acessos'
     | '/alertas'
     | '/alocacoes'
     | '/ativos'
@@ -174,6 +184,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/acessos'
     | '/alertas'
     | '/alocacoes'
     | '/ativos'
@@ -191,6 +202,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/_authenticated/acessos'
     | '/_authenticated/alertas'
     | '/_authenticated/alocacoes'
     | '/_authenticated/ativos'
@@ -311,6 +323,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAlertasRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/acessos': {
+      id: '/_authenticated/acessos'
+      path: '/acessos'
+      fullPath: '/acessos'
+      preLoaderRoute: typeof AuthenticatedAcessosRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/auditoria_/$tabela/$id': {
       id: '/_authenticated/auditoria_/$tabela/$id'
       path: '/auditoria/$tabela/$id'
@@ -322,6 +341,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteChildren {
+  AuthenticatedAcessosRoute: typeof AuthenticatedAcessosRoute
   AuthenticatedAlertasRoute: typeof AuthenticatedAlertasRoute
   AuthenticatedAlocacoesRoute: typeof AuthenticatedAlocacoesRoute
   AuthenticatedAtivosRoute: typeof AuthenticatedAtivosRoute
@@ -337,6 +357,7 @@ interface AuthenticatedRouteChildren {
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedAcessosRoute: AuthenticatedAcessosRoute,
   AuthenticatedAlertasRoute: AuthenticatedAlertasRoute,
   AuthenticatedAlocacoesRoute: AuthenticatedAlocacoesRoute,
   AuthenticatedAtivosRoute: AuthenticatedAtivosRoute,
