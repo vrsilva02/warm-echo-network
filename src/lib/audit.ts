@@ -17,7 +17,7 @@ export async function logAction(
     await supabase.rpc("fn_log_action", {
       p_acao: acao,
       p_tabela: tabela,
-      p_registro_id: (registroId ?? "00000000-0000-0000-0000-000000000000") as string,
+      p_registro_id: (registroId ?? null) as unknown as string,
       p_metadata: metadata as any,
     });
   } catch (err) {
