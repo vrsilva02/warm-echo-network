@@ -15,6 +15,8 @@ import { Pencil, Trash2, Laptop } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
 import { logAction } from "@/lib/audit";
+import { useConfirm } from "@/components/confirm-dialog";
+import { Combobox } from "@/components/combobox";
 
 export const Route = createFileRoute("/_authenticated/ativos")({
   component: AtivosPage,
@@ -64,6 +66,7 @@ function statusBadge(s: string) {
 function AtivosPage() {
   const { canWrite } = useAuth();
   const qc = useQueryClient();
+  const confirm = useConfirm();
   const [editing, setEditing] = useState<Ativo | null>(null);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(initial);
@@ -123,18 +126,44 @@ function AtivosPage() {
     qc.invalidateQueries({ queryKey: ["dashboard"] });
   }
 
-  async function remove(id: string) {
-    if (!confirm("Excluir este ativo?")) return;
-    const { error } = await supabase.from("ativos").delete().eq("id", id);
+  async function remove(row: Ativo) {
+    const { count: alocCount } = await supabase
+      .from("alocacoes").select("id", { count: "exact", head: true })
+      .eq("ativo_id", row.id).is("data_fim", null);
+    const ok = await confirm({
+      title: "Excluir este ativo?",
+      description: "Esta ação é irreversível. Prefira baixar o ativo para manter o histórico.",
+      tone: "danger",
+      impact: [
+        { label: "Ativo", value: row.hostname },
+        { label: "Status atual", value: row.status_ciclo_vida },
+        { label: "Alocações ativas afetadas", value: alocCount ?? 0, tone: (alocCount ?? 0) > 0 ? "danger" : "default" },
+      ],
+      confirmLabel: "Excluir",
+    });
+    if (!ok) return;
+    const { error } = await supabase.from("ativos").delete().eq("id", row.id);
     if (error) return toast.error(error.message);
     toast.success("Ativo excluído");
     qc.invalidateQueries({ queryKey: ["ativos"] });
   }
 
   async function bulkBaixar(rows: Ativo[], clear: () => void) {
-    if (!confirm(`Baixar ${rows.length} ativo(s)? As licenças alocadas serão liberadas.`)) return;
-    const ids = rows.filter((r) => r.status_ciclo_vida !== "baixado").map((r) => r.id);
-    if (ids.length === 0) return toast.info("Nada a baixar");
+    const alvos = rows.filter((r) => r.status_ciclo_vida !== "baixado");
+    if (alvos.length === 0) return toast.info("Nada a baixar");
+    const ok = await confirm({
+      title: `Baixar ${alvos.length} ativo(s)?`,
+      description: "Ativos baixados têm suas alocações encerradas e liberam licenças.",
+      tone: "warn",
+      impact: [
+        { label: "Selecionados", value: rows.length },
+        { label: "Serão baixados", value: alvos.length },
+        { label: "Já baixados ignorados", value: rows.length - alvos.length },
+      ],
+      confirmLabel: "Baixar",
+    });
+    if (!ok) return;
+    const ids = alvos.map((r) => r.id);
     const { error } = await supabase.from("ativos").update({ status_ciclo_vida: "baixado" }).in("id", ids);
     if (error) return toast.error(error.message);
     void logAction("BULK_UPDATE", "ativos", { operacao: "baixar", ids, total: ids.length });
@@ -145,7 +174,16 @@ function AtivosPage() {
     qc.invalidateQueries({ queryKey: ["dashboard"] });
   }
   async function bulkDelete(rows: Ativo[], clear: () => void) {
-    if (!confirm(`Excluir ${rows.length} ativo(s)? Ação irreversível.`)) return;
+    const ok = await confirm({
+      title: `Excluir ${rows.length} ativo(s)?`,
+      description: "Ação irreversível. Considere baixar em vez de excluir para manter histórico.",
+      tone: "danger",
+      impact: [
+        { label: "Ativos a excluir", value: rows.length, tone: "danger" },
+      ],
+      confirmLabel: "Excluir todos",
+    });
+    if (!ok) return;
     const ids = rows.map((r) => r.id);
     const { error } = await supabase.from("ativos").delete().in("id", ids);
     if (error) return toast.error(error.message);
