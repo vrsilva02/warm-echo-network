@@ -13,6 +13,8 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AuthProvider } from "@/lib/auth";
 import { Toaster } from "@/components/ui/sonner";
+import { ConfirmProvider } from "@/components/confirm-dialog";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 function NotFoundComponent() {
   return (
@@ -124,8 +126,12 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <Outlet />
-        <Toaster richColors position="top-right" />
+        <TooltipProvider delayDuration={200}>
+          <ConfirmProvider>
+            <Outlet />
+            <Toaster richColors position="top-right" />
+          </ConfirmProvider>
+        </TooltipProvider>
       </AuthProvider>
     </QueryClientProvider>
   );
