@@ -14,7 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { CrudDialog } from "@/components/crud-dialog";
+import * as React from "react";
 import { EmptyState } from "@/components/empty-state";
 import { Combobox } from "@/components/combobox";
 import { Skeleton } from "@/components/ui/skeleton";
