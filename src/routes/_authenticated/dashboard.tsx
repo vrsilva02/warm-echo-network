@@ -47,17 +47,21 @@ function useDashboardData() {
   return useQuery({
     queryKey: ["dashboard"],
     queryFn: async () => {
-      const [elp, ativos, vencendo, ociosas] = await Promise.all([
+      const [elp, ativos, vencendo, ociosas, ocioseFin, risco] = await Promise.all([
         supabase.from("vw_elp").select("*"),
         supabase.from("ativos").select("status_ciclo_vida"),
         supabase.from("vw_contratos_vencendo").select("id,dias_para_vencer,urgencia"),
         supabase.from("vw_licencas_ociosas").select("licenca_id"),
+        supabase.from("vw_ociosidade_financeira").select("*"),
+        supabase.rpc("fn_risco_compliance", { _categoria: null as unknown as string }),
       ]);
       return {
         elp: (elp.data ?? []) as ElpRow[],
         ativos: ativos.data ?? [],
         contratosVencendo30: (vencendo.data ?? []).filter((r: any) => r.dias_para_vencer <= 30).length,
         licencasOciosas: ociosas.data?.length ?? 0,
+        ocioseFin: (ocioseFin.data ?? []) as Array<{ produto_id: string; nome_oficial: string; categoria: string; licencas_ociosas: number; valor_ocioso: number }>,
+        risco: (risco.data ?? []) as Array<{ categoria: string; deficit_pct: number; criticidade_media: number; score: number }>,
       };
     },
   });
