@@ -95,8 +95,8 @@
   --card-foreground: oklch(0.129 0.042 264.695);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.129 0.042 264.695);
-  --primary: oklch(0.208 0.042 265.755);
-  --primary-foreground: oklch(0.984 0.003 247.858);
+  --primary: oklch(0.52 0.19 265);
+  --primary-foreground: oklch(0.99 0.005 265);
   --secondary: oklch(0.968 0.007 247.896);
   --secondary-foreground: oklch(0.208 0.042 265.755);
   --muted: oklch(0.968 0.007 247.896);
@@ -109,10 +109,21 @@
   --success-foreground: oklch(0.99 0.01 148);
   --warning: oklch(0.82 0.17 85);
   --warning-foreground: oklch(0.2 0.05 85);
+
+  /* Semantic status tokens */
+  --status-ok: oklch(0.94 0.06 148);
+  --status-ok-foreground: oklch(0.35 0.13 148);
+  --status-warn: oklch(0.95 0.09 85);
+  --status-warn-foreground: oklch(0.42 0.12 70);
+  --status-critical: oklch(0.94 0.05 22);
+  --status-critical-foreground: oklch(0.45 0.19 22);
+  --status-neutral: oklch(0.96 0.005 260);
+  --status-neutral-foreground: oklch(0.4 0.02 260);
+
   --border: oklch(0.929 0.013 255.508);
 
   --input: oklch(0.929 0.013 255.508);
-  --ring: oklch(0.704 0.04 256.788);
+  --ring: oklch(0.52 0.19 265);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
