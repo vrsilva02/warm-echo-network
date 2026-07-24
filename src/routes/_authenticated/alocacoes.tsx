@@ -236,37 +236,39 @@ function Page() {
       <CrudDialog title="Nova alocação" open={open} onOpenChange={setOpen} onSubmit={save} trigger={null}>
         <div>
           <Label>Licença *</Label>
-          <Select value={form.licenca_id} onValueChange={(v) => setForm({ ...form, licenca_id: v })}>
-            <SelectTrigger><SelectValue placeholder="Selecione…" /></SelectTrigger>
-            <SelectContent>
-              {(licencas ?? []).map((l: any) => (
-                <SelectItem key={l.id} value={l.id}>
-                  {l.produtos_catalogo?.nome_oficial ?? l.id.slice(0, 8)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Combobox
+            placeholder="Selecione uma licença…"
+            searchPlaceholder="Buscar produto…"
+            clearable={false}
+            value={form.licenca_id || null}
+            onChange={(v) => setForm({ ...form, licenca_id: v ?? "" })}
+            options={(licencas ?? []).map((l: any) => ({
+              value: l.id,
+              label: l.produtos_catalogo?.nome_oficial ?? l.id.slice(0, 8),
+              hint: l.id.slice(0, 8),
+            }))}
+          />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <Label>Colaborador</Label>
-            <Select value={form.usuario_id ?? "none"} onValueChange={(v) => setForm({ ...form, usuario_id: v === "none" ? null : v })}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">— Nenhum —</SelectItem>
-                {(usuarios ?? []).map((u) => <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            <Combobox
+              placeholder="Nenhum"
+              searchPlaceholder="Buscar colaborador…"
+              value={form.usuario_id}
+              onChange={(v) => setForm({ ...form, usuario_id: v })}
+              options={(usuarios ?? []).map((u) => ({ value: u.id, label: u.nome }))}
+            />
           </div>
           <div>
             <Label>Ativo</Label>
-            <Select value={form.ativo_id ?? "none"} onValueChange={(v) => setForm({ ...form, ativo_id: v === "none" ? null : v })}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">— Nenhum —</SelectItem>
-                {(ativos ?? []).map((a) => <SelectItem key={a.id} value={a.id}>{a.hostname}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            <Combobox
+              placeholder="Nenhum"
+              searchPlaceholder="Buscar hostname…"
+              value={form.ativo_id}
+              onChange={(v) => setForm({ ...form, ativo_id: v })}
+              options={(ativos ?? []).map((a) => ({ value: a.id, label: a.hostname }))}
+            />
           </div>
         </div>
         <div className="grid grid-cols-2 gap-3">
