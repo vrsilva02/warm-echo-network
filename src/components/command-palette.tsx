@@ -89,13 +89,13 @@ export function CommandPalette() {
           .limit(6),
         supabase
           .from("usuarios")
-          .select("id, nome, email, departamento")
+          .select("id, nome, email, setor")
           .or(`nome.ilike.${like},email.ilike.${like}`)
           .limit(6),
         supabase
           .from("produtos_catalogo")
-          .select("id, nome, categoria")
-          .ilike("nome", like)
+          .select("id, nome_oficial, categoria")
+          .ilike("nome_oficial", like)
           .limit(6),
       ]);
       if (cancelled) return;
