@@ -9,38 +9,211 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRelatoriosRouteImport } from './routes/_authenticated/relatorios'
+import { Route as AuthenticatedReconciliacaoRouteImport } from './routes/_authenticated/reconciliacao'
+import { Route as AuthenticatedProdutosRouteImport } from './routes/_authenticated/produtos'
+import { Route as AuthenticatedLicencasRouteImport } from './routes/_authenticated/licencas'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedContratosRouteImport } from './routes/_authenticated/contratos'
+import { Route as AuthenticatedColaboradoresRouteImport } from './routes/_authenticated/colaboradores'
+import { Route as AuthenticatedAuditoriaRouteImport } from './routes/_authenticated/auditoria'
+import { Route as AuthenticatedAtivosRouteImport } from './routes/_authenticated/ativos'
+import { Route as AuthenticatedAlocacoesRouteImport } from './routes/_authenticated/alocacoes'
+import { Route as AuthenticatedAlertasRouteImport } from './routes/_authenticated/alertas'
 
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRoute = AuthenticatedRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedRelatoriosRoute = AuthenticatedRelatoriosRouteImport.update({
+  id: '/relatorios',
+  path: '/relatorios',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedReconciliacaoRoute =
+  AuthenticatedReconciliacaoRouteImport.update({
+    id: '/reconciliacao',
+    path: '/reconciliacao',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedProdutosRoute = AuthenticatedProdutosRouteImport.update({
+  id: '/produtos',
+  path: '/produtos',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedLicencasRoute = AuthenticatedLicencasRouteImport.update({
+  id: '/licencas',
+  path: '/licencas',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedContratosRoute = AuthenticatedContratosRouteImport.update({
+  id: '/contratos',
+  path: '/contratos',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedColaboradoresRoute =
+  AuthenticatedColaboradoresRouteImport.update({
+    id: '/colaboradores',
+    path: '/colaboradores',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedAuditoriaRoute = AuthenticatedAuditoriaRouteImport.update({
+  id: '/auditoria',
+  path: '/auditoria',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedAtivosRoute = AuthenticatedAtivosRouteImport.update({
+  id: '/ativos',
+  path: '/ativos',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedAlocacoesRoute = AuthenticatedAlocacoesRouteImport.update({
+  id: '/alocacoes',
+  path: '/alocacoes',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedAlertasRoute = AuthenticatedAlertasRouteImport.update({
+  id: '/alertas',
+  path: '/alertas',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/alertas': typeof AuthenticatedAlertasRoute
+  '/alocacoes': typeof AuthenticatedAlocacoesRoute
+  '/ativos': typeof AuthenticatedAtivosRoute
+  '/auditoria': typeof AuthenticatedAuditoriaRoute
+  '/colaboradores': typeof AuthenticatedColaboradoresRoute
+  '/contratos': typeof AuthenticatedContratosRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/licencas': typeof AuthenticatedLicencasRoute
+  '/produtos': typeof AuthenticatedProdutosRoute
+  '/reconciliacao': typeof AuthenticatedReconciliacaoRoute
+  '/relatorios': typeof AuthenticatedRelatoriosRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/alertas': typeof AuthenticatedAlertasRoute
+  '/alocacoes': typeof AuthenticatedAlocacoesRoute
+  '/ativos': typeof AuthenticatedAtivosRoute
+  '/auditoria': typeof AuthenticatedAuditoriaRoute
+  '/colaboradores': typeof AuthenticatedColaboradoresRoute
+  '/contratos': typeof AuthenticatedContratosRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/licencas': typeof AuthenticatedLicencasRoute
+  '/produtos': typeof AuthenticatedProdutosRoute
+  '/reconciliacao': typeof AuthenticatedReconciliacaoRoute
+  '/relatorios': typeof AuthenticatedRelatoriosRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/_authenticated/alertas': typeof AuthenticatedAlertasRoute
+  '/_authenticated/alocacoes': typeof AuthenticatedAlocacoesRoute
+  '/_authenticated/ativos': typeof AuthenticatedAtivosRoute
+  '/_authenticated/auditoria': typeof AuthenticatedAuditoriaRoute
+  '/_authenticated/colaboradores': typeof AuthenticatedColaboradoresRoute
+  '/_authenticated/contratos': typeof AuthenticatedContratosRoute
+  '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/licencas': typeof AuthenticatedLicencasRoute
+  '/_authenticated/produtos': typeof AuthenticatedProdutosRoute
+  '/_authenticated/reconciliacao': typeof AuthenticatedReconciliacaoRoute
+  '/_authenticated/relatorios': typeof AuthenticatedRelatoriosRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/alertas'
+    | '/alocacoes'
+    | '/ativos'
+    | '/auditoria'
+    | '/colaboradores'
+    | '/contratos'
+    | '/dashboard'
+    | '/licencas'
+    | '/produtos'
+    | '/reconciliacao'
+    | '/relatorios'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/auth'
+    | '/alertas'
+    | '/alocacoes'
+    | '/ativos'
+    | '/auditoria'
+    | '/colaboradores'
+    | '/contratos'
+    | '/dashboard'
+    | '/licencas'
+    | '/produtos'
+    | '/reconciliacao'
+    | '/relatorios'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/auth'
+    | '/_authenticated/alertas'
+    | '/_authenticated/alocacoes'
+    | '/_authenticated/ativos'
+    | '/_authenticated/auditoria'
+    | '/_authenticated/colaboradores'
+    | '/_authenticated/contratos'
+    | '/_authenticated/dashboard'
+    | '/_authenticated/licencas'
+    | '/_authenticated/produtos'
+    | '/_authenticated/reconciliacao'
+    | '/_authenticated/relatorios'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
+  AuthRoute: typeof AuthRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,22 +221,123 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/relatorios': {
+      id: '/_authenticated/relatorios'
+      path: '/relatorios'
+      fullPath: '/relatorios'
+      preLoaderRoute: typeof AuthenticatedRelatoriosRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/reconciliacao': {
+      id: '/_authenticated/reconciliacao'
+      path: '/reconciliacao'
+      fullPath: '/reconciliacao'
+      preLoaderRoute: typeof AuthenticatedReconciliacaoRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/produtos': {
+      id: '/_authenticated/produtos'
+      path: '/produtos'
+      fullPath: '/produtos'
+      preLoaderRoute: typeof AuthenticatedProdutosRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/licencas': {
+      id: '/_authenticated/licencas'
+      path: '/licencas'
+      fullPath: '/licencas'
+      preLoaderRoute: typeof AuthenticatedLicencasRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/contratos': {
+      id: '/_authenticated/contratos'
+      path: '/contratos'
+      fullPath: '/contratos'
+      preLoaderRoute: typeof AuthenticatedContratosRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/colaboradores': {
+      id: '/_authenticated/colaboradores'
+      path: '/colaboradores'
+      fullPath: '/colaboradores'
+      preLoaderRoute: typeof AuthenticatedColaboradoresRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/auditoria': {
+      id: '/_authenticated/auditoria'
+      path: '/auditoria'
+      fullPath: '/auditoria'
+      preLoaderRoute: typeof AuthenticatedAuditoriaRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/ativos': {
+      id: '/_authenticated/ativos'
+      path: '/ativos'
+      fullPath: '/ativos'
+      preLoaderRoute: typeof AuthenticatedAtivosRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/alocacoes': {
+      id: '/_authenticated/alocacoes'
+      path: '/alocacoes'
+      fullPath: '/alocacoes'
+      preLoaderRoute: typeof AuthenticatedAlocacoesRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/alertas': {
+      id: '/_authenticated/alertas'
+      path: '/alertas'
+      fullPath: '/alertas'
+      preLoaderRoute: typeof AuthenticatedAlertasRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
+interface AuthenticatedRouteChildren {
+  AuthenticatedAlertasRoute: typeof AuthenticatedAlertasRoute
+  AuthenticatedAlocacoesRoute: typeof AuthenticatedAlocacoesRoute
+  AuthenticatedAtivosRoute: typeof AuthenticatedAtivosRoute
+  AuthenticatedAuditoriaRoute: typeof AuthenticatedAuditoriaRoute
+  AuthenticatedColaboradoresRoute: typeof AuthenticatedColaboradoresRoute
+  AuthenticatedContratosRoute: typeof AuthenticatedContratosRoute
+  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedLicencasRoute: typeof AuthenticatedLicencasRoute
+  AuthenticatedProdutosRoute: typeof AuthenticatedProdutosRoute
+  AuthenticatedReconciliacaoRoute: typeof AuthenticatedReconciliacaoRoute
+  AuthenticatedRelatoriosRoute: typeof AuthenticatedRelatoriosRoute
+}
+
+const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedAlertasRoute: AuthenticatedAlertasRoute,
+  AuthenticatedAlocacoesRoute: AuthenticatedAlocacoesRoute,
+  AuthenticatedAtivosRoute: AuthenticatedAtivosRoute,
+  AuthenticatedAuditoriaRoute: AuthenticatedAuditoriaRoute,
+  AuthenticatedColaboradoresRoute: AuthenticatedColaboradoresRoute,
+  AuthenticatedContratosRoute: AuthenticatedContratosRoute,
+  AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedLicencasRoute: AuthenticatedLicencasRoute,
+  AuthenticatedProdutosRoute: AuthenticatedProdutosRoute,
+  AuthenticatedReconciliacaoRoute: AuthenticatedReconciliacaoRoute,
+  AuthenticatedRelatoriosRoute: AuthenticatedRelatoriosRoute,
+}
+
+const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
+  AuthenticatedRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRoute: AuthenticatedRouteWithChildren,
+  AuthRoute: AuthRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

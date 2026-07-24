@@ -1,0 +1,158 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { PageHeader } from "@/components/page-header";
+import { DataTable, ListToolbar, useFilteredList } from "@/components/data-table";
+import { CrudDialog } from "@/components/crud-dialog";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Pencil, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+import { useAuth } from "@/lib/auth";
+
+export const Route = createFileRoute("/_authenticated/contratos")({
+  component: Page,
+  head: () => ({
+    meta: [
+      { title: "Contratos — ITAM/SAM" },
+      { name: "description", content: "Gestão de contratos de licenciamento e renovações." },
+    ],
+  }),
+});
+
+type Row = {
+  id: string;
+  fornecedor: string;
+  numero_contrato: string | null;
+  tipo_contrato: string | null;
+  data_inicio: string;
+  data_fim: string | null;
+  quantidade_seats: number;
+  valor_total: number | null;
+};
+
+const TIPOS = ["EA", "MPSA", "Open Value", "NCE", "Perpetua", "SaaS", "Outro"];
+const initial = { fornecedor: "", numero_contrato: "", tipo_contrato: "SaaS", data_inicio: "", data_fim: "", quantidade_seats: 0, valor_total: "" };
+
+function urgencyBadge(dataFim: string | null) {
+  if (!dataFim) return <Badge variant="outline">sem vencimento</Badge>;
+  const d = Math.floor((new Date(dataFim).getTime() - Date.now()) / 86400000);
+  if (d < 0) return <Badge variant="destructive">vencido</Badge>;
+  if (d <= 30) return <Badge className="bg-destructive/15 text-destructive border-destructive/30" variant="outline">{d}d — crítico</Badge>;
+  if (d <= 90) return <Badge className="bg-[color:var(--warning)]/15 text-[color:var(--warning)] border-[color:var(--warning)]/30" variant="outline">{d}d</Badge>;
+  return <Badge variant="outline">{d}d</Badge>;
+}
+
+function Page() {
+  const { canWrite } = useAuth();
+  const qc = useQueryClient();
+  const [q, setQ] = useState("");
+  const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<Row | null>(null);
+  const [form, setForm] = useState(initial);
+
+  const { data: rows, isLoading } = useQuery({
+    queryKey: ["contratos"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("contratos").select("*").order("data_fim", { ascending: true, nullsFirst: false });
+      if (error) throw error;
+      return data as Row[];
+    },
+  });
+  const filtered = useFilteredList(rows, q, ["fornecedor", "numero_contrato", "tipo_contrato"]);
+
+  function openNew() { setEditing(null); setForm(initial); setOpen(true); }
+  function openEdit(r: Row) {
+    setEditing(r);
+    setForm({
+      fornecedor: r.fornecedor,
+      numero_contrato: r.numero_contrato ?? "",
+      tipo_contrato: r.tipo_contrato ?? "SaaS",
+      data_inicio: r.data_inicio,
+      data_fim: r.data_fim ?? "",
+      quantidade_seats: r.quantidade_seats,
+      valor_total: r.valor_total?.toString() ?? "",
+    });
+    setOpen(true);
+  }
+  async function save() {
+    const payload = {
+      fornecedor: form.fornecedor.trim(),
+      numero_contrato: form.numero_contrato || null,
+      tipo_contrato: form.tipo_contrato || null,
+      data_inicio: form.data_inicio,
+      data_fim: form.data_fim || null,
+      quantidade_seats: Number(form.quantidade_seats) || 0,
+      valor_total: form.valor_total ? Number(form.valor_total) : null,
+    };
+    const { error } = editing
+      ? await supabase.from("contratos").update(payload).eq("id", editing.id)
+      : await supabase.from("contratos").insert(payload);
+    if (error) return toast.error(error.message);
+    toast.success("Salvo");
+    qc.invalidateQueries({ queryKey: ["contratos"] });
+    qc.invalidateQueries({ queryKey: ["dashboard"] });
+  }
+  async function remove(id: string) {
+    if (!confirm("Excluir contrato?")) return;
+    const { error } = await supabase.from("contratos").delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    qc.invalidateQueries({ queryKey: ["contratos"] });
+  }
+
+  return (
+    <>
+      <PageHeader
+        title="Contratos"
+        description="Fornecedores, seats contratados e datas de renovação."
+        actions={canWrite ? <Button size="sm" onClick={openNew}>Novo contrato</Button> : undefined}
+      />
+      <ListToolbar query={q} onQueryChange={setQ} />
+      <DataTable
+        columns={["Fornecedor", "Nº", "Tipo", "Início", "Fim", "Seats", "Valor", "Vencimento", "Ações"]}
+        empty={isLoading ? "Carregando…" : "Nenhum contrato."}
+        rows={filtered.map((r) => [
+          <span key="f" className="font-medium">{r.fornecedor}</span>,
+          r.numero_contrato ?? "—",
+          r.tipo_contrato ?? "—",
+          r.data_inicio,
+          r.data_fim ?? "—",
+          r.quantidade_seats,
+          r.valor_total ? `R$ ${r.valor_total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}` : "—",
+          urgencyBadge(r.data_fim),
+          <div key="a" className="flex gap-1">
+            {canWrite && <>
+              <Button size="icon" variant="ghost" onClick={() => openEdit(r)}><Pencil className="h-4 w-4" /></Button>
+              <Button size="icon" variant="ghost" onClick={() => remove(r.id)}><Trash2 className="h-4 w-4" /></Button>
+            </>}
+          </div>,
+        ])}
+      />
+      <CrudDialog title={editing ? "Editar contrato" : "Novo contrato"} open={open} onOpenChange={setOpen} onSubmit={save} trigger={null}>
+        <div className="grid grid-cols-2 gap-3">
+          <div><Label>Fornecedor</Label><Input required value={form.fornecedor} onChange={(e) => setForm({ ...form, fornecedor: e.target.value })} /></div>
+          <div><Label>Nº contrato</Label><Input value={form.numero_contrato} onChange={(e) => setForm({ ...form, numero_contrato: e.target.value })} /></div>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <Label>Tipo</Label>
+            <Select value={form.tipo_contrato} onValueChange={(v) => setForm({ ...form, tipo_contrato: v })}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>{TIPOS.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+            </Select>
+          </div>
+          <div><Label>Seats</Label><Input type="number" min={0} value={form.quantidade_seats} onChange={(e) => setForm({ ...form, quantidade_seats: Number(e.target.value) })} /></div>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div><Label>Início</Label><Input type="date" required value={form.data_inicio} onChange={(e) => setForm({ ...form, data_inicio: e.target.value })} /></div>
+          <div><Label>Fim</Label><Input type="date" value={form.data_fim} onChange={(e) => setForm({ ...form, data_fim: e.target.value })} /></div>
+        </div>
+        <div><Label>Valor total (R$)</Label><Input type="number" step="0.01" value={form.valor_total} onChange={(e) => setForm({ ...form, valor_total: e.target.value })} /></div>
+      </CrudDialog>
+    </>
+  );
+}
