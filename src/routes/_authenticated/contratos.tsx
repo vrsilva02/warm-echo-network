@@ -10,10 +10,12 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, FileStack } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
 import { useConfirm } from "@/components/confirm-dialog";
+import { AditivosDialog } from "@/components/aditivos-dialog";
+import { Combobox } from "@/components/combobox";
 
 export const Route = createFileRoute("/_authenticated/contratos")({
   component: Page,
@@ -34,10 +36,11 @@ type Row = {
   data_fim: string | null;
   quantidade_seats: number;
   valor_total: number | null;
+  unidade_id: string | null;
 };
 
 const TIPOS = ["EA", "MPSA", "Open Value", "NCE", "Perpetua", "SaaS", "Outro"];
-const initial = { fornecedor: "", numero_contrato: "", tipo_contrato: "SaaS", data_inicio: "", data_fim: "", quantidade_seats: 0, valor_total: "" };
+const initial = { fornecedor: "", numero_contrato: "", tipo_contrato: "SaaS", data_inicio: "", data_fim: "", quantidade_seats: 0, valor_total: "", unidade_id: null as string | null };
 
 function urgencyBadge(dataFim: string | null) {
   if (!dataFim) return <Badge variant="outline">sem vencimento</Badge>;
@@ -55,6 +58,7 @@ function Page() {
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Row | null>(null);
+  const [aditivo, setAditivo] = useState<Row | null>(null);
   const [form, setForm] = useState(initial);
 
   const { data: rows, isLoading } = useQuery({
@@ -64,6 +68,10 @@ function Page() {
       if (error) throw error;
       return data as Row[];
     },
+  });
+  const { data: unidades } = useQuery({
+    queryKey: ["unidades-lite"],
+    queryFn: async () => (await supabase.from("unidades").select("id, nome").eq("ativo", true).order("nome")).data ?? [],
   });
   const filtered = useFilteredList(rows, q, ["fornecedor", "numero_contrato", "tipo_contrato"]);
 
