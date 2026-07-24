@@ -212,7 +212,7 @@ function AcessosPage() {
         actions={
           <div className="flex gap-2">
             <Button variant="outline" asChild>
-              <Link to="/auditoria" search={{ tabela: "user_roles" }}>
+              <Link to="/auditoria">
                 <History className="mr-2 h-4 w-4" /> Trilha de perfis
               </Link>
             </Button>
