@@ -39,7 +39,7 @@ function useAlertas() {
       const [vc, elp, oc] = await Promise.all([
         supabase.from("vw_contratos_vencendo").select("*"),
         supabase.from("vw_elp").select("*"),
-        supabase.from("vw_licencas_ociosas").select("*, produtos_catalogo:nome_oficial"),
+        supabase.from("vw_licencas_ociosas").select("*"),
       ]);
       const alertas: Alerta[] = [];
 
