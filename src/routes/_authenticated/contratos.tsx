@@ -150,6 +150,9 @@ function Page() {
           r.valor_total ? `R$ ${r.valor_total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}` : "—",
           urgencyBadge(r.data_fim),
           <div key="a" className="flex gap-1">
+            <Button size="icon" variant="ghost" title="Aditivos" onClick={() => setAditivo(r)}>
+              <FileStack className="h-4 w-4" />
+            </Button>
             {canWrite && <>
               <Button size="icon" variant="ghost" onClick={() => openEdit(r)}><Pencil className="h-4 w-4" /></Button>
               <Button size="icon" variant="ghost" onClick={() => remove(r)}><Trash2 className="h-4 w-4" /></Button>
@@ -176,8 +179,26 @@ function Page() {
           <div><Label>Início</Label><Input type="date" required value={form.data_inicio} onChange={(e) => setForm({ ...form, data_inicio: e.target.value })} /></div>
           <div><Label>Fim</Label><Input type="date" value={form.data_fim} onChange={(e) => setForm({ ...form, data_fim: e.target.value })} /></div>
         </div>
-        <div><Label>Valor total (R$)</Label><Input type="number" step="0.01" value={form.valor_total} onChange={(e) => setForm({ ...form, valor_total: e.target.value })} /></div>
+        <div className="grid grid-cols-2 gap-3">
+          <div><Label>Valor total (R$)</Label><Input type="number" step="0.01" value={form.valor_total} onChange={(e) => setForm({ ...form, valor_total: e.target.value })} /></div>
+          <div>
+            <Label>Unidade</Label>
+            <Combobox
+              placeholder="Nenhuma"
+              searchPlaceholder="Buscar unidade…"
+              value={form.unidade_id}
+              onChange={(v) => setForm({ ...form, unidade_id: v })}
+              options={(unidades ?? []).map((u) => ({ value: u.id, label: u.nome }))}
+            />
+          </div>
+        </div>
       </CrudDialog>
+      <AditivosDialog
+        contratoId={aditivo?.id ?? null}
+        contratoLabel={aditivo ? `${aditivo.fornecedor}${aditivo.numero_contrato ? " · " + aditivo.numero_contrato : ""}` : ""}
+        open={!!aditivo}
+        onOpenChange={(v) => !v && setAditivo(null)}
+      />
     </>
   );
 }
