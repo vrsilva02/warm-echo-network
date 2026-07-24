@@ -35,11 +35,12 @@ type Row = {
   quantidade: number;
   chave_ativacao: string | null;
   data_expiracao: string | null;
+  custo_unitario: number | null;
   produtos_catalogo?: { nome_oficial: string } | null;
   contratos?: { fornecedor: string; numero_contrato: string | null } | null;
 };
 
-const initial = { produto_id: "", contrato_id: null as string | null, quantidade: 1, chave_ativacao: "", data_expiracao: "" };
+const initial = { produto_id: "", contrato_id: null as string | null, quantidade: 1, chave_ativacao: "", data_expiracao: "", custo_unitario: "" };
 
 function daysUntil(iso: string | null): number | null {
   if (!iso) return null;
@@ -84,6 +85,7 @@ function Page() {
       quantidade: r.quantidade,
       chave_ativacao: r.chave_ativacao ?? "",
       data_expiracao: r.data_expiracao ?? "",
+      custo_unitario: r.custo_unitario?.toString() ?? "",
     });
     setOpen(true);
   }
@@ -95,6 +97,7 @@ function Page() {
       quantidade: Number(form.quantidade) || 1,
       chave_ativacao: form.chave_ativacao || null,
       data_expiracao: form.data_expiracao || null,
+      custo_unitario: form.custo_unitario ? Number(form.custo_unitario) : null,
     };
     const { error } = editing
       ? await supabase.from("licencas").update(payload).eq("id", editing.id)
@@ -263,7 +266,10 @@ function Page() {
           <div><Label>Quantidade</Label><Input type="number" min={1} value={form.quantidade} onChange={(e) => setForm({ ...form, quantidade: Number(e.target.value) })} /></div>
           <div><Label>Expiração</Label><Input type="date" value={form.data_expiracao} onChange={(e) => setForm({ ...form, data_expiracao: e.target.value })} /></div>
         </div>
-        <div><Label>Chave de ativação</Label><Input value={form.chave_ativacao} onChange={(e) => setForm({ ...form, chave_ativacao: e.target.value })} /></div>
+        <div className="grid grid-cols-2 gap-3">
+          <div><Label>Custo unitário (R$)</Label><Input type="number" step="0.01" min={0} value={form.custo_unitario} onChange={(e) => setForm({ ...form, custo_unitario: e.target.value })} /></div>
+          <div><Label>Chave de ativação</Label><Input value={form.chave_ativacao} onChange={(e) => setForm({ ...form, chave_ativacao: e.target.value })} /></div>
+        </div>
       </CrudDialog>
     </>
   );

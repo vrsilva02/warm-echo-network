@@ -12,6 +12,8 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedUnidadesRouteImport } from './routes/_authenticated/unidades'
+import { Route as AuthenticatedSolicitacoesRouteImport } from './routes/_authenticated/solicitacoes'
 import { Route as AuthenticatedRelatoriosRouteImport } from './routes/_authenticated/relatorios'
 import { Route as AuthenticatedReconciliacaoRouteImport } from './routes/_authenticated/reconciliacao'
 import { Route as AuthenticatedProdutosRouteImport } from './routes/_authenticated/produtos'
@@ -40,6 +42,17 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedUnidadesRoute = AuthenticatedUnidadesRouteImport.update({
+  id: '/unidades',
+  path: '/unidades',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedSolicitacoesRoute =
+  AuthenticatedSolicitacoesRouteImport.update({
+    id: '/solicitacoes',
+    path: '/solicitacoes',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedRelatoriosRoute = AuthenticatedRelatoriosRouteImport.update({
   id: '/relatorios',
   path: '/relatorios',
@@ -124,6 +137,8 @@ export interface FileRoutesByFullPath {
   '/produtos': typeof AuthenticatedProdutosRoute
   '/reconciliacao': typeof AuthenticatedReconciliacaoRoute
   '/relatorios': typeof AuthenticatedRelatoriosRoute
+  '/solicitacoes': typeof AuthenticatedSolicitacoesRoute
+  '/unidades': typeof AuthenticatedUnidadesRoute
   '/auditoria/$tabela/$id': typeof AuthenticatedAuditoriaTabelaIdRoute
 }
 export interface FileRoutesByTo {
@@ -141,6 +156,8 @@ export interface FileRoutesByTo {
   '/produtos': typeof AuthenticatedProdutosRoute
   '/reconciliacao': typeof AuthenticatedReconciliacaoRoute
   '/relatorios': typeof AuthenticatedRelatoriosRoute
+  '/solicitacoes': typeof AuthenticatedSolicitacoesRoute
+  '/unidades': typeof AuthenticatedUnidadesRoute
   '/auditoria/$tabela/$id': typeof AuthenticatedAuditoriaTabelaIdRoute
 }
 export interface FileRoutesById {
@@ -160,6 +177,8 @@ export interface FileRoutesById {
   '/_authenticated/produtos': typeof AuthenticatedProdutosRoute
   '/_authenticated/reconciliacao': typeof AuthenticatedReconciliacaoRoute
   '/_authenticated/relatorios': typeof AuthenticatedRelatoriosRoute
+  '/_authenticated/solicitacoes': typeof AuthenticatedSolicitacoesRoute
+  '/_authenticated/unidades': typeof AuthenticatedUnidadesRoute
   '/_authenticated/auditoria_/$tabela/$id': typeof AuthenticatedAuditoriaTabelaIdRoute
 }
 export interface FileRouteTypes {
@@ -179,6 +198,8 @@ export interface FileRouteTypes {
     | '/produtos'
     | '/reconciliacao'
     | '/relatorios'
+    | '/solicitacoes'
+    | '/unidades'
     | '/auditoria/$tabela/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -196,6 +217,8 @@ export interface FileRouteTypes {
     | '/produtos'
     | '/reconciliacao'
     | '/relatorios'
+    | '/solicitacoes'
+    | '/unidades'
     | '/auditoria/$tabela/$id'
   id:
     | '__root__'
@@ -214,6 +237,8 @@ export interface FileRouteTypes {
     | '/_authenticated/produtos'
     | '/_authenticated/reconciliacao'
     | '/_authenticated/relatorios'
+    | '/_authenticated/solicitacoes'
+    | '/_authenticated/unidades'
     | '/_authenticated/auditoria_/$tabela/$id'
   fileRoutesById: FileRoutesById
 }
@@ -245,6 +270,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/unidades': {
+      id: '/_authenticated/unidades'
+      path: '/unidades'
+      fullPath: '/unidades'
+      preLoaderRoute: typeof AuthenticatedUnidadesRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/solicitacoes': {
+      id: '/_authenticated/solicitacoes'
+      path: '/solicitacoes'
+      fullPath: '/solicitacoes'
+      preLoaderRoute: typeof AuthenticatedSolicitacoesRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/relatorios': {
       id: '/_authenticated/relatorios'
@@ -353,6 +392,8 @@ interface AuthenticatedRouteChildren {
   AuthenticatedProdutosRoute: typeof AuthenticatedProdutosRoute
   AuthenticatedReconciliacaoRoute: typeof AuthenticatedReconciliacaoRoute
   AuthenticatedRelatoriosRoute: typeof AuthenticatedRelatoriosRoute
+  AuthenticatedSolicitacoesRoute: typeof AuthenticatedSolicitacoesRoute
+  AuthenticatedUnidadesRoute: typeof AuthenticatedUnidadesRoute
   AuthenticatedAuditoriaTabelaIdRoute: typeof AuthenticatedAuditoriaTabelaIdRoute
 }
 
@@ -369,6 +410,8 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedProdutosRoute: AuthenticatedProdutosRoute,
   AuthenticatedReconciliacaoRoute: AuthenticatedReconciliacaoRoute,
   AuthenticatedRelatoriosRoute: AuthenticatedRelatoriosRoute,
+  AuthenticatedSolicitacoesRoute: AuthenticatedSolicitacoesRoute,
+  AuthenticatedUnidadesRoute: AuthenticatedUnidadesRoute,
   AuthenticatedAuditoriaTabelaIdRoute: AuthenticatedAuditoriaTabelaIdRoute,
 }
 
