@@ -64,7 +64,7 @@ function AcessosPage() {
   const [inviteOpen, setInviteOpen] = useState(false);
   const [invEmail, setInvEmail] = useState("");
   const [invNome, setInvNome] = useState("");
-  const [invRoles, setInvRoles] = useState<Set<AppRole>>(new Set(["auditoria"]));
+  const [invRoles, setInvRoles] = useState<Set<AppRole>>(new Set(["visitante"]));
   const [inviting, setInviting] = useState(false);
   const invite = useServerFn(inviteUser);
 
@@ -183,7 +183,7 @@ function AcessosPage() {
       setInviteOpen(false);
       setInvEmail("");
       setInvNome("");
-      setInvRoles(new Set(["auditoria"]));
+      setInvRoles(new Set(["visitante"]));
       qc.invalidateQueries({ queryKey: ["acessos-profiles"] });
       qc.invalidateQueries({ queryKey: ["acessos-roles"] });
     } catch (e) {
