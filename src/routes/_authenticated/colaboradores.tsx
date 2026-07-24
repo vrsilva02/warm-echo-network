@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
+import { useConfirm } from "@/components/confirm-dialog";
 
 export const Route = createFileRoute("/_authenticated/colaboradores")({
   component: Page,
@@ -39,6 +40,7 @@ const initial = { nome: "", email: "", matricula: "", setor: "", status: "ativo"
 function Page() {
   const { canWrite } = useAuth();
   const qc = useQueryClient();
+  const confirm = useConfirm();
   const [q, setQ] = useState("");
   const [editing, setEditing] = useState<Row | null>(null);
   const [open, setOpen] = useState(false);
@@ -85,9 +87,22 @@ function Page() {
     qc.invalidateQueries({ queryKey: ["usuarios"] });
     qc.invalidateQueries({ queryKey: ["usuarios-lite"] });
   }
-  async function remove(id: string) {
-    if (!confirm("Excluir colaborador?")) return;
-    const { error } = await supabase.from("usuarios").delete().eq("id", id);
+  async function remove(row: Row) {
+    const { count: ativosCount } = await supabase.from("ativos").select("id", { count: "exact", head: true }).eq("usuario_responsavel_id", row.id);
+    const { count: alocCount } = await supabase.from("alocacoes").select("id", { count: "exact", head: true }).eq("usuario_id", row.id).is("data_fim", null);
+    const ok = await confirm({
+      title: "Excluir colaborador?",
+      description: "Considere marcar como 'desligado' para preservar o histórico — o sistema libera as licenças automaticamente.",
+      tone: "danger",
+      impact: [
+        { label: "Colaborador", value: row.nome },
+        { label: "Ativos vinculados", value: ativosCount ?? 0, tone: (ativosCount ?? 0) > 0 ? "warn" : "default" },
+        { label: "Alocações ativas", value: alocCount ?? 0, tone: (alocCount ?? 0) > 0 ? "warn" : "default" },
+      ],
+      confirmLabel: "Excluir",
+    });
+    if (!ok) return;
+    const { error } = await supabase.from("usuarios").delete().eq("id", row.id);
     if (error) return toast.error(error.message);
     qc.invalidateQueries({ queryKey: ["usuarios"] });
   }
