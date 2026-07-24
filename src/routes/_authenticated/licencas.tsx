@@ -709,7 +709,7 @@ function LicencaDialog({
   });
 
   // Carrega quando edita
-  useMemo(() => {
+  React.useEffect(() => {
     if (!open) return;
     if (licencaId) {
       supabase.from("licencas").select("*").eq("id", licencaId).single().then(({ data }) => {
