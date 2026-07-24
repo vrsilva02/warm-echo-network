@@ -333,16 +333,13 @@ function AtivosPage() {
         </div>
         <div>
           <Label>Responsável</Label>
-          <Select
-            value={form.usuario_responsavel_id ?? "none"}
-            onValueChange={(v) => setForm({ ...form, usuario_responsavel_id: v === "none" ? null : v })}
-          >
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">— Nenhum —</SelectItem>
-              {(users ?? []).map((u) => <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>)}
-            </SelectContent>
-          </Select>
+          <Combobox
+            placeholder="Nenhum"
+            searchPlaceholder="Buscar colaborador…"
+            value={form.usuario_responsavel_id}
+            onChange={(v) => setForm({ ...form, usuario_responsavel_id: v })}
+            options={(users ?? []).map((u) => ({ value: u.id, label: u.nome }))}
+          />
         </div>
       </CrudDialog>
     </>
