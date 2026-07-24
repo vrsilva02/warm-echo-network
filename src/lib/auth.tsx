@@ -75,5 +75,12 @@ export function useAuth() {
 }
 
 export function roleLabel(r: AppRole): string {
-  return r === "admin" ? "Administrador" : r === "gestor_ti" ? "Gestor de TI" : "Auditoria";
+  const map: Record<AppRole, string> = {
+    admin: "Admin",
+    gestor_ti: "Gestão",
+    padrao: "Padrão",
+    visitante: "Visitante",
+    auditoria: "Visitante",
+  };
+  return map[r] ?? r;
 }
