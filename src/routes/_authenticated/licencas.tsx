@@ -154,10 +154,11 @@ function Page() {
             <LicencasImportExport
               canWrite={canWrite}
               onImported={() => {
-                // Re-consulta os agregados após uma importação.
-                void supabase.auth.getSession();
+                qc.invalidateQueries({ queryKey: ["licencas-produtos-agg"] });
+                qc.invalidateQueries({ queryKey: ["dashboard"] });
               }}
             />
+
             {canWrite && (
               <Button size="sm" onClick={() => { setEditingLicId(null); setDefaultCategoria(tab === "todas" ? null : tab); setNewLicOpen(true); }}>
                 <Plus className="h-4 w-4" /> Nova licença
