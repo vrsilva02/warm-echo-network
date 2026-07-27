@@ -265,6 +265,29 @@ function Page() {
     { id: "sem_ativo", label: "Só colaborador", filter: (rs) => rs.filter((r) => !r.ativo_id && r.usuario_id) },
   ];
 
+  const produtosOpts = Array.from(
+    new Map(
+      (rows ?? [])
+        .filter((r) => r.licencas?.produtos_catalogo)
+        .map((r) => [r.licencas!.produtos_catalogo!.id, r.licencas!.produtos_catalogo!.nome_oficial]),
+    ).entries(),
+  ).sort((a, b) => a[1].localeCompare(b[1]));
+
+  const filteredRows = (rows ?? []).filter((r) => {
+    if (fProduto && r.licencas?.produtos_catalogo?.id !== fProduto) return false;
+    if (fAtivo && r.ativo_id !== fAtivo) return false;
+    if (fStatus === "ativa" && r.data_fim) return false;
+    if (fStatus === "encerrada" && !r.data_fim) return false;
+    if (fChave.trim()) {
+      const q = fChave.trim().toLowerCase();
+      const chave = (r.chave_individual ?? r.licencas?.chave_ativacao ?? "").toLowerCase();
+      if (!chave.includes(q)) return false;
+    }
+    return true;
+  });
+
+  const hasFilter = !!fProduto || !!fAtivo || !!fChave.trim() || fStatus !== "todas";
+
   return (
     <>
       <PageHeader
@@ -272,9 +295,57 @@ function Page() {
         description="Cada vínculo consome um seat efetivo do produto até ser encerrado."
         actions={canWrite ? <Button size="sm" onClick={openNew}>Nova alocação</Button> : undefined}
       />
+      <div className="grid gap-3 md:grid-cols-4 mb-4">
+        <div>
+          <Label className="text-xs">Produto</Label>
+          <Combobox
+            placeholder="Todos"
+            searchPlaceholder="Buscar produto…"
+            value={fProduto}
+            onChange={setFProduto}
+            options={produtosOpts.map(([id, nome]) => ({ value: id, label: nome }))}
+          />
+        </div>
+        <div>
+          <Label className="text-xs">Ativo</Label>
+          <Combobox
+            placeholder="Todos"
+            searchPlaceholder="Buscar hostname…"
+            value={fAtivo}
+            onChange={setFAtivo}
+            options={(ativos ?? []).map((a) => ({ value: a.id, label: a.hostname }))}
+          />
+        </div>
+        <div>
+          <Label className="text-xs">Chave</Label>
+          <Input
+            value={fChave}
+            onChange={(e) => setFChave(e.target.value)}
+            placeholder="Trecho da chave…"
+          />
+        </div>
+        <div>
+          <Label className="text-xs">Status</Label>
+          <Select value={fStatus} onValueChange={(v) => setFStatus(v as typeof fStatus)}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todas">Todas</SelectItem>
+              <SelectItem value="ativa">Ativas</SelectItem>
+              <SelectItem value="encerrada">Encerradas</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        {hasFilter && (
+          <div className="md:col-span-4">
+            <Button size="sm" variant="ghost" onClick={() => { setFProduto(null); setFAtivo(null); setFChave(""); setFStatus("todas"); }}>
+              Limpar filtros
+            </Button>
+          </div>
+        )}
+      </div>
       <AdvancedTable<Row>
         storageKey="alocacoes"
-        rows={rows}
+        rows={filteredRows}
         isLoading={isLoading}
         columns={columns}
         getRowId={(r) => r.id}
