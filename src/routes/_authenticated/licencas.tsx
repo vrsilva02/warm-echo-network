@@ -171,6 +171,13 @@ function ProductGrid({
 }
 
 function ProductCard({ row, onSelect }: { row: ProdutoAgg; onSelect: (id: string) => void }) {
+  const { canWrite } = useAuth();
+  const qc = useQueryClient();
+  const confirm = useConfirm();
+  const [renameOpen, setRenameOpen] = useState(false);
+  const [nome, setNome] = useState(row.nome_oficial);
+  const [saving, setSaving] = useState(false);
+
   const total = row.licencas_compradas ?? 0;
   const usadas = row.licencas_alocadas ?? 0;
   const disponivel = total - usadas;
@@ -183,39 +190,120 @@ function ProductCard({ row, onSelect }: { row: ProdutoAgg; onSelect: (id: string
   const barCls = pct > 100 ? "bg-destructive" : pct >= 90 ? "bg-[color:var(--warning)]" : "bg-[color:var(--success)]";
   const status = pct > 100 ? "déficit" : pct >= 90 ? "atenção" : "ok";
 
+  async function saveRename() {
+    const novo = nome.trim();
+    if (!novo) return toast.error("Informe um nome");
+    if (novo === row.nome_oficial) { setRenameOpen(false); return; }
+    setSaving(true);
+    const { error } = await supabase
+      .from("produtos_catalogo")
+      .update({ nome_oficial: novo })
+      .eq("id", row.produto_id);
+    setSaving(false);
+    if (error) return toast.error(error.message);
+    toast.success("Licença renomeada");
+    void logAction("BULK_UPDATE", "produtos_catalogo", { operacao: "renomear", id: row.produto_id, de: row.nome_oficial, para: novo }, row.produto_id);
+    setRenameOpen(false);
+    qc.invalidateQueries({ queryKey: ["licencas-produtos-agg"] });
+  }
+
+  async function removerProduto() {
+    const ok = await confirm({
+      title: "Excluir esta licença?",
+      description:
+        "O produto e todos os blocos de licenças, atribuições e histórico serão removidos definitivamente.",
+      tone: "danger",
+      impact: [
+        { label: "Seats totais", value: total, tone: "danger" },
+        { label: "Atribuições ativas", value: usadas, tone: usadas > 0 ? "danger" : "default" },
+      ],
+      confirmLabel: "Excluir definitivamente",
+    });
+    if (!ok) return;
+    const { error } = await supabase.from("produtos_catalogo").delete().eq("id", row.produto_id);
+    if (error) return toast.error(error.message);
+    toast.success("Licença excluída");
+    void logAction("BULK_DELETE", "produtos_catalogo", { id: row.produto_id, nome: row.nome_oficial }, row.produto_id);
+    qc.invalidateQueries({ queryKey: ["licencas-produtos-agg"] });
+    qc.invalidateQueries({ queryKey: ["dashboard"] });
+  }
+
   return (
-    <button
-      onClick={() => onSelect(row.produto_id)}
-      className="text-left rounded-lg border bg-card p-4 hover:border-primary/50 hover:shadow-sm transition-all"
-    >
-      <div className="flex items-start justify-between gap-2 mb-2">
-        <div className="min-w-0">
-          <div className="font-semibold text-sm truncate">{row.nome_oficial}</div>
-          <div className="text-xs text-muted-foreground truncate">
-            {row.fabricante ?? "—"} · {row.categoria}{row.subtipo ? ` · ${row.subtipo}` : ""}
+    <>
+      <div
+        onClick={() => onSelect(row.produto_id)}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => { if (e.key === "Enter") onSelect(row.produto_id); }}
+        className="relative text-left rounded-lg border bg-card p-4 hover:border-primary/50 hover:shadow-sm transition-all cursor-pointer"
+      >
+        {canWrite && (
+          <div className="absolute top-2 right-2 flex gap-1">
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-7 w-7"
+              title="Renomear"
+              onClick={(e) => { e.stopPropagation(); setNome(row.nome_oficial); setRenameOpen(true); }}
+            >
+              <Pencil className="h-3.5 w-3.5" />
+            </Button>
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-7 w-7 text-destructive hover:text-destructive"
+              title="Excluir"
+              onClick={(e) => { e.stopPropagation(); void removerProduto(); }}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        )}
+        <div className="flex items-start justify-between gap-2 mb-2 pr-20">
+          <div className="min-w-0">
+            <div className="font-semibold text-sm truncate">{row.nome_oficial}</div>
+            <div className="text-xs text-muted-foreground truncate">
+              {row.fabricante ?? "—"} · {row.categoria}{row.subtipo ? ` · ${row.subtipo}` : ""}
+            </div>
+          </div>
+          <Badge variant="outline" className={tone}>{status}</Badge>
+        </div>
+        <div className="grid grid-cols-3 gap-2 text-center my-3">
+          <div>
+            <div className="text-lg font-semibold tabular-nums">{total}</div>
+            <div className="text-[10px] uppercase text-muted-foreground tracking-wide">Total</div>
+          </div>
+          <div>
+            <div className="text-lg font-semibold tabular-nums">{usadas}</div>
+            <div className="text-[10px] uppercase text-muted-foreground tracking-wide">Atribuídas</div>
+          </div>
+          <div>
+            <div className={`text-lg font-semibold tabular-nums ${disponivel < 0 ? "text-destructive" : ""}`}>{disponivel}</div>
+            <div className="text-[10px] uppercase text-muted-foreground tracking-wide">Disponível</div>
           </div>
         </div>
-        <Badge variant="outline" className={tone}>{status}</Badge>
-      </div>
-      <div className="grid grid-cols-3 gap-2 text-center my-3">
-        <div>
-          <div className="text-lg font-semibold tabular-nums">{total}</div>
-          <div className="text-[10px] uppercase text-muted-foreground tracking-wide">Total</div>
+        <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+          <div className={`h-full ${barCls}`} style={{ width: `${Math.min(100, pct)}%` }} />
         </div>
-        <div>
-          <div className="text-lg font-semibold tabular-nums">{usadas}</div>
-          <div className="text-[10px] uppercase text-muted-foreground tracking-wide">Atribuídas</div>
-        </div>
-        <div>
-          <div className={`text-lg font-semibold tabular-nums ${disponivel < 0 ? "text-destructive" : ""}`}>{disponivel}</div>
-          <div className="text-[10px] uppercase text-muted-foreground tracking-wide">Disponível</div>
-        </div>
+        <div className="mt-1 text-[10px] text-muted-foreground text-right tabular-nums">{pct.toFixed(0)}% de uso</div>
       </div>
-      <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
-        <div className={`h-full ${barCls}`} style={{ width: `${Math.min(100, pct)}%` }} />
-      </div>
-      <div className="mt-1 text-[10px] text-muted-foreground text-right tabular-nums">{pct.toFixed(0)}% de uso</div>
-    </button>
+
+      <Dialog open={renameOpen} onOpenChange={setRenameOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Renomear licença</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label>Nome oficial</Label>
+            <Input value={nome} onChange={(e) => setNome(e.target.value)} autoFocus />
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setRenameOpen(false)}>Cancelar</Button>
+            <Button onClick={saveRename} disabled={saving}>{saving ? "Salvando…" : "Salvar"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 
