@@ -76,7 +76,9 @@ function Page() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("alocacoes")
-        .select("*, licencas(produtos_catalogo(nome_oficial)), usuarios(nome), ativos(hostname)")
+        .select(
+          "*, licencas(id, chave_ativacao, produtos_catalogo(id, nome_oficial, modelo_licenciamento, tipo_licenciamento)), usuarios(nome), ativos(hostname)",
+        )
         .order("data_inicio", { ascending: false });
       if (error) throw error;
       return data as unknown as Row[];
@@ -84,7 +86,11 @@ function Page() {
   });
   const { data: licencas } = useQuery({
     queryKey: ["licencas-lite"],
-    queryFn: async () => (await supabase.from("licencas").select("id, produtos_catalogo(nome_oficial)")).data ?? [],
+    queryFn: async () =>
+      (await supabase
+        .from("licencas")
+        .select("id, produtos_catalogo(id, nome_oficial, modelo_licenciamento, tipo_licenciamento)")
+      ).data ?? [],
   });
   const { data: usuarios } = useQuery({
     queryKey: ["usuarios-lite"],
@@ -95,16 +101,23 @@ function Page() {
     queryFn: async () => (await supabase.from("ativos").select("id,hostname").neq("status_ciclo_vida", "baixado").order("hostname")).data ?? [],
   });
 
+  const licencaSel = (licencas ?? []).find((l: any) => l.id === form.licenca_id) as any | undefined;
+  const chaveObrigatoria = isChaveIndividualRequired(licencaSel?.produtos_catalogo ?? null);
+
   function openNew() { setForm(initial); setOpen(true); }
   async function save() {
     if (!form.licenca_id) return toast.error("Selecione a licença");
     if (!form.usuario_id && !form.ativo_id) return toast.error("Vincule a um colaborador ou ativo");
+    if (chaveObrigatoria && !form.chave_individual.trim()) {
+      return toast.error("Produto OEM/Retail: informe a chave individual desta alocação.");
+    }
     const { error } = await supabase.from("alocacoes").insert({
       licenca_id: form.licenca_id,
       usuario_id: form.usuario_id,
       ativo_id: form.ativo_id,
       data_inicio: form.data_inicio,
       data_fim: form.data_fim || null,
+      chave_individual: form.chave_individual.trim() || null,
       observacao: form.observacao || null,
     });
     if (error) return toast.error(error.message);
