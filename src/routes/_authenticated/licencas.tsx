@@ -27,6 +27,7 @@ import { logAction } from "@/lib/audit";
 import { encerrarAlocacao, encerrarAlocacoes, criarAlocacao } from "@/lib/licencas";
 import { friendlyError } from "@/lib/errors";
 import { MaskedKey } from "@/components/masked-key";
+import { LicencasImportExport } from "@/components/licencas-import-export";
 
 export const Route = createFileRoute("/_authenticated/licencas")({
   component: Page,
