@@ -27,6 +27,7 @@ import { logAction } from "@/lib/audit";
 import { encerrarAlocacao, encerrarAlocacoes, criarAlocacao } from "@/lib/licencas";
 import { friendlyError } from "@/lib/errors";
 import { MaskedKey } from "@/components/masked-key";
+import { LicencasImportExport } from "@/components/licencas-import-export";
 
 export const Route = createFileRoute("/_authenticated/licencas")({
   component: Page,
@@ -75,6 +76,9 @@ function statusLicenca(p: ProdutoAgg): StatusFiltro {
 
 function Page() {
   const { canWrite } = useAuth();
+  const qc = useQueryClient();
+
+
 
   const { data: produtos, isLoading } = useQuery({
     queryKey: ["licencas-produtos-agg"],
@@ -146,11 +150,21 @@ function Page() {
         title="Licenças"
         description="Visão por categoria e SKU, atribuições ativas e histórico."
         actions={
-          canWrite ? (
-            <Button size="sm" onClick={() => { setEditingLicId(null); setDefaultCategoria(tab === "todas" ? null : tab); setNewLicOpen(true); }}>
-              <Plus className="h-4 w-4" /> Nova licença
-            </Button>
-          ) : undefined
+          <div className="flex items-center gap-2">
+            <LicencasImportExport
+              canWrite={canWrite}
+              onImported={() => {
+                qc.invalidateQueries({ queryKey: ["licencas-produtos-agg"] });
+                qc.invalidateQueries({ queryKey: ["dashboard"] });
+              }}
+            />
+
+            {canWrite && (
+              <Button size="sm" onClick={() => { setEditingLicId(null); setDefaultCategoria(tab === "todas" ? null : tab); setNewLicOpen(true); }}>
+                <Plus className="h-4 w-4" /> Nova licença
+              </Button>
+            )}
+          </div>
         }
       />
 
