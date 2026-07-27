@@ -70,6 +70,10 @@ function Page() {
   const confirm = useConfirm();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(initial);
+  const [fProduto, setFProduto] = useState<string | null>(null);
+  const [fAtivo, setFAtivo] = useState<string | null>(null);
+  const [fChave, setFChave] = useState("");
+  const [fStatus, setFStatus] = useState<"todas" | "ativa" | "encerrada">("todas");
 
   const { data: rows, isLoading } = useQuery({
     queryKey: ["alocacoes"],
