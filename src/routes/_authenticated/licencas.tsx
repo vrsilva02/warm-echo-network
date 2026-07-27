@@ -767,8 +767,10 @@ function VincularDialog({
   const [licencaId, setLicencaId] = useState<string | null>(null);
   const [ativoId, setAtivoId] = useState<string | null>(null);
   const [usuarioId, setUsuarioId] = useState<string | null>(null);
+  const [chaveIndividual, setChaveIndividual] = useState("");
   const [obs, setObs] = useState("");
   const [busy, setBusy] = useState(false);
+  const chaveObrigatoria = isChaveIndividualRequired(produto);
 
   const { data: licencas } = useQuery({
     queryKey: ["licencas-do-produto", produto.produto_id],
@@ -793,6 +795,9 @@ function VincularDialog({
   async function submit() {
     if (!effectiveLic) return toast.error("Selecione o bloco de licença");
     if (!ativoId && !usuarioId) return toast.error("Selecione ao menos um ativo ou colaborador");
+    if (chaveObrigatoria && !chaveIndividual.trim()) {
+      return toast.error("Este produto é OEM/Retail: informe a chave individual desta alocação.");
+    }
 
     const saldo = produto.saldo;
     if (saldo <= 0) {
@@ -814,6 +819,7 @@ function VincularDialog({
       licenca_id: effectiveLic,
       ativo_id: ativoId,
       usuario_id: usuarioId,
+      chave_individual: chaveObrigatoria ? chaveIndividual.trim() : (chaveIndividual.trim() || null),
       observacao: obs || null,
       saldoAntes: saldo,
     });
@@ -821,7 +827,7 @@ function VincularDialog({
     if (!r.ok) return toast.error(r.error || "Erro");
     toast.success(r.deficit ? "Vinculado (com déficit registrado)" : "Vinculado");
     onOpenChange(false);
-    setLicencaId(null); setAtivoId(null); setUsuarioId(null); setObs("");
+    setLicencaId(null); setAtivoId(null); setUsuarioId(null); setChaveIndividual(""); setObs("");
     onDone();
   }
 
