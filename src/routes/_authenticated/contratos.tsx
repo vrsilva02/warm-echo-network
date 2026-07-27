@@ -21,7 +21,7 @@ export const Route = createFileRoute("/_authenticated/contratos")({
   component: Page,
   head: () => ({
     meta: [
-      { title: "Contratos — Gestorait" },
+      { title: "Contratos — GestoraIT" },
       { name: "description", content: "Gestão de contratos de licenciamento e renovações." },
     ],
   }),

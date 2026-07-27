@@ -20,7 +20,7 @@ export const Route = createFileRoute("/_authenticated/reconciliacao")({
   component: Page,
   head: () => ({
     meta: [
-      { title: "Reconciliação — Gestorait" },
+      { title: "Reconciliação — GestoraIT" },
       { name: "description", content: "Importe inventário CSV e reconcilie automaticamente via aliases do catálogo." },
     ],
   }),

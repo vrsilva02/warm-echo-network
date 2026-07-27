@@ -22,7 +22,7 @@ export const Route = createFileRoute("/_authenticated/solicitacoes")({
   component: Page,
   head: () => ({
     meta: [
-      { title: "Solicitações — Gestorait" },
+      { title: "Solicitações — GestoraIT" },
       { name: "description", content: "Workflow de aprovação de solicitações de licenças." },
     ],
   }),

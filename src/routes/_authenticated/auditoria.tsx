@@ -18,7 +18,7 @@ export const Route = createFileRoute("/_authenticated/auditoria")({
   component: Page,
   head: () => ({
     meta: [
-      { title: "Auditoria — Gestorait" },
+      { title: "Auditoria — GestoraIT" },
       { name: "description", content: "Log imutável e detalhado das ações no sistema, com filtros, timeline e exportação." },
     ],
   }),
