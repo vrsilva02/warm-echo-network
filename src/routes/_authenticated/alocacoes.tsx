@@ -74,6 +74,8 @@ function Page() {
   const [fAtivo, setFAtivo] = useState<string | null>(null);
   const [fChave, setFChave] = useState("");
   const [fStatus, setFStatus] = useState<"todas" | "ativa" | "encerrada">("todas");
+  const [fDataInicio, setFDataInicio] = useState("");
+  const [fDataFim, setFDataFim] = useState("");
 
   const { data: rows, isLoading } = useQuery({
     queryKey: ["alocacoes"],
@@ -283,10 +285,16 @@ function Page() {
       const chave = (r.chave_individual ?? r.licencas?.chave_ativacao ?? "").toLowerCase();
       if (!chave.includes(q)) return false;
     }
+    if (fDataInicio || fDataFim) {
+      const alocInicio = r.data_inicio ?? "";
+      const alocFim = r.data_fim ?? new Date().toISOString().slice(0, 10);
+      if (fDataInicio && alocFim < fDataInicio) return false;
+      if (fDataFim && alocInicio > fDataFim) return false;
+    }
     return true;
   });
 
-  const hasFilter = !!fProduto || !!fAtivo || !!fChave.trim() || fStatus !== "todas";
+  const hasFilter = !!fProduto || !!fAtivo || !!fChave.trim() || fStatus !== "todas" || !!fDataInicio || !!fDataFim;
 
   return (
     <>
@@ -295,7 +303,7 @@ function Page() {
         description="Cada vínculo consome um seat efetivo do produto até ser encerrado."
         actions={canWrite ? <Button size="sm" onClick={openNew}>Nova alocação</Button> : undefined}
       />
-      <div className="grid gap-3 md:grid-cols-4 mb-4">
+      <div className="grid gap-3 md:grid-cols-6 mb-4">
         <div>
           <Label className="text-xs">Produto</Label>
           <Combobox
@@ -335,9 +343,17 @@ function Page() {
             </SelectContent>
           </Select>
         </div>
+        <div>
+          <Label className="text-xs">Início a partir de</Label>
+          <Input type="date" value={fDataInicio} onChange={(e) => setFDataInicio(e.target.value)} />
+        </div>
+        <div>
+          <Label className="text-xs">Fim até</Label>
+          <Input type="date" value={fDataFim} onChange={(e) => setFDataFim(e.target.value)} />
+        </div>
         {hasFilter && (
-          <div className="md:col-span-4">
-            <Button size="sm" variant="ghost" onClick={() => { setFProduto(null); setFAtivo(null); setFChave(""); setFStatus("todas"); }}>
+          <div className="md:col-span-6">
+            <Button size="sm" variant="ghost" onClick={() => { setFProduto(null); setFAtivo(null); setFChave(""); setFStatus("todas"); setFDataInicio(""); setFDataFim(""); }}>
               Limpar filtros
             </Button>
           </div>
