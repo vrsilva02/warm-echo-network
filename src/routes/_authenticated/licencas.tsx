@@ -76,6 +76,9 @@ function statusLicenca(p: ProdutoAgg): StatusFiltro {
 
 function Page() {
   const { canWrite } = useAuth();
+  const qc = useQueryClient();
+
+
 
   const { data: produtos, isLoading } = useQuery({
     queryKey: ["licencas-produtos-agg"],
