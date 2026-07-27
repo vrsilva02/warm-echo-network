@@ -39,7 +39,17 @@ type Row = {
   data_inicio: string | null;
   data_fim: string | null;
   observacao: string | null;
-  licencas?: { produtos_catalogo?: { nome_oficial: string } | null } | null;
+  chave_individual: string | null;
+  licencas?: {
+    id: string;
+    chave_ativacao: string | null;
+    produtos_catalogo?: {
+      id: string;
+      nome_oficial: string;
+      modelo_licenciamento: string | null;
+      tipo_licenciamento: string | null;
+    } | null;
+  } | null;
   usuarios?: { nome: string } | null;
   ativos?: { hostname: string } | null;
 };
@@ -50,6 +60,7 @@ const initial = {
   ativo_id: null as string | null,
   data_inicio: new Date().toISOString().slice(0, 10),
   data_fim: "",
+  chave_individual: "",
   observacao: "",
 };
 
