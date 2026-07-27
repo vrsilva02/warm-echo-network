@@ -25,6 +25,7 @@ import { useAuth } from "@/lib/auth";
 import { useConfirm } from "@/components/confirm-dialog";
 import { logAction } from "@/lib/audit";
 import { encerrarAlocacao, encerrarAlocacoes, criarAlocacao } from "@/lib/licencas";
+import { friendlyError } from "@/lib/errors";
 
 export const Route = createFileRoute("/_authenticated/licencas")({
   component: Page,
