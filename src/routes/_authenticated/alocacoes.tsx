@@ -74,6 +74,8 @@ function Page() {
   const [fAtivo, setFAtivo] = useState<string | null>(null);
   const [fChave, setFChave] = useState("");
   const [fStatus, setFStatus] = useState<"todas" | "ativa" | "encerrada">("todas");
+  const [fDataInicio, setFDataInicio] = useState("");
+  const [fDataFim, setFDataFim] = useState("");
 
   const { data: rows, isLoading } = useQuery({
     queryKey: ["alocacoes"],
