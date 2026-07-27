@@ -201,7 +201,7 @@ function ProductCard({ row, onSelect }: { row: ProdutoAgg; onSelect: (id: string
       .update({ nome_oficial: novo })
       .eq("id", row.produto_id);
     setSaving(false);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(friendlyError(error, "Não foi possível renomear a licença."));
     toast.success("Licença renomeada");
     void logAction("BULK_UPDATE", "produtos_catalogo", { operacao: "renomear", id: row.produto_id, de: row.nome_oficial, para: novo }, row.produto_id);
     setRenameOpen(false);
