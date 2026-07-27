@@ -48,7 +48,17 @@ type ElpRow = {
   saldo: number;
 };
 
-type ProdutoAgg = ElpRow & { subtipo: string | null };
+type ProdutoAgg = ElpRow & { subtipo: string | null; proxima_expiracao?: string | null };
+
+type StatusFiltro = "todos" | "ativa" | "inativa" | "vencida";
+
+function statusLicenca(p: ProdutoAgg): StatusFiltro {
+  const hoje = new Date().toISOString().slice(0, 10);
+  if (p.proxima_expiracao && p.proxima_expiracao < hoje) return "vencida";
+  if ((p.licencas_compradas ?? 0) === 0 && (p.licencas_alocadas ?? 0) === 0) return "inativa";
+  if ((p.licencas_alocadas ?? 0) === 0) return "inativa";
+  return "ativa";
+}
 
 function Page() {
   const { canWrite } = useAuth();
