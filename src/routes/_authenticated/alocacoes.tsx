@@ -191,6 +191,35 @@ function Page() {
       searchValue: (r) => r.ativos?.hostname, exportValue: (r) => r.ativos?.hostname,
     },
     {
+      id: "chave", header: "Chave",
+      accessor: (r) => {
+        const usaIndividual = isChaveIndividualRequired(r.licencas?.produtos_catalogo ?? null);
+        const chave = usaIndividual ? r.chave_individual : r.licencas?.chave_ativacao ?? null;
+        if (!chave) return <span className="text-muted-foreground text-xs">—</span>;
+        return (
+          <MaskedKey
+            value={chave}
+            context={{
+              tabela: usaIndividual ? "alocacoes" : "licencas",
+              registroId: usaIndividual ? r.id : (r.licencas?.id ?? r.licenca_id ?? r.id),
+              metadata: {
+                origem: usaIndividual ? "chave_individual" : "chave_ativacao",
+                alocacao_id: r.id,
+                licenca_id: r.licenca_id,
+                produto_id: r.licencas?.produtos_catalogo?.id ?? null,
+                produto: r.licencas?.produtos_catalogo?.nome_oficial ?? null,
+                ativo_id: r.ativo_id,
+                ativo_hostname: r.ativos?.hostname ?? null,
+                usuario_id: r.usuario_id,
+              },
+            }}
+          />
+        );
+      },
+      searchValue: () => undefined,
+      exportValue: () => "(protegida)",
+    },
+    {
       id: "inicio", header: "Início",
       accessor: (r) => r.data_inicio ?? "—",
       sortValue: (r) => r.data_inicio ?? "", exportValue: (r) => r.data_inicio,
