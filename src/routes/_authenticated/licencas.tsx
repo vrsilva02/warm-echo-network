@@ -222,7 +222,7 @@ function ProductCard({ row, onSelect }: { row: ProdutoAgg; onSelect: (id: string
     });
     if (!ok) return;
     const { error } = await supabase.from("produtos_catalogo").delete().eq("id", row.produto_id);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(friendlyError(error, "Não foi possível excluir a licença."));
     toast.success("Licença excluída");
     void logAction("BULK_DELETE", "produtos_catalogo", { id: row.produto_id, nome: row.nome_oficial }, row.produto_id);
     qc.invalidateQueries({ queryKey: ["licencas-produtos-agg"] });
