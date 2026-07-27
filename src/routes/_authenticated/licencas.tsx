@@ -56,17 +56,29 @@ function Page() {
   const { data: produtos, isLoading } = useQuery({
     queryKey: ["licencas-produtos-agg"],
     queryFn: async () => {
-      // vw_elp já traz totais por produto. Complemento com subtipo do catálogo.
-      const [{ data: elp, error: e1 }, { data: cat, error: e2 }] = await Promise.all([
+      // vw_elp já traz totais por produto. Complemento com subtipo do catálogo
+      // e a menor data de expiração dos blocos de licença para derivar status.
+      const [{ data: elp, error: e1 }, { data: cat, error: e2 }, { data: lic, error: e3 }] = await Promise.all([
         supabase.from("vw_elp").select("*"),
         supabase.from("produtos_catalogo").select("id, subtipo"),
+        supabase.from("licencas").select("produto_id, data_expiracao"),
       ]);
       if (e1) throw e1;
       if (e2) throw e2;
+      if (e3) throw e3;
       const subByProd = new Map((cat ?? []).map((c: any) => [c.id, c.subtipo as string | null]));
+      const expByProd = new Map<string, string | null>();
+      (lic ?? []).forEach((l: any) => {
+        if (!l.produto_id) return;
+        const cur = expByProd.get(l.produto_id);
+        const d = l.data_expiracao as string | null;
+        if (d && (!cur || d < cur)) expByProd.set(l.produto_id, d);
+        else if (!expByProd.has(l.produto_id)) expByProd.set(l.produto_id, cur ?? null);
+      });
       return (elp ?? []).map((r: any) => ({
         ...r,
         subtipo: subByProd.get(r.produto_id) ?? null,
+        proxima_expiracao: expByProd.get(r.produto_id) ?? null,
       })) as ProdutoAgg[];
     },
   });
