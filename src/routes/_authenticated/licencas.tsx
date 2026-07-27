@@ -100,12 +100,27 @@ function Page() {
   }, [produtos]);
 
   const [tab, setTab] = useState<string>("todas");
+  const [statusFiltro, setStatusFiltro] = useState<StatusFiltro>("todos");
   const [selectedProdId, setSelectedProdId] = useState<string | null>(null);
   const [newLicOpen, setNewLicOpen] = useState(false);
   const [editingLicId, setEditingLicId] = useState<string | null>(null);
   const [defaultCategoria, setDefaultCategoria] = useState<string | null>(null);
 
   const selected = produtos?.find((p) => p.produto_id === selectedProdId) ?? null;
+
+  function aplicarStatus(list: ProdutoAgg[]) {
+    if (statusFiltro === "todos") return list;
+    return list.filter((p) => statusLicenca(p) === statusFiltro);
+  }
+  const contagem = useMemo(() => {
+    const base = produtos ?? [];
+    return {
+      todos: base.length,
+      ativa: base.filter((p) => statusLicenca(p) === "ativa").length,
+      inativa: base.filter((p) => statusLicenca(p) === "inativa").length,
+      vencida: base.filter((p) => statusLicenca(p) === "vencida").length,
+    };
+  }, [produtos]);
 
   return (
     <>
@@ -129,19 +144,35 @@ function Page() {
         />
       ) : (
         <Tabs value={tab} onValueChange={setTab}>
-          <TabsList className="flex-wrap h-auto">
-            <TabsTrigger value="todas">Todas</TabsTrigger>
-            {categorias.map((c) => (
-              <TabsTrigger key={c} value={c}>{c}</TabsTrigger>
-            ))}
-          </TabsList>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <TabsList className="flex-wrap h-auto">
+              <TabsTrigger value="todas">Todas</TabsTrigger>
+              {categorias.map((c) => (
+                <TabsTrigger key={c} value={c}>{c}</TabsTrigger>
+              ))}
+            </TabsList>
+            <div className="flex items-center gap-2">
+              <Label className="text-xs text-muted-foreground">Status</Label>
+              <Select value={statusFiltro} onValueChange={(v) => setStatusFiltro(v as StatusFiltro)}>
+                <SelectTrigger className="h-8 w-[190px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos ({contagem.todos})</SelectItem>
+                  <SelectItem value="ativa">Ativas ({contagem.ativa})</SelectItem>
+                  <SelectItem value="inativa">Inativas ({contagem.inativa})</SelectItem>
+                  <SelectItem value="vencida">Vencidas ({contagem.vencida})</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
 
           <TabsContent value="todas" className="mt-4">
-            <ProductGrid rows={produtos ?? []} isLoading={isLoading} onSelect={setSelectedProdId} />
+            <ProductGrid rows={aplicarStatus(produtos ?? [])} isLoading={isLoading} onSelect={setSelectedProdId} />
           </TabsContent>
           {categorias.map((c) => (
             <TabsContent key={c} value={c} className="mt-4">
-              <ProductGrid rows={(produtos ?? []).filter((p) => p.categoria === c)} isLoading={isLoading} onSelect={setSelectedProdId} />
+              <ProductGrid rows={aplicarStatus((produtos ?? []).filter((p) => p.categoria === c))} isLoading={isLoading} onSelect={setSelectedProdId} />
             </TabsContent>
           ))}
         </Tabs>
