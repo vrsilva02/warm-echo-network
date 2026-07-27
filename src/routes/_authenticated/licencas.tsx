@@ -417,6 +417,7 @@ type AlocRow = {
   data_fim: string | null;
   observacao: string | null;
   licenca_id: string;
+  chave_individual: string | null;
   ativos: { id: string; hostname: string } | null;
   usuarios: { id: string; nome: string } | null;
   licencas: { id: string; chave_ativacao: string | null; contrato_id: string | null } | null;
@@ -436,6 +437,7 @@ function ProductDetail({
   const [sel, setSel] = useState<Set<string>>(new Set());
   const [showHistorico, setShowHistorico] = useState(false);
   const [vincOpen, setVincOpen] = useState(false);
+  const usaChaveIndividual = isChaveIndividualRequired(produto);
 
   const { data, isLoading } = useQuery({
     queryKey: ["alocacoes-produto", produto.produto_id, showHistorico],
@@ -443,7 +445,7 @@ function ProductDetail({
       let q = supabase
         .from("alocacoes")
         .select(
-          "id, data_inicio, data_fim, observacao, licenca_id, ativos(id, hostname), usuarios(id, nome), licencas!inner(id, produto_id, chave_ativacao, contrato_id)",
+          "id, data_inicio, data_fim, observacao, licenca_id, chave_individual, ativos(id, hostname), usuarios(id, nome), licencas!inner(id, produto_id, chave_ativacao, contrato_id)",
         )
         .eq("licencas.produto_id", produto.produto_id)
         .order("data_inicio", { ascending: false });
