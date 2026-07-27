@@ -262,14 +262,38 @@ function ProductCard({ row, onSelect }: { row: ProdutoAgg; onSelect: (id: string
   }
 
   async function removerProduto() {
+    // Busca impacto real antes de confirmar
+    const [blocosRes, ativasRes, historicoRes] = await Promise.all([
+      supabase.from("licencas").select("id, quantidade").eq("produto_id", row.produto_id),
+      supabase
+        .from("alocacoes")
+        .select("id, licencas!inner(produto_id)", { count: "exact", head: true })
+        .eq("licencas.produto_id", row.produto_id)
+        .is("data_fim", null),
+      supabase
+        .from("alocacoes")
+        .select("id, licencas!inner(produto_id)", { count: "exact", head: true })
+        .eq("licencas.produto_id", row.produto_id)
+        .not("data_fim", "is", null),
+    ]);
+    const blocos = blocosRes.data ?? [];
+    const seatsTotais = blocos.reduce((s, b) => s + (b.quantidade ?? 0), 0);
+    const atribuidas = ativasRes.count ?? usadas;
+    const disponiveisReal = seatsTotais - atribuidas;
+    const historico = historicoRes.count ?? 0;
+
     const ok = await confirm({
       title: "Excluir esta licença?",
       description:
-        "O produto e todos os blocos de licenças, atribuições e histórico serão removidos definitivamente.",
+        "O produto e todos os blocos de licenças, atribuições e histórico serão removidos definitivamente. Esta ação é irreversível.",
       tone: "danger",
       impact: [
-        { label: "Seats totais", value: total, tone: "danger" },
-        { label: "Atribuições ativas", value: usadas, tone: usadas > 0 ? "danger" : "default" },
+        { label: "Produto", value: row.nome_oficial },
+        { label: "Blocos de licenças (SKUs)", value: blocos.length, tone: blocos.length > 0 ? "warn" : "default" },
+        { label: "Seats totais", value: seatsTotais, tone: seatsTotais > 0 ? "warn" : "default" },
+        { label: "Seats em uso (atribuições ativas)", value: atribuidas, tone: atribuidas > 0 ? "danger" : "default" },
+        { label: "Seats disponíveis", value: disponiveisReal, tone: disponiveisReal < 0 ? "danger" : "default" },
+        { label: "Atribuições no histórico", value: historico, tone: historico > 0 ? "warn" : "default" },
       ],
       confirmLabel: "Excluir definitivamente",
     });
@@ -277,10 +301,16 @@ function ProductCard({ row, onSelect }: { row: ProdutoAgg; onSelect: (id: string
     const { error } = await supabase.from("produtos_catalogo").delete().eq("id", row.produto_id);
     if (error) return toast.error(friendlyError(error, "Não foi possível excluir a licença."));
     toast.success("Licença excluída");
-    void logAction("BULK_DELETE", "produtos_catalogo", { id: row.produto_id, nome: row.nome_oficial }, row.produto_id);
+    void logAction(
+      "BULK_DELETE",
+      "produtos_catalogo",
+      { id: row.produto_id, nome: row.nome_oficial, seats_totais: seatsTotais, atribuicoes_ativas: atribuidas, blocos: blocos.length },
+      row.produto_id,
+    );
     qc.invalidateQueries({ queryKey: ["licencas-produtos-agg"] });
     qc.invalidateQueries({ queryKey: ["dashboard"] });
   }
+
 
   return (
     <>
