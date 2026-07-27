@@ -1,0 +1,1 @@
+ALTER TABLE public.alocacoes ADD COLUMN IF NOT EXISTS chave_individual text;
