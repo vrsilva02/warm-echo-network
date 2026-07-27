@@ -25,6 +25,7 @@ import { useAuth } from "@/lib/auth";
 import { useConfirm } from "@/components/confirm-dialog";
 import { logAction } from "@/lib/audit";
 import { encerrarAlocacao, encerrarAlocacoes, criarAlocacao } from "@/lib/licencas";
+import { friendlyError } from "@/lib/errors";
 
 export const Route = createFileRoute("/_authenticated/licencas")({
   component: Page,
@@ -47,7 +48,17 @@ type ElpRow = {
   saldo: number;
 };
 
-type ProdutoAgg = ElpRow & { subtipo: string | null };
+type ProdutoAgg = ElpRow & { subtipo: string | null; proxima_expiracao?: string | null };
+
+type StatusFiltro = "todos" | "ativa" | "inativa" | "vencida";
+
+function statusLicenca(p: ProdutoAgg): StatusFiltro {
+  const hoje = new Date().toISOString().slice(0, 10);
+  if (p.proxima_expiracao && p.proxima_expiracao < hoje) return "vencida";
+  if ((p.licencas_compradas ?? 0) === 0 && (p.licencas_alocadas ?? 0) === 0) return "inativa";
+  if ((p.licencas_alocadas ?? 0) === 0) return "inativa";
+  return "ativa";
+}
 
 function Page() {
   const { canWrite } = useAuth();
@@ -55,17 +66,29 @@ function Page() {
   const { data: produtos, isLoading } = useQuery({
     queryKey: ["licencas-produtos-agg"],
     queryFn: async () => {
-      // vw_elp já traz totais por produto. Complemento com subtipo do catálogo.
-      const [{ data: elp, error: e1 }, { data: cat, error: e2 }] = await Promise.all([
+      // vw_elp já traz totais por produto. Complemento com subtipo do catálogo
+      // e a menor data de expiração dos blocos de licença para derivar status.
+      const [{ data: elp, error: e1 }, { data: cat, error: e2 }, { data: lic, error: e3 }] = await Promise.all([
         supabase.from("vw_elp").select("*"),
         supabase.from("produtos_catalogo").select("id, subtipo"),
+        supabase.from("licencas").select("produto_id, data_expiracao"),
       ]);
       if (e1) throw e1;
       if (e2) throw e2;
+      if (e3) throw e3;
       const subByProd = new Map((cat ?? []).map((c: any) => [c.id, c.subtipo as string | null]));
+      const expByProd = new Map<string, string | null>();
+      (lic ?? []).forEach((l: any) => {
+        if (!l.produto_id) return;
+        const cur = expByProd.get(l.produto_id);
+        const d = l.data_expiracao as string | null;
+        if (d && (!cur || d < cur)) expByProd.set(l.produto_id, d);
+        else if (!expByProd.has(l.produto_id)) expByProd.set(l.produto_id, cur ?? null);
+      });
       return (elp ?? []).map((r: any) => ({
         ...r,
         subtipo: subByProd.get(r.produto_id) ?? null,
+        proxima_expiracao: expByProd.get(r.produto_id) ?? null,
       })) as ProdutoAgg[];
     },
   });
@@ -77,12 +100,27 @@ function Page() {
   }, [produtos]);
 
   const [tab, setTab] = useState<string>("todas");
+  const [statusFiltro, setStatusFiltro] = useState<StatusFiltro>("todos");
   const [selectedProdId, setSelectedProdId] = useState<string | null>(null);
   const [newLicOpen, setNewLicOpen] = useState(false);
   const [editingLicId, setEditingLicId] = useState<string | null>(null);
   const [defaultCategoria, setDefaultCategoria] = useState<string | null>(null);
 
   const selected = produtos?.find((p) => p.produto_id === selectedProdId) ?? null;
+
+  function aplicarStatus(list: ProdutoAgg[]) {
+    if (statusFiltro === "todos") return list;
+    return list.filter((p) => statusLicenca(p) === statusFiltro);
+  }
+  const contagem = useMemo(() => {
+    const base = produtos ?? [];
+    return {
+      todos: base.length,
+      ativa: base.filter((p) => statusLicenca(p) === "ativa").length,
+      inativa: base.filter((p) => statusLicenca(p) === "inativa").length,
+      vencida: base.filter((p) => statusLicenca(p) === "vencida").length,
+    };
+  }, [produtos]);
 
   return (
     <>
@@ -106,19 +144,35 @@ function Page() {
         />
       ) : (
         <Tabs value={tab} onValueChange={setTab}>
-          <TabsList className="flex-wrap h-auto">
-            <TabsTrigger value="todas">Todas</TabsTrigger>
-            {categorias.map((c) => (
-              <TabsTrigger key={c} value={c}>{c}</TabsTrigger>
-            ))}
-          </TabsList>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <TabsList className="flex-wrap h-auto">
+              <TabsTrigger value="todas">Todas</TabsTrigger>
+              {categorias.map((c) => (
+                <TabsTrigger key={c} value={c}>{c}</TabsTrigger>
+              ))}
+            </TabsList>
+            <div className="flex items-center gap-2">
+              <Label className="text-xs text-muted-foreground">Status</Label>
+              <Select value={statusFiltro} onValueChange={(v) => setStatusFiltro(v as StatusFiltro)}>
+                <SelectTrigger className="h-8 w-[190px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos ({contagem.todos})</SelectItem>
+                  <SelectItem value="ativa">Ativas ({contagem.ativa})</SelectItem>
+                  <SelectItem value="inativa">Inativas ({contagem.inativa})</SelectItem>
+                  <SelectItem value="vencida">Vencidas ({contagem.vencida})</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
 
           <TabsContent value="todas" className="mt-4">
-            <ProductGrid rows={produtos ?? []} isLoading={isLoading} onSelect={setSelectedProdId} />
+            <ProductGrid rows={aplicarStatus(produtos ?? [])} isLoading={isLoading} onSelect={setSelectedProdId} />
           </TabsContent>
           {categorias.map((c) => (
             <TabsContent key={c} value={c} className="mt-4">
-              <ProductGrid rows={(produtos ?? []).filter((p) => p.categoria === c)} isLoading={isLoading} onSelect={setSelectedProdId} />
+              <ProductGrid rows={aplicarStatus((produtos ?? []).filter((p) => p.categoria === c))} isLoading={isLoading} onSelect={setSelectedProdId} />
             </TabsContent>
           ))}
         </Tabs>
@@ -200,7 +254,7 @@ function ProductCard({ row, onSelect }: { row: ProdutoAgg; onSelect: (id: string
       .update({ nome_oficial: novo })
       .eq("id", row.produto_id);
     setSaving(false);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(friendlyError(error, "Não foi possível renomear a licença."));
     toast.success("Licença renomeada");
     void logAction("BULK_UPDATE", "produtos_catalogo", { operacao: "renomear", id: row.produto_id, de: row.nome_oficial, para: novo }, row.produto_id);
     setRenameOpen(false);
@@ -221,7 +275,7 @@ function ProductCard({ row, onSelect }: { row: ProdutoAgg; onSelect: (id: string
     });
     if (!ok) return;
     const { error } = await supabase.from("produtos_catalogo").delete().eq("id", row.produto_id);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(friendlyError(error, "Não foi possível excluir a licença."));
     toast.success("Licença excluída");
     void logAction("BULK_DELETE", "produtos_catalogo", { id: row.produto_id, nome: row.nome_oficial }, row.produto_id);
     qc.invalidateQueries({ queryKey: ["licencas-produtos-agg"] });
@@ -552,7 +606,7 @@ function LicencasDoProduto({ produto }: { produto: ProdutoAgg }) {
     });
     if (!ok) return;
     const { error } = await supabase.from("licencas").delete().eq("id", id);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(friendlyError(error));
     toast.success("Bloco excluído");
     qc.invalidateQueries({ queryKey: ["licencas-blocos"] });
     qc.invalidateQueries({ queryKey: ["licencas-produtos-agg"] });
@@ -844,7 +898,7 @@ function LicencaDialog({
     const { error } = licencaId
       ? await supabase.from("licencas").update(payload).eq("id", licencaId)
       : await supabase.from("licencas").insert(payload);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(friendlyError(error));
     toast.success("Salvo");
     onOpenChange(false);
     qc.invalidateQueries({ queryKey: ["licencas-blocos"] });
