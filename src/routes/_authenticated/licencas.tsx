@@ -553,7 +553,7 @@ function LicencasDoProduto({ produto }: { produto: ProdutoAgg }) {
     });
     if (!ok) return;
     const { error } = await supabase.from("licencas").delete().eq("id", id);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(friendlyError(error));
     toast.success("Bloco excluído");
     qc.invalidateQueries({ queryKey: ["licencas-blocos"] });
     qc.invalidateQueries({ queryKey: ["licencas-produtos-agg"] });
@@ -845,7 +845,7 @@ function LicencaDialog({
     const { error } = licencaId
       ? await supabase.from("licencas").update(payload).eq("id", licencaId)
       : await supabase.from("licencas").insert(payload);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(friendlyError(error));
     toast.success("Salvo");
     onOpenChange(false);
     qc.invalidateQueries({ queryKey: ["licencas-blocos"] });
