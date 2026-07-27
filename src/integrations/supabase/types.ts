@@ -17,6 +17,7 @@ export type Database = {
       alocacoes: {
         Row: {
           ativo_id: string | null
+          chave_individual: string | null
           created_at: string | null
           data_fim: string | null
           data_inicio: string | null
@@ -27,6 +28,7 @@ export type Database = {
         }
         Insert: {
           ativo_id?: string | null
+          chave_individual?: string | null
           created_at?: string | null
           data_fim?: string | null
           data_inicio?: string | null
@@ -37,6 +39,7 @@ export type Database = {
         }
         Update: {
           ativo_id?: string | null
+          chave_individual?: string | null
           created_at?: string | null
           data_fim?: string | null
           data_inicio?: string | null

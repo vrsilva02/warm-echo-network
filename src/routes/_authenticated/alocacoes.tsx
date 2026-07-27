@@ -18,6 +18,8 @@ import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
 import { logAction } from "@/lib/audit";
 import { useConfirm } from "@/components/confirm-dialog";
+import { MaskedKey } from "@/components/masked-key";
+import { isChaveIndividualRequired } from "@/routes/_authenticated/licencas";
 
 export const Route = createFileRoute("/_authenticated/alocacoes")({
   component: Page,
@@ -37,7 +39,17 @@ type Row = {
   data_inicio: string | null;
   data_fim: string | null;
   observacao: string | null;
-  licencas?: { produtos_catalogo?: { nome_oficial: string } | null } | null;
+  chave_individual: string | null;
+  licencas?: {
+    id: string;
+    chave_ativacao: string | null;
+    produtos_catalogo?: {
+      id: string;
+      nome_oficial: string;
+      modelo_licenciamento: string | null;
+      tipo_licenciamento: string | null;
+    } | null;
+  } | null;
   usuarios?: { nome: string } | null;
   ativos?: { hostname: string } | null;
 };
@@ -48,6 +60,7 @@ const initial = {
   ativo_id: null as string | null,
   data_inicio: new Date().toISOString().slice(0, 10),
   data_fim: "",
+  chave_individual: "",
   observacao: "",
 };
 
@@ -63,7 +76,9 @@ function Page() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("alocacoes")
-        .select("*, licencas(produtos_catalogo(nome_oficial)), usuarios(nome), ativos(hostname)")
+        .select(
+          "*, licencas(id, chave_ativacao, produtos_catalogo(id, nome_oficial, modelo_licenciamento, tipo_licenciamento)), usuarios(nome), ativos(hostname)",
+        )
         .order("data_inicio", { ascending: false });
       if (error) throw error;
       return data as unknown as Row[];
@@ -71,7 +86,11 @@ function Page() {
   });
   const { data: licencas } = useQuery({
     queryKey: ["licencas-lite"],
-    queryFn: async () => (await supabase.from("licencas").select("id, produtos_catalogo(nome_oficial)")).data ?? [],
+    queryFn: async () =>
+      (await supabase
+        .from("licencas")
+        .select("id, produtos_catalogo(id, nome_oficial, modelo_licenciamento, tipo_licenciamento)")
+      ).data ?? [],
   });
   const { data: usuarios } = useQuery({
     queryKey: ["usuarios-lite"],
@@ -82,16 +101,23 @@ function Page() {
     queryFn: async () => (await supabase.from("ativos").select("id,hostname").neq("status_ciclo_vida", "baixado").order("hostname")).data ?? [],
   });
 
+  const licencaSel = (licencas ?? []).find((l: any) => l.id === form.licenca_id) as any | undefined;
+  const chaveObrigatoria = isChaveIndividualRequired(licencaSel?.produtos_catalogo ?? null);
+
   function openNew() { setForm(initial); setOpen(true); }
   async function save() {
     if (!form.licenca_id) return toast.error("Selecione a licença");
     if (!form.usuario_id && !form.ativo_id) return toast.error("Vincule a um colaborador ou ativo");
+    if (chaveObrigatoria && !form.chave_individual.trim()) {
+      return toast.error("Produto OEM/Retail: informe a chave individual desta alocação.");
+    }
     const { error } = await supabase.from("alocacoes").insert({
       licenca_id: form.licenca_id,
       usuario_id: form.usuario_id,
       ativo_id: form.ativo_id,
       data_inicio: form.data_inicio,
       data_fim: form.data_fim || null,
+      chave_individual: form.chave_individual.trim() || null,
       observacao: form.observacao || null,
     });
     if (error) return toast.error(error.message);
@@ -163,6 +189,35 @@ function Page() {
       accessor: (r) => r.ativos?.hostname ?? "—",
       sortValue: (r) => r.ativos?.hostname ?? "",
       searchValue: (r) => r.ativos?.hostname, exportValue: (r) => r.ativos?.hostname,
+    },
+    {
+      id: "chave", header: "Chave",
+      accessor: (r) => {
+        const usaIndividual = isChaveIndividualRequired(r.licencas?.produtos_catalogo ?? null);
+        const chave = usaIndividual ? r.chave_individual : r.licencas?.chave_ativacao ?? null;
+        if (!chave) return <span className="text-muted-foreground text-xs">—</span>;
+        return (
+          <MaskedKey
+            value={chave}
+            context={{
+              tabela: usaIndividual ? "alocacoes" : "licencas",
+              registroId: usaIndividual ? r.id : (r.licencas?.id ?? r.licenca_id ?? r.id),
+              metadata: {
+                origem: usaIndividual ? "chave_individual" : "chave_ativacao",
+                alocacao_id: r.id,
+                licenca_id: r.licenca_id,
+                produto_id: r.licencas?.produtos_catalogo?.id ?? null,
+                produto: r.licencas?.produtos_catalogo?.nome_oficial ?? null,
+                ativo_id: r.ativo_id,
+                ativo_hostname: r.ativos?.hostname ?? null,
+                usuario_id: r.usuario_id,
+              },
+            }}
+          />
+        );
+      },
+      searchValue: () => undefined,
+      exportValue: () => "(protegida)",
     },
     {
       id: "inicio", header: "Início",
@@ -274,6 +329,23 @@ function Page() {
         <div className="grid grid-cols-2 gap-3">
           <div><Label>Início</Label><Input type="date" value={form.data_inicio} onChange={(e) => setForm({ ...form, data_inicio: e.target.value })} /></div>
           <div><Label>Fim (opcional)</Label><Input type="date" value={form.data_fim} onChange={(e) => setForm({ ...form, data_fim: e.target.value })} /></div>
+        </div>
+        <div>
+          <Label>
+            Chave individual {chaveObrigatoria && <span className="text-destructive">*</span>}
+            {!chaveObrigatoria && <span className="text-muted-foreground text-xs"> (opcional)</span>}
+          </Label>
+          <Input
+            value={form.chave_individual}
+            onChange={(e) => setForm({ ...form, chave_individual: e.target.value })}
+            placeholder={chaveObrigatoria ? "Obrigatório para produtos OEM/Retail" : "Somente se este ativo tem chave própria"}
+            autoComplete="off"
+          />
+          {chaveObrigatoria && (
+            <p className="text-[11px] text-muted-foreground mt-1">
+              Produto OEM/Retail: cada ativo recebe uma chave própria. Ela ficará mascarada e cada revelação é registrada no log de auditoria.
+            </p>
+          )}
         </div>
         <div><Label>Observação</Label><Textarea value={form.observacao} onChange={(e) => setForm({ ...form, observacao: e.target.value })} /></div>
       </CrudDialog>

@@ -26,6 +26,7 @@ import { useConfirm } from "@/components/confirm-dialog";
 import { logAction } from "@/lib/audit";
 import { encerrarAlocacao, encerrarAlocacoes, criarAlocacao } from "@/lib/licencas";
 import { friendlyError } from "@/lib/errors";
+import { MaskedKey } from "@/components/masked-key";
 
 export const Route = createFileRoute("/_authenticated/licencas")({
   component: Page,
@@ -48,9 +49,21 @@ type ElpRow = {
   saldo: number;
 };
 
-type ProdutoAgg = ElpRow & { subtipo: string | null; proxima_expiracao?: string | null };
+type ProdutoAgg = ElpRow & {
+  subtipo: string | null;
+  proxima_expiracao?: string | null;
+  modelo_licenciamento?: string | null;
+  tipo_licenciamento?: string | null;
+};
 
 type StatusFiltro = "todos" | "ativa" | "inativa" | "vencida";
+
+/** True quando o produto usa chave por dispositivo (OEM/Retail) e cada alocação precisa da sua própria chave. */
+export function isChaveIndividualRequired(p: { modelo_licenciamento?: string | null; tipo_licenciamento?: string | null } | null | undefined): boolean {
+  if (!p) return false;
+  const s = `${p.modelo_licenciamento ?? ""} ${p.tipo_licenciamento ?? ""}`.toLowerCase();
+  return /(^|\W)(oem|retail)(\W|$)/.test(s);
+}
 
 function statusLicenca(p: ProdutoAgg): StatusFiltro {
   const hoje = new Date().toISOString().slice(0, 10);
@@ -70,13 +83,13 @@ function Page() {
       // e a menor data de expiração dos blocos de licença para derivar status.
       const [{ data: elp, error: e1 }, { data: cat, error: e2 }, { data: lic, error: e3 }] = await Promise.all([
         supabase.from("vw_elp").select("*"),
-        supabase.from("produtos_catalogo").select("id, subtipo"),
+        supabase.from("produtos_catalogo").select("id, subtipo, modelo_licenciamento, tipo_licenciamento"),
         supabase.from("licencas").select("produto_id, data_expiracao"),
       ]);
       if (e1) throw e1;
       if (e2) throw e2;
       if (e3) throw e3;
-      const subByProd = new Map((cat ?? []).map((c: any) => [c.id, c.subtipo as string | null]));
+      const catByProd = new Map((cat ?? []).map((c: any) => [c.id, c]));
       const expByProd = new Map<string, string | null>();
       (lic ?? []).forEach((l: any) => {
         if (!l.produto_id) return;
@@ -85,11 +98,16 @@ function Page() {
         if (d && (!cur || d < cur)) expByProd.set(l.produto_id, d);
         else if (!expByProd.has(l.produto_id)) expByProd.set(l.produto_id, cur ?? null);
       });
-      return (elp ?? []).map((r: any) => ({
-        ...r,
-        subtipo: subByProd.get(r.produto_id) ?? null,
-        proxima_expiracao: expByProd.get(r.produto_id) ?? null,
-      })) as ProdutoAgg[];
+      return (elp ?? []).map((r: any) => {
+        const c: any = catByProd.get(r.produto_id) ?? {};
+        return {
+          ...r,
+          subtipo: c.subtipo ?? null,
+          modelo_licenciamento: c.modelo_licenciamento ?? null,
+          tipo_licenciamento: c.tipo_licenciamento ?? null,
+          proxima_expiracao: expByProd.get(r.produto_id) ?? null,
+        };
+      }) as ProdutoAgg[];
     },
   });
 
@@ -399,6 +417,7 @@ type AlocRow = {
   data_fim: string | null;
   observacao: string | null;
   licenca_id: string;
+  chave_individual: string | null;
   ativos: { id: string; hostname: string } | null;
   usuarios: { id: string; nome: string } | null;
   licencas: { id: string; chave_ativacao: string | null; contrato_id: string | null } | null;
@@ -418,6 +437,7 @@ function ProductDetail({
   const [sel, setSel] = useState<Set<string>>(new Set());
   const [showHistorico, setShowHistorico] = useState(false);
   const [vincOpen, setVincOpen] = useState(false);
+  const usaChaveIndividual = isChaveIndividualRequired(produto);
 
   const { data, isLoading } = useQuery({
     queryKey: ["alocacoes-produto", produto.produto_id, showHistorico],
@@ -425,7 +445,7 @@ function ProductDetail({
       let q = supabase
         .from("alocacoes")
         .select(
-          "id, data_inicio, data_fim, observacao, licenca_id, ativos(id, hostname), usuarios(id, nome), licencas!inner(id, produto_id, chave_ativacao, contrato_id)",
+          "id, data_inicio, data_fim, observacao, licenca_id, chave_individual, ativos(id, hostname), usuarios(id, nome), licencas!inner(id, produto_id, chave_ativacao, contrato_id)",
         )
         .eq("licencas.produto_id", produto.produto_id)
         .order("data_inicio", { ascending: false });
@@ -553,6 +573,7 @@ function ProductDetail({
                     </th>
                     <th className="text-left p-2 font-medium">Ativo</th>
                     <th className="text-left p-2 font-medium">Colaborador</th>
+                    <th className="text-left p-2 font-medium">Chave</th>
                     <th className="text-left p-2 font-medium">Início</th>
                     <th className="text-left p-2 font-medium">Fim</th>
                     <th className="text-left p-2 font-medium">Status</th>
@@ -560,13 +581,34 @@ function ProductDetail({
                   </tr>
                 </thead>
                 <tbody>
-                  {rows.map((r) => (
+                  {rows.map((r) => {
+                    const chave = usaChaveIndividual ? r.chave_individual : r.licencas?.chave_ativacao ?? null;
+                    return (
                     <tr key={r.id} className="border-t hover:bg-muted/30">
                       <td className="p-2">
                         <Checkbox checked={sel.has(r.id)} onCheckedChange={() => toggle(r.id)} />
                       </td>
                       <td className="p-2 font-mono text-xs">{r.ativos?.hostname ?? "—"}</td>
                       <td className="p-2">{r.usuarios?.nome ?? "—"}</td>
+                      <td className="p-2">
+                        <MaskedKey
+                          value={chave}
+                          context={{
+                            tabela: usaChaveIndividual ? "alocacoes" : "licencas",
+                            registroId: usaChaveIndividual ? r.id : (r.licencas?.id ?? r.licenca_id),
+                            metadata: {
+                              origem: usaChaveIndividual ? "chave_individual" : "chave_ativacao",
+                              alocacao_id: r.id,
+                              licenca_id: r.licenca_id,
+                              produto_id: produto.produto_id,
+                              produto: produto.nome_oficial,
+                              ativo_id: r.ativos?.id ?? null,
+                              ativo_hostname: r.ativos?.hostname ?? null,
+                              usuario_id: r.usuarios?.id ?? null,
+                            },
+                          }}
+                        />
+                      </td>
                       <td className="p-2 tabular-nums">{r.data_inicio ? new Date(r.data_inicio).toLocaleDateString("pt-BR") : "—"}</td>
                       <td className="p-2 tabular-nums">{r.data_fim ? new Date(r.data_fim).toLocaleDateString("pt-BR") : "—"}</td>
                       <td className="p-2">
@@ -580,7 +622,8 @@ function ProductDetail({
                         )}
                       </td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -724,8 +767,10 @@ function VincularDialog({
   const [licencaId, setLicencaId] = useState<string | null>(null);
   const [ativoId, setAtivoId] = useState<string | null>(null);
   const [usuarioId, setUsuarioId] = useState<string | null>(null);
+  const [chaveIndividual, setChaveIndividual] = useState("");
   const [obs, setObs] = useState("");
   const [busy, setBusy] = useState(false);
+  const chaveObrigatoria = isChaveIndividualRequired(produto);
 
   const { data: licencas } = useQuery({
     queryKey: ["licencas-do-produto", produto.produto_id],
@@ -750,6 +795,9 @@ function VincularDialog({
   async function submit() {
     if (!effectiveLic) return toast.error("Selecione o bloco de licença");
     if (!ativoId && !usuarioId) return toast.error("Selecione ao menos um ativo ou colaborador");
+    if (chaveObrigatoria && !chaveIndividual.trim()) {
+      return toast.error("Este produto é OEM/Retail: informe a chave individual desta alocação.");
+    }
 
     const saldo = produto.saldo;
     if (saldo <= 0) {
@@ -771,6 +819,7 @@ function VincularDialog({
       licenca_id: effectiveLic,
       ativo_id: ativoId,
       usuario_id: usuarioId,
+      chave_individual: chaveObrigatoria ? chaveIndividual.trim() : (chaveIndividual.trim() || null),
       observacao: obs || null,
       saldoAntes: saldo,
     });
@@ -778,7 +827,7 @@ function VincularDialog({
     if (!r.ok) return toast.error(r.error || "Erro");
     toast.success(r.deficit ? "Vinculado (com déficit registrado)" : "Vinculado");
     onOpenChange(false);
-    setLicencaId(null); setAtivoId(null); setUsuarioId(null); setObs("");
+    setLicencaId(null); setAtivoId(null); setUsuarioId(null); setChaveIndividual(""); setObs("");
     onDone();
   }
 
@@ -823,6 +872,23 @@ function VincularDialog({
               onChange={setUsuarioId}
               options={(usuarios ?? []).map((u) => ({ value: u.id, label: u.nome }))}
             />
+          </div>
+          <div>
+            <Label>
+              Chave individual {chaveObrigatoria && <span className="text-destructive">*</span>}
+              {!chaveObrigatoria && <span className="text-muted-foreground text-xs"> (opcional)</span>}
+            </Label>
+            <Input
+              value={chaveIndividual}
+              onChange={(e) => setChaveIndividual(e.target.value)}
+              placeholder={chaveObrigatoria ? "Obrigatório para OEM/Retail" : "Somente se este ativo tem chave própria"}
+              autoComplete="off"
+            />
+            {chaveObrigatoria && (
+              <p className="text-[11px] text-muted-foreground mt-1">
+                Produto OEM/Retail: cada ativo recebe uma chave própria; ficará mascarada e cada revelação é registrada no log de auditoria.
+              </p>
+            )}
           </div>
           <div>
             <Label>Observação</Label>
