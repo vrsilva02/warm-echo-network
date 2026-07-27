@@ -330,6 +330,23 @@ function Page() {
           <div><Label>Início</Label><Input type="date" value={form.data_inicio} onChange={(e) => setForm({ ...form, data_inicio: e.target.value })} /></div>
           <div><Label>Fim (opcional)</Label><Input type="date" value={form.data_fim} onChange={(e) => setForm({ ...form, data_fim: e.target.value })} /></div>
         </div>
+        <div>
+          <Label>
+            Chave individual {chaveObrigatoria && <span className="text-destructive">*</span>}
+            {!chaveObrigatoria && <span className="text-muted-foreground text-xs"> (opcional)</span>}
+          </Label>
+          <Input
+            value={form.chave_individual}
+            onChange={(e) => setForm({ ...form, chave_individual: e.target.value })}
+            placeholder={chaveObrigatoria ? "Obrigatório para produtos OEM/Retail" : "Somente se este ativo tem chave própria"}
+            autoComplete="off"
+          />
+          {chaveObrigatoria && (
+            <p className="text-[11px] text-muted-foreground mt-1">
+              Produto OEM/Retail: cada ativo recebe uma chave própria. Ela ficará mascarada e cada revelação é registrada no log de auditoria.
+            </p>
+          )}
+        </div>
         <div><Label>Observação</Label><Textarea value={form.observacao} onChange={(e) => setForm({ ...form, observacao: e.target.value })} /></div>
       </CrudDialog>
     </>
