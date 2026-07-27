@@ -26,7 +26,7 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
   component: DashboardPage,
   head: () => ({
     meta: [
-      { title: "Dashboard — Gestorait" },
+      { title: "Dashboard — GestoraIT" },
       { name: "description", content: "Visão geral de compliance, licenças e ativos." },
     ],
   }),

@@ -25,7 +25,7 @@ export const Route = createFileRoute("/_authenticated/alocacoes")({
   component: Page,
   head: () => ({
     meta: [
-      { title: "Alocações — Gestorait" },
+      { title: "Alocações — GestoraIT" },
       { name: "description", content: "Vínculo de licenças a colaboradores e ativos." },
     ],
   }),

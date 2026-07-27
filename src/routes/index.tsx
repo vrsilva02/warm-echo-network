@@ -7,8 +7,8 @@ export const Route = createFileRoute("/")({
   component: IndexRedirect,
   head: () => ({
     meta: [
-      { title: "Gestorait — Painel" },
-      { name: "description", content: "Acesso ao painel do sistema Gestorait." },
+      { title: "GestoraIT — Painel" },
+      { name: "description", content: "Acesso ao painel do sistema GestoraIT." },
     ],
   }),
 });

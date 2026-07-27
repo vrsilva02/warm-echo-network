@@ -75,7 +75,7 @@ export function AppSidebar() {
           </div>
           {!collapsed && (
             <div className="min-w-0">
-              <div className="text-sm font-semibold truncate">Gestorait</div>
+              <div className="text-sm font-semibold truncate">GestoraIT</div>
               <div className="text-[10px] text-muted-foreground truncate">Gestão de Licenças</div>
             </div>
           )}

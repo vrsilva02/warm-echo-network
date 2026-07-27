@@ -15,7 +15,7 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
   head: () => ({
     meta: [
-      { title: "Entrar — Gestorait" },
+      { title: "Entrar — GestoraIT" },
       { name: "description", content: "Acesso ao sistema de gestão de ativos e licenças." },
       { name: "robots", content: "noindex" },
     ],
@@ -73,7 +73,7 @@ function AuthPage() {
             <ShieldCheck className="h-5 w-5" />
           </div>
           <div>
-            <h1 className="text-lg font-semibold">Gestorait</h1>
+            <h1 className="text-lg font-semibold">GestoraIT</h1>
             <p className="text-xs text-muted-foreground">Gestão de Ativos e Licenças</p>
           </div>
         </div>

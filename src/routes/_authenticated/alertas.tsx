@@ -14,7 +14,7 @@ export const Route = createFileRoute("/_authenticated/alertas")({
   component: Page,
   head: () => ({
     meta: [
-      { title: "Alertas — Gestorait" },
+      { title: "Alertas — GestoraIT" },
       { name: "description", content: "Central de alertas: contratos vencendo, déficit de compliance e licenças ociosas." },
     ],
   }),
