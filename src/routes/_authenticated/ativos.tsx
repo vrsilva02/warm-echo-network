@@ -17,6 +17,7 @@ import { useAuth } from "@/lib/auth";
 import { logAction } from "@/lib/audit";
 import { useConfirm } from "@/components/confirm-dialog";
 import { Combobox } from "@/components/combobox";
+import { AtivosImportExport } from "@/components/ativos-import-export";
 
 export const Route = createFileRoute("/_authenticated/ativos")({
   component: AtivosPage,
@@ -260,7 +261,18 @@ function AtivosPage() {
       <PageHeader
         title="Ativos"
         description="Notebooks, desktops, servidores e VDIs — com ciclo de vida controlado."
-        actions={canWrite ? <Button size="sm" onClick={openNew}>Novo ativo</Button> : undefined}
+        actions={
+          <div className="flex items-center gap-2">
+            <AtivosImportExport
+              canWrite={canWrite}
+              onImported={() => {
+                qc.invalidateQueries({ queryKey: ["ativos"] });
+                qc.invalidateQueries({ queryKey: ["dashboard"] });
+              }}
+            />
+            {canWrite && <Button size="sm" onClick={openNew}>Novo ativo</Button>}
+          </div>
+        }
       />
       <AdvancedTable<Ativo>
         storageKey="ativos"
