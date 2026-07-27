@@ -55,6 +55,7 @@ export async function criarAlocacao(input: {
   licenca_id: string;
   ativo_id?: string | null;
   usuario_id?: string | null;
+  chave_individual?: string | null;
   observacao?: string | null;
   saldoAntes: number;
 }): Promise<{ ok: boolean; error?: string; deficit: boolean }> {
@@ -64,6 +65,7 @@ export async function criarAlocacao(input: {
       licenca_id: input.licenca_id,
       ativo_id: input.ativo_id ?? null,
       usuario_id: input.usuario_id ?? null,
+      chave_individual: input.chave_individual ?? null,
       observacao: input.observacao ?? null,
     })
     .select("id")
