@@ -285,10 +285,16 @@ function Page() {
       const chave = (r.chave_individual ?? r.licencas?.chave_ativacao ?? "").toLowerCase();
       if (!chave.includes(q)) return false;
     }
+    if (fDataInicio || fDataFim) {
+      const alocInicio = r.data_inicio ?? "";
+      const alocFim = r.data_fim ?? new Date().toISOString().slice(0, 10);
+      if (fDataInicio && alocFim < fDataInicio) return false;
+      if (fDataFim && alocInicio > fDataFim) return false;
+    }
     return true;
   });
 
-  const hasFilter = !!fProduto || !!fAtivo || !!fChave.trim() || fStatus !== "todas";
+  const hasFilter = !!fProduto || !!fAtivo || !!fChave.trim() || fStatus !== "todas" || !!fDataInicio || !!fDataFim;
 
   return (
     <>
