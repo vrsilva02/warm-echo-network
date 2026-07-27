@@ -874,6 +874,23 @@ function VincularDialog({
             />
           </div>
           <div>
+            <Label>
+              Chave individual {chaveObrigatoria && <span className="text-destructive">*</span>}
+              {!chaveObrigatoria && <span className="text-muted-foreground text-xs"> (opcional)</span>}
+            </Label>
+            <Input
+              value={chaveIndividual}
+              onChange={(e) => setChaveIndividual(e.target.value)}
+              placeholder={chaveObrigatoria ? "Obrigatório para OEM/Retail" : "Somente se este ativo tem chave própria"}
+              autoComplete="off"
+            />
+            {chaveObrigatoria && (
+              <p className="text-[11px] text-muted-foreground mt-1">
+                Produto OEM/Retail: cada ativo recebe uma chave própria; ficará mascarada e cada revelação é registrada no log de auditoria.
+              </p>
+            )}
+          </div>
+          <div>
             <Label>Observação</Label>
             <Textarea value={obs} onChange={(e) => setObs(e.target.value)} rows={2} />
           </div>
