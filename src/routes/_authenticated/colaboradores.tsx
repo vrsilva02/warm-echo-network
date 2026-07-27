@@ -19,7 +19,7 @@ export const Route = createFileRoute("/_authenticated/colaboradores")({
   component: Page,
   head: () => ({
     meta: [
-      { title: "Colaboradores — ITAM/SAM" },
+      { title: "Colaboradores — Gestorait" },
       { name: "description", content: "Cadastro de colaboradores para atribuição de ativos e licenças." },
     ],
   }),

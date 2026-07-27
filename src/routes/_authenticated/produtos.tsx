@@ -21,7 +21,7 @@ export const Route = createFileRoute("/_authenticated/produtos")({
   component: Page,
   head: () => ({
     meta: [
-      { title: "Catálogo — ITAM/SAM" },
+      { title: "Catálogo — Gestorait" },
       { name: "description", content: "Catálogo de produtos e fabricantes com aliases de reconciliação." },
     ],
   }),

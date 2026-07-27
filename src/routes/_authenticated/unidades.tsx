@@ -20,7 +20,7 @@ export const Route = createFileRoute("/_authenticated/unidades")({
   component: Page,
   head: () => ({
     meta: [
-      { title: "Unidades — ITAM/SAM" },
+      { title: "Unidades — Gestorait" },
       { name: "description", content: "Cadastro de unidades e filiais." },
     ],
   }),
