@@ -573,6 +573,7 @@ function ProductDetail({
                     </th>
                     <th className="text-left p-2 font-medium">Ativo</th>
                     <th className="text-left p-2 font-medium">Colaborador</th>
+                    <th className="text-left p-2 font-medium">Chave</th>
                     <th className="text-left p-2 font-medium">Início</th>
                     <th className="text-left p-2 font-medium">Fim</th>
                     <th className="text-left p-2 font-medium">Status</th>
@@ -580,13 +581,34 @@ function ProductDetail({
                   </tr>
                 </thead>
                 <tbody>
-                  {rows.map((r) => (
+                  {rows.map((r) => {
+                    const chave = usaChaveIndividual ? r.chave_individual : r.licencas?.chave_ativacao ?? null;
+                    return (
                     <tr key={r.id} className="border-t hover:bg-muted/30">
                       <td className="p-2">
                         <Checkbox checked={sel.has(r.id)} onCheckedChange={() => toggle(r.id)} />
                       </td>
                       <td className="p-2 font-mono text-xs">{r.ativos?.hostname ?? "—"}</td>
                       <td className="p-2">{r.usuarios?.nome ?? "—"}</td>
+                      <td className="p-2">
+                        <MaskedKey
+                          value={chave}
+                          context={{
+                            tabela: usaChaveIndividual ? "alocacoes" : "licencas",
+                            registroId: usaChaveIndividual ? r.id : (r.licencas?.id ?? r.licenca_id),
+                            metadata: {
+                              origem: usaChaveIndividual ? "chave_individual" : "chave_ativacao",
+                              alocacao_id: r.id,
+                              licenca_id: r.licenca_id,
+                              produto_id: produto.produto_id,
+                              produto: produto.nome_oficial,
+                              ativo_id: r.ativos?.id ?? null,
+                              ativo_hostname: r.ativos?.hostname ?? null,
+                              usuario_id: r.usuarios?.id ?? null,
+                            },
+                          }}
+                        />
+                      </td>
                       <td className="p-2 tabular-nums">{r.data_inicio ? new Date(r.data_inicio).toLocaleDateString("pt-BR") : "—"}</td>
                       <td className="p-2 tabular-nums">{r.data_fim ? new Date(r.data_fim).toLocaleDateString("pt-BR") : "—"}</td>
                       <td className="p-2">
@@ -600,7 +622,8 @@ function ProductDetail({
                         )}
                       </td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
