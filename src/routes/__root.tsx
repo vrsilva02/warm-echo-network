@@ -81,13 +81,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "ITAM/SAM — Gestão de Ativos e Licenças" },
+      { title: "Gestorait — Gestão de Ativos e Licenças" },
       {
         name: "description",
         content:
-          "Sistema corporativo de gestão de ativos e licenças de software (ITAM/SAM) com controle de compliance, contratos e reconciliação.",
+          "Sistema corporativo de gestão de ativos e licenças de software (Gestorait) com controle de compliance, contratos e reconciliação.",
       },
-      { property: "og:title", content: "ITAM/SAM — Gestão de Ativos e Licenças" },
+      { property: "og:title", content: "Gestorait — Gestão de Ativos e Licenças" },
       {
         property: "og:description",
         content:

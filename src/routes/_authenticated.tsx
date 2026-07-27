@@ -29,7 +29,7 @@ function ProtectedLayout() {
           <header className="h-12 flex items-center border-b bg-background px-3 gap-3 sticky top-0 z-10">
             <SidebarTrigger />
             <div className="text-sm text-muted-foreground hidden sm:block">
-              ITAM/SAM · Painel
+              Gestorait · Painel
             </div>
             <div className="flex-1" />
             <CommandPaletteTrigger />

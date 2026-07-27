@@ -24,7 +24,7 @@ export const Route = createFileRoute("/_authenticated/relatorios")({
   component: Page,
   head: () => ({
     meta: [
-      { title: "Relatórios — ITAM/SAM" },
+      { title: "Relatórios — Gestorait" },
       { name: "description", content: "Construtor de relatórios com filtros combináveis e envios recorrentes." },
     ],
   }),

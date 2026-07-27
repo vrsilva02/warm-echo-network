@@ -26,7 +26,7 @@ export const Route = createFileRoute("/_authenticated/acessos")({
   component: AcessosPage,
   head: () => ({
     meta: [
-      { title: "Gestão de Acessos — ITAM/SAM" },
+      { title: "Gestão de Acessos — Gestorait" },
       { name: "description", content: "Controle de perfis, convites e permissões dos usuários da plataforma." },
     ],
   }),

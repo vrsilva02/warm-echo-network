@@ -33,7 +33,7 @@ export const Route = createFileRoute("/_authenticated/licencas")({
   component: Page,
   head: () => ({
     meta: [
-      { title: "Licenças — ITAM/SAM" },
+      { title: "Licenças — Gestorait" },
       { name: "description", content: "Painel de licenças por categoria, produto e atribuição." },
     ],
   }),

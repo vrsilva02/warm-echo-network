@@ -23,7 +23,7 @@ export const Route = createFileRoute("/_authenticated/ativos")({
   component: AtivosPage,
   head: () => ({
     meta: [
-      { title: "Ativos — ITAM/SAM" },
+      { title: "Ativos — Gestorait" },
       { name: "description", content: "Cadastro e ciclo de vida de ativos corporativos." },
     ],
   }),
