@@ -147,11 +147,20 @@ function Page() {
         title="Licenças"
         description="Visão por categoria e SKU, atribuições ativas e histórico."
         actions={
-          canWrite ? (
-            <Button size="sm" onClick={() => { setEditingLicId(null); setDefaultCategoria(tab === "todas" ? null : tab); setNewLicOpen(true); }}>
-              <Plus className="h-4 w-4" /> Nova licença
-            </Button>
-          ) : undefined
+          <div className="flex items-center gap-2">
+            <LicencasImportExport
+              canWrite={canWrite}
+              onImported={() => {
+                // Re-consulta os agregados após uma importação.
+                void supabase.auth.getSession();
+              }}
+            />
+            {canWrite && (
+              <Button size="sm" onClick={() => { setEditingLicId(null); setDefaultCategoria(tab === "todas" ? null : tab); setNewLicOpen(true); }}>
+                <Plus className="h-4 w-4" /> Nova licença
+              </Button>
+            )}
+          </div>
         }
       />
 
