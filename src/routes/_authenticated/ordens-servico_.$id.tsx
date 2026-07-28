@@ -82,7 +82,7 @@ function Page() {
         description={<Link to="/ativos/$id" params={{ id: os.ativo_id }} className="hover:text-primary">{os.ativos?.hostname}</Link>}
        
         actions={
-          canWrite && os.status !== "concluida" && os.status !== "cancelada" ? (
+          canOperateOS && os.status !== "concluida" && os.status !== "cancelada" ? (
             <div className="flex gap-2">
               {os.status !== "em_andamento" && <Button size="sm" variant="outline" onClick={() => mudarStatus("em_andamento")}>Iniciar</Button>}
               {os.status !== "aguardando_peca" && <Button size="sm" variant="outline" onClick={() => mudarStatus("aguardando_peca")}>Aguardar peça</Button>}
@@ -124,7 +124,7 @@ function Page() {
       <Card className="mt-4">
         <CardHeader className="flex-row items-center justify-between space-y-0">
           <CardTitle className="text-sm flex items-center gap-2"><Package className="h-4 w-4" /> Peças utilizadas</CardTitle>
-          {canWrite && os.status !== "concluida" && os.status !== "cancelada" && (
+          {canOperateOS && os.status !== "concluida" && os.status !== "cancelada" && (
             <Button size="sm" onClick={() => setAddOpen(true)}>Adicionar peça</Button>
           )}
         </CardHeader>
@@ -151,7 +151,7 @@ function Page() {
                   <TableCell className="text-right tabular-nums">R$ {(p.quantidade * Number(p.custo_unitario ?? 0)).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</TableCell>
                   <TableCell className="text-xs">{new Date(p.created_at).toLocaleString("pt-BR")}</TableCell>
                   <TableCell className="text-right">
-                    {canWrite && os.status !== "concluida" && (
+                    {canOperateOS && os.status !== "concluida" && (
                       <Button size="icon" variant="ghost" onClick={() => removerPeca(p.id)}><Trash2 className="h-4 w-4" /></Button>
                     )}
                   </TableCell>
