@@ -16,7 +16,7 @@ import { useAuth } from "@/lib/auth";
 import { logAction } from "@/lib/audit";
 import { criticidadeTone } from "./servicos";
 
-export const Route = createFileRoute("/_authenticated/servicos/$id")({
+export const Route = createFileRoute("/_authenticated/servicos_/$id")({
   component: Page,
   head: () => ({
     meta: [

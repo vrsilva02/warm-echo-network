@@ -17,7 +17,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
 import { logAction } from "@/lib/audit";
 
-export const Route = createFileRoute("/_authenticated/ativos/$id")({
+export const Route = createFileRoute("/_authenticated/ativos_/$id")({
   component: Page,
   head: () => ({
     meta: [

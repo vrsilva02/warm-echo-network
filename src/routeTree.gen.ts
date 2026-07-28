@@ -19,6 +19,7 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedUnidadesRouteImport } from './routes/_authenticated/unidades'
 import { Route as AuthenticatedSolicitacoesRouteImport } from './routes/_authenticated/solicitacoes'
+import { Route as AuthenticatedServicosRouteImport } from './routes/_authenticated/servicos'
 import { Route as AuthenticatedRelatoriosRouteImport } from './routes/_authenticated/relatorios'
 import { Route as AuthenticatedReconciliacaoRouteImport } from './routes/_authenticated/reconciliacao'
 import { Route as AuthenticatedProdutosRouteImport } from './routes/_authenticated/produtos'
@@ -26,12 +27,15 @@ import { Route as AuthenticatedLicencasRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedContratosRouteImport } from './routes/_authenticated/contratos'
 import { Route as AuthenticatedColaboradoresRouteImport } from './routes/_authenticated/colaboradores'
+import { Route as AuthenticatedCentrosCustoRouteImport } from './routes/_authenticated/centros-custo'
 import { Route as AuthenticatedAuditoriaRouteImport } from './routes/_authenticated/auditoria'
 import { Route as AuthenticatedAtivosRouteImport } from './routes/_authenticated/ativos'
 import { Route as AuthenticatedAlocacoesRouteImport } from './routes/_authenticated/alocacoes'
 import { Route as AuthenticatedAlertasRouteImport } from './routes/_authenticated/alertas'
 import { Route as AuthenticatedAcessosRouteImport } from './routes/_authenticated/acessos'
 import { Route as Authenticated403RouteImport } from './routes/_authenticated/403'
+import { Route as AuthenticatedServicosIdRouteImport } from './routes/_authenticated/servicos_.$id'
+import { Route as AuthenticatedAtivosIdRouteImport } from './routes/_authenticated/ativos_.$id'
 import { Route as AuthenticatedAuditoriaTabelaIdRouteImport } from './routes/_authenticated/auditoria_.$tabela.$id'
 
 const SignupRoute = SignupRouteImport.update({
@@ -84,6 +88,11 @@ const AuthenticatedSolicitacoesRoute =
     path: '/solicitacoes',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedServicosRoute = AuthenticatedServicosRouteImport.update({
+  id: '/servicos',
+  path: '/servicos',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedRelatoriosRoute = AuthenticatedRelatoriosRouteImport.update({
   id: '/relatorios',
   path: '/relatorios',
@@ -121,6 +130,12 @@ const AuthenticatedColaboradoresRoute =
     path: '/colaboradores',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedCentrosCustoRoute =
+  AuthenticatedCentrosCustoRouteImport.update({
+    id: '/centros-custo',
+    path: '/centros-custo',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedAuditoriaRoute = AuthenticatedAuditoriaRouteImport.update({
   id: '/auditoria',
   path: '/auditoria',
@@ -151,6 +166,16 @@ const Authenticated403Route = Authenticated403RouteImport.update({
   path: '/403',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedServicosIdRoute = AuthenticatedServicosIdRouteImport.update({
+  id: '/servicos_/$id',
+  path: '/servicos/$id',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedAtivosIdRoute = AuthenticatedAtivosIdRouteImport.update({
+  id: '/ativos_/$id',
+  path: '/ativos/$id',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedAuditoriaTabelaIdRoute =
   AuthenticatedAuditoriaTabelaIdRouteImport.update({
     id: '/auditoria_/$tabela/$id',
@@ -172,6 +197,7 @@ export interface FileRoutesByFullPath {
   '/alocacoes': typeof AuthenticatedAlocacoesRoute
   '/ativos': typeof AuthenticatedAtivosRoute
   '/auditoria': typeof AuthenticatedAuditoriaRoute
+  '/centros-custo': typeof AuthenticatedCentrosCustoRoute
   '/colaboradores': typeof AuthenticatedColaboradoresRoute
   '/contratos': typeof AuthenticatedContratosRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -179,8 +205,11 @@ export interface FileRoutesByFullPath {
   '/produtos': typeof AuthenticatedProdutosRoute
   '/reconciliacao': typeof AuthenticatedReconciliacaoRoute
   '/relatorios': typeof AuthenticatedRelatoriosRoute
+  '/servicos': typeof AuthenticatedServicosRoute
   '/solicitacoes': typeof AuthenticatedSolicitacoesRoute
   '/unidades': typeof AuthenticatedUnidadesRoute
+  '/ativos/$id': typeof AuthenticatedAtivosIdRoute
+  '/servicos/$id': typeof AuthenticatedServicosIdRoute
   '/auditoria/$tabela/$id': typeof AuthenticatedAuditoriaTabelaIdRoute
 }
 export interface FileRoutesByTo {
@@ -197,6 +226,7 @@ export interface FileRoutesByTo {
   '/alocacoes': typeof AuthenticatedAlocacoesRoute
   '/ativos': typeof AuthenticatedAtivosRoute
   '/auditoria': typeof AuthenticatedAuditoriaRoute
+  '/centros-custo': typeof AuthenticatedCentrosCustoRoute
   '/colaboradores': typeof AuthenticatedColaboradoresRoute
   '/contratos': typeof AuthenticatedContratosRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -204,8 +234,11 @@ export interface FileRoutesByTo {
   '/produtos': typeof AuthenticatedProdutosRoute
   '/reconciliacao': typeof AuthenticatedReconciliacaoRoute
   '/relatorios': typeof AuthenticatedRelatoriosRoute
+  '/servicos': typeof AuthenticatedServicosRoute
   '/solicitacoes': typeof AuthenticatedSolicitacoesRoute
   '/unidades': typeof AuthenticatedUnidadesRoute
+  '/ativos/$id': typeof AuthenticatedAtivosIdRoute
+  '/servicos/$id': typeof AuthenticatedServicosIdRoute
   '/auditoria/$tabela/$id': typeof AuthenticatedAuditoriaTabelaIdRoute
 }
 export interface FileRoutesById {
@@ -224,6 +257,7 @@ export interface FileRoutesById {
   '/_authenticated/alocacoes': typeof AuthenticatedAlocacoesRoute
   '/_authenticated/ativos': typeof AuthenticatedAtivosRoute
   '/_authenticated/auditoria': typeof AuthenticatedAuditoriaRoute
+  '/_authenticated/centros-custo': typeof AuthenticatedCentrosCustoRoute
   '/_authenticated/colaboradores': typeof AuthenticatedColaboradoresRoute
   '/_authenticated/contratos': typeof AuthenticatedContratosRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
@@ -231,8 +265,11 @@ export interface FileRoutesById {
   '/_authenticated/produtos': typeof AuthenticatedProdutosRoute
   '/_authenticated/reconciliacao': typeof AuthenticatedReconciliacaoRoute
   '/_authenticated/relatorios': typeof AuthenticatedRelatoriosRoute
+  '/_authenticated/servicos': typeof AuthenticatedServicosRoute
   '/_authenticated/solicitacoes': typeof AuthenticatedSolicitacoesRoute
   '/_authenticated/unidades': typeof AuthenticatedUnidadesRoute
+  '/_authenticated/ativos_/$id': typeof AuthenticatedAtivosIdRoute
+  '/_authenticated/servicos_/$id': typeof AuthenticatedServicosIdRoute
   '/_authenticated/auditoria_/$tabela/$id': typeof AuthenticatedAuditoriaTabelaIdRoute
 }
 export interface FileRouteTypes {
@@ -251,6 +288,7 @@ export interface FileRouteTypes {
     | '/alocacoes'
     | '/ativos'
     | '/auditoria'
+    | '/centros-custo'
     | '/colaboradores'
     | '/contratos'
     | '/dashboard'
@@ -258,8 +296,11 @@ export interface FileRouteTypes {
     | '/produtos'
     | '/reconciliacao'
     | '/relatorios'
+    | '/servicos'
     | '/solicitacoes'
     | '/unidades'
+    | '/ativos/$id'
+    | '/servicos/$id'
     | '/auditoria/$tabela/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -276,6 +317,7 @@ export interface FileRouteTypes {
     | '/alocacoes'
     | '/ativos'
     | '/auditoria'
+    | '/centros-custo'
     | '/colaboradores'
     | '/contratos'
     | '/dashboard'
@@ -283,8 +325,11 @@ export interface FileRouteTypes {
     | '/produtos'
     | '/reconciliacao'
     | '/relatorios'
+    | '/servicos'
     | '/solicitacoes'
     | '/unidades'
+    | '/ativos/$id'
+    | '/servicos/$id'
     | '/auditoria/$tabela/$id'
   id:
     | '__root__'
@@ -302,6 +347,7 @@ export interface FileRouteTypes {
     | '/_authenticated/alocacoes'
     | '/_authenticated/ativos'
     | '/_authenticated/auditoria'
+    | '/_authenticated/centros-custo'
     | '/_authenticated/colaboradores'
     | '/_authenticated/contratos'
     | '/_authenticated/dashboard'
@@ -309,8 +355,11 @@ export interface FileRouteTypes {
     | '/_authenticated/produtos'
     | '/_authenticated/reconciliacao'
     | '/_authenticated/relatorios'
+    | '/_authenticated/servicos'
     | '/_authenticated/solicitacoes'
     | '/_authenticated/unidades'
+    | '/_authenticated/ativos_/$id'
+    | '/_authenticated/servicos_/$id'
     | '/_authenticated/auditoria_/$tabela/$id'
   fileRoutesById: FileRoutesById
 }
@@ -397,6 +446,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSolicitacoesRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/servicos': {
+      id: '/_authenticated/servicos'
+      path: '/servicos'
+      fullPath: '/servicos'
+      preLoaderRoute: typeof AuthenticatedServicosRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/relatorios': {
       id: '/_authenticated/relatorios'
       path: '/relatorios'
@@ -446,6 +502,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedColaboradoresRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/centros-custo': {
+      id: '/_authenticated/centros-custo'
+      path: '/centros-custo'
+      fullPath: '/centros-custo'
+      preLoaderRoute: typeof AuthenticatedCentrosCustoRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/auditoria': {
       id: '/_authenticated/auditoria'
       path: '/auditoria'
@@ -488,6 +551,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Authenticated403RouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/servicos_/$id': {
+      id: '/_authenticated/servicos_/$id'
+      path: '/servicos/$id'
+      fullPath: '/servicos/$id'
+      preLoaderRoute: typeof AuthenticatedServicosIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/ativos_/$id': {
+      id: '/_authenticated/ativos_/$id'
+      path: '/ativos/$id'
+      fullPath: '/ativos/$id'
+      preLoaderRoute: typeof AuthenticatedAtivosIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/auditoria_/$tabela/$id': {
       id: '/_authenticated/auditoria_/$tabela/$id'
       path: '/auditoria/$tabela/$id'
@@ -505,6 +582,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAlocacoesRoute: typeof AuthenticatedAlocacoesRoute
   AuthenticatedAtivosRoute: typeof AuthenticatedAtivosRoute
   AuthenticatedAuditoriaRoute: typeof AuthenticatedAuditoriaRoute
+  AuthenticatedCentrosCustoRoute: typeof AuthenticatedCentrosCustoRoute
   AuthenticatedColaboradoresRoute: typeof AuthenticatedColaboradoresRoute
   AuthenticatedContratosRoute: typeof AuthenticatedContratosRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
@@ -512,8 +590,11 @@ interface AuthenticatedRouteChildren {
   AuthenticatedProdutosRoute: typeof AuthenticatedProdutosRoute
   AuthenticatedReconciliacaoRoute: typeof AuthenticatedReconciliacaoRoute
   AuthenticatedRelatoriosRoute: typeof AuthenticatedRelatoriosRoute
+  AuthenticatedServicosRoute: typeof AuthenticatedServicosRoute
   AuthenticatedSolicitacoesRoute: typeof AuthenticatedSolicitacoesRoute
   AuthenticatedUnidadesRoute: typeof AuthenticatedUnidadesRoute
+  AuthenticatedAtivosIdRoute: typeof AuthenticatedAtivosIdRoute
+  AuthenticatedServicosIdRoute: typeof AuthenticatedServicosIdRoute
   AuthenticatedAuditoriaTabelaIdRoute: typeof AuthenticatedAuditoriaTabelaIdRoute
 }
 
@@ -524,6 +605,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAlocacoesRoute: AuthenticatedAlocacoesRoute,
   AuthenticatedAtivosRoute: AuthenticatedAtivosRoute,
   AuthenticatedAuditoriaRoute: AuthenticatedAuditoriaRoute,
+  AuthenticatedCentrosCustoRoute: AuthenticatedCentrosCustoRoute,
   AuthenticatedColaboradoresRoute: AuthenticatedColaboradoresRoute,
   AuthenticatedContratosRoute: AuthenticatedContratosRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
@@ -531,8 +613,11 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedProdutosRoute: AuthenticatedProdutosRoute,
   AuthenticatedReconciliacaoRoute: AuthenticatedReconciliacaoRoute,
   AuthenticatedRelatoriosRoute: AuthenticatedRelatoriosRoute,
+  AuthenticatedServicosRoute: AuthenticatedServicosRoute,
   AuthenticatedSolicitacoesRoute: AuthenticatedSolicitacoesRoute,
   AuthenticatedUnidadesRoute: AuthenticatedUnidadesRoute,
+  AuthenticatedAtivosIdRoute: AuthenticatedAtivosIdRoute,
+  AuthenticatedServicosIdRoute: AuthenticatedServicosIdRoute,
   AuthenticatedAuditoriaTabelaIdRoute: AuthenticatedAuditoriaTabelaIdRoute,
 }
 
