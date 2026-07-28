@@ -1457,7 +1457,13 @@ export type Database = {
     }
     Enums: {
       aditivo_tipo: "quantidade" | "prazo" | "valor" | "outro"
-      app_role: "admin" | "gestor_ti" | "auditoria" | "padrao" | "visitante"
+      app_role:
+        | "admin"
+        | "gestor_ti"
+        | "auditoria"
+        | "padrao"
+        | "visitante"
+        | "tecnico"
       mov_tipo: "entrada" | "saida" | "ajuste"
       os_prioridade: "baixa" | "media" | "alta" | "critica"
       os_status:
@@ -1595,7 +1601,14 @@ export const Constants = {
   public: {
     Enums: {
       aditivo_tipo: ["quantidade", "prazo", "valor", "outro"],
-      app_role: ["admin", "gestor_ti", "auditoria", "padrao", "visitante"],
+      app_role: [
+        "admin",
+        "gestor_ti",
+        "auditoria",
+        "padrao",
+        "visitante",
+        "tecnico",
+      ],
       mov_tipo: ["entrada", "saida", "ajuste"],
       os_prioridade: ["baixa", "media", "alta", "critica"],
       os_status: [
