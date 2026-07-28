@@ -46,6 +46,7 @@ const main = [
   { title: "Licenças", url: "/licencas", icon: KeySquare },
   { title: "Alocações", url: "/alocacoes", icon: Link2 },
   { title: "Solicitações", url: "/solicitacoes", icon: ClipboardList },
+  { title: "Serviços", url: "/servicos", icon: Network },
 ] as const;
 
 const fase2 = [
