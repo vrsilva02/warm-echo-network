@@ -16,6 +16,8 @@ import {
   UserCog,
   ClipboardList,
   Building2,
+  Network,
+  Wallet,
 } from "lucide-react";
 import {
   Sidebar,
