@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Loader2, ShieldCheck } from "lucide-react";
+import { PasswordStrength, evaluatePassword } from "@/components/password-strength";
 
 export const Route = createFileRoute("/reset-password")({
   ssr: false,
