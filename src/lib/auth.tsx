@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
-export type AppRole = "admin" | "gestor_ti" | "padrao" | "visitante" | "auditoria";
+export type AppRole = "admin" | "gestor_ti" | "padrao" | "visitante" | "auditoria" | "tecnico";
 
 interface AuthCtx {
   session: Session | null;
@@ -12,7 +12,9 @@ interface AuthCtx {
   isAdmin: boolean;
   isGestor: boolean;
   isAuditoria: boolean;
+  isTecnico: boolean;
   canWrite: boolean;
+  canOperateOS: boolean;
   signOut: () => Promise<void>;
 }
 
