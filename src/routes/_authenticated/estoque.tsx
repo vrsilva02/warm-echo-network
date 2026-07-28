@@ -73,18 +73,14 @@ function Page() {
   });
 
   function exportarLista() {
-    const rows = (reposicao ?? []).map((r) => ({
-      Peça: r.nome,
-      Categoria: r.categoria,
-      Fabricante: r.fabricante ?? "",
-      "Fornecedor padrão": r.fornecedor_padrao ?? "",
-      "Saldo atual": r.saldo,
-      "Estoque mínimo": r.estoque_minimo,
-      "Qtde. sugerida": r.quantidade_sugerida,
-      "Custo unitário (R$)": r.custo_unitario ?? "",
-      "Estimativa total (R$)": r.custo_unitario ? (Number(r.custo_unitario) * r.quantidade_sugerida).toFixed(2) : "",
-    }));
-    downloadCSV(`lista-compras-${new Date().toISOString().slice(0, 10)}.csv`, rows);
+    const cols = ["Peça", "Categoria", "Fabricante", "Fornecedor padrão", "Saldo atual", "Estoque mínimo", "Qtde. sugerida", "Custo unitário (R$)", "Estimativa total (R$)"];
+    const rows = (reposicao ?? []).map((r) => [
+      r.nome, r.categoria, r.fabricante ?? "", r.fornecedor_padrao ?? "",
+      r.saldo, r.estoque_minimo, r.quantidade_sugerida,
+      r.custo_unitario ?? "",
+      r.custo_unitario ? (Number(r.custo_unitario) * r.quantidade_sugerida).toFixed(2) : "",
+    ]);
+    downloadCSV(`lista-compras-${new Date().toISOString().slice(0, 10)}.csv`, cols, rows);
   }
 
   return (
