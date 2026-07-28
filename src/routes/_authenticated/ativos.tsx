@@ -369,15 +369,27 @@ function AtivosPage() {
             </Select>
           </div>
         </div>
-        <div>
-          <Label>Responsável</Label>
-          <Combobox
-            placeholder="Nenhum"
-            searchPlaceholder="Buscar colaborador…"
-            value={form.usuario_responsavel_id}
-            onChange={(v) => setForm({ ...form, usuario_responsavel_id: v })}
-            options={(users ?? []).map((u) => ({ value: u.id, label: u.nome }))}
-          />
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <Label>Responsável</Label>
+            <Combobox
+              placeholder="Nenhum"
+              searchPlaceholder="Buscar colaborador…"
+              value={form.usuario_responsavel_id}
+              onChange={(v) => setForm({ ...form, usuario_responsavel_id: v })}
+              options={(users ?? []).map((u) => ({ value: u.id, label: u.nome }))}
+            />
+          </div>
+          <div>
+            <Label>Centro de custo</Label>
+            <Combobox
+              placeholder="Nenhum"
+              searchPlaceholder="Buscar centro…"
+              value={form.centro_custo_id}
+              onChange={(v) => setForm({ ...form, centro_custo_id: v })}
+              options={(centros ?? []).map((c: any) => ({ value: c.id, label: c.nome }))}
+            />
+          </div>
         </div>
       </CrudDialog>
     </>
