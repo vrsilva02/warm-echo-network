@@ -40,7 +40,9 @@ type Ativo = {
   setor: string | null;
   status_ciclo_vida: string;
   usuario_responsavel_id: string | null;
+  centro_custo_id: string | null;
   usuarios?: { nome: string } | null;
+  centros_custo?: { nome: string } | null;
 };
 
 const STATUS = ["em_estoque", "em_uso", "em_manutencao", "baixado"];
@@ -54,6 +56,7 @@ const initial = {
   setor: "",
   status_ciclo_vida: "em_estoque",
   usuario_responsavel_id: null as string | null,
+  centro_custo_id: null as string | null,
 };
 
 function statusBadge(s: string) {
