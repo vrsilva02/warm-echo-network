@@ -42,7 +42,7 @@ const initial = {
 };
 
 function Page() {
-  const { isGestorOrAdmin } = useAuth();
+  const { canWrite } = useAuth();
   const qc = useQueryClient();
   const confirm = useConfirm();
   const [open, setOpen] = useState(false);
@@ -114,7 +114,7 @@ function Page() {
       id: "acoes", header: "Ações", alwaysVisible: true,
       accessor: (r) => (
         <div className="flex gap-1">
-          {isGestorOrAdmin && (
+          {canWrite && (
             <>
               <Button size="icon" variant="ghost" onClick={() => openEdit(r)}><Pencil className="h-4 w-4" /></Button>
               <Button size="icon" variant="ghost" onClick={() => remove(r)}><Trash2 className="h-4 w-4" /></Button>
@@ -130,7 +130,7 @@ function Page() {
       <PageHeader
         title="Catálogo de peças"
         description="Peças e componentes usados nas manutenções, com estoque mínimo e fornecedor padrão."
-        actions={isGestorOrAdmin ? <Button size="sm" onClick={openNew}>Nova peça</Button> : undefined}
+        actions={canWrite ? <Button size="sm" onClick={openNew}>Nova peça</Button> : undefined}
       />
       <AdvancedTable<Row>
         storageKey="pecas_catalogo"
@@ -144,7 +144,7 @@ function Page() {
             icon={<Wrench className="h-6 w-6" />}
             title="Nenhuma peça cadastrada"
             description="Cadastre peças e defina o estoque mínimo para automatizar a reposição."
-            action={isGestorOrAdmin ? <Button size="sm" onClick={openNew}>Nova peça</Button> : undefined}
+            action={canWrite ? <Button size="sm" onClick={openNew}>Nova peça</Button> : undefined}
           />
         }
       />
