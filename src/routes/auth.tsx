@@ -83,50 +83,23 @@ function AuthPage() {
           <CardHeader>
             <CardTitle>Acesso ao sistema</CardTitle>
             <CardDescription>
-              O primeiro cadastro vira Administrador automaticamente.
+              Use suas credenciais corporativas para acessar o GestoraIT.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="login">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="login">Entrar</TabsTrigger>
-                <TabsTrigger value="signup">Cadastrar</TabsTrigger>
-              </TabsList>
-              <TabsContent value="login" className="mt-4">
-                <form onSubmit={handleLogin} className="space-y-3">
-                  <div>
-                    <Label htmlFor="email">Email</Label>
-                    <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
-                  </div>
-                  <div>
-                    <Label htmlFor="pw">Senha</Label>
-                    <Input id="pw" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
-                  </div>
-                  <Button type="submit" className="w-full" disabled={busy}>
-                    {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Entrar"}
-                  </Button>
-                </form>
-              </TabsContent>
-              <TabsContent value="signup" className="mt-4">
-                <form onSubmit={handleSignup} className="space-y-3">
-                  <div>
-                    <Label htmlFor="nome">Nome</Label>
-                    <Input id="nome" required value={nome} onChange={(e) => setNome(e.target.value)} />
-                  </div>
-                  <div>
-                    <Label htmlFor="email2">Email</Label>
-                    <Input id="email2" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
-                  </div>
-                  <div>
-                    <Label htmlFor="pw2">Senha</Label>
-                    <Input id="pw2" type="password" required minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} />
-                  </div>
-                  <Button type="submit" className="w-full" disabled={busy}>
-                    {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Criar conta"}
-                  </Button>
-                </form>
-              </TabsContent>
-            </Tabs>
+            <form onSubmit={handleLogin} className="space-y-3">
+              <div>
+                <Label htmlFor="email">Email</Label>
+                <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+              </div>
+              <div>
+                <Label htmlFor="pw">Senha</Label>
+                <Input id="pw" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
+              </div>
+              <Button type="submit" className="w-full" disabled={busy}>
+                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Entrar"}
+              </Button>
+            </form>
           </CardContent>
         </Card>
         <div className="mt-6 flex flex-col items-center gap-1 opacity-70">
