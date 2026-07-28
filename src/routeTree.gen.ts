@@ -9,6 +9,11 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SignupRouteImport } from './routes/signup'
+import { Route as SignUpRouteImport } from './routes/sign-up'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as RegisterRouteImport } from './routes/register'
+import { Route as CadastroRouteImport } from './routes/cadastro'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
@@ -28,6 +33,31 @@ import { Route as AuthenticatedAlertasRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedAcessosRouteImport } from './routes/_authenticated/acessos'
 import { Route as AuthenticatedAuditoriaTabelaIdRouteImport } from './routes/_authenticated/auditoria_.$tabela.$id'
 
+const SignupRoute = SignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignUpRoute = SignUpRouteImport.update({
+  id: '/sign-up',
+  path: '/sign-up',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CadastroRoute = CadastroRouteImport.update({
+  id: '/cadastro',
+  path: '/cadastro',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -125,6 +155,11 @@ const AuthenticatedAuditoriaTabelaIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/cadastro': typeof CadastroRoute
+  '/register': typeof RegisterRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/sign-up': typeof SignUpRoute
+  '/signup': typeof SignupRoute
   '/acessos': typeof AuthenticatedAcessosRoute
   '/alertas': typeof AuthenticatedAlertasRoute
   '/alocacoes': typeof AuthenticatedAlocacoesRoute
@@ -144,6 +179,11 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/cadastro': typeof CadastroRoute
+  '/register': typeof RegisterRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/sign-up': typeof SignUpRoute
+  '/signup': typeof SignupRoute
   '/acessos': typeof AuthenticatedAcessosRoute
   '/alertas': typeof AuthenticatedAlertasRoute
   '/alocacoes': typeof AuthenticatedAlocacoesRoute
@@ -165,6 +205,11 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/auth': typeof AuthRoute
+  '/cadastro': typeof CadastroRoute
+  '/register': typeof RegisterRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/sign-up': typeof SignUpRoute
+  '/signup': typeof SignupRoute
   '/_authenticated/acessos': typeof AuthenticatedAcessosRoute
   '/_authenticated/alertas': typeof AuthenticatedAlertasRoute
   '/_authenticated/alocacoes': typeof AuthenticatedAlocacoesRoute
@@ -186,6 +231,11 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/cadastro'
+    | '/register'
+    | '/reset-password'
+    | '/sign-up'
+    | '/signup'
     | '/acessos'
     | '/alertas'
     | '/alocacoes'
@@ -205,6 +255,11 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/cadastro'
+    | '/register'
+    | '/reset-password'
+    | '/sign-up'
+    | '/signup'
     | '/acessos'
     | '/alertas'
     | '/alocacoes'
@@ -225,6 +280,11 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/cadastro'
+    | '/register'
+    | '/reset-password'
+    | '/sign-up'
+    | '/signup'
     | '/_authenticated/acessos'
     | '/_authenticated/alertas'
     | '/_authenticated/alocacoes'
@@ -246,10 +306,50 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   AuthRoute: typeof AuthRoute
+  CadastroRoute: typeof CadastroRoute
+  RegisterRoute: typeof RegisterRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
+  SignUpRoute: typeof SignUpRoute
+  SignupRoute: typeof SignupRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sign-up': {
+      id: '/sign-up'
+      path: '/sign-up'
+      fullPath: '/sign-up'
+      preLoaderRoute: typeof SignUpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cadastro': {
+      id: '/cadastro'
+      path: '/cadastro'
+      fullPath: '/cadastro'
+      preLoaderRoute: typeof CadastroRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -423,6 +523,11 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   AuthRoute: AuthRoute,
+  CadastroRoute: CadastroRoute,
+  RegisterRoute: RegisterRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
+  SignUpRoute: SignUpRoute,
+  SignupRoute: SignupRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
