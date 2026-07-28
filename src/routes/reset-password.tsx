@@ -42,7 +42,8 @@ function ResetPasswordPage() {
 
   async function handleReset(e: React.FormEvent) {
     e.preventDefault();
-    if (password.length < 8) return toast.error("A senha deve ter no mínimo 8 caracteres.");
+    const { valid } = evaluatePassword(password);
+    if (!valid) return toast.error("A senha não atende aos requisitos mínimos.");
     if (password !== confirm) return toast.error("As senhas não coincidem.");
     setBusy(true);
     const { error } = await supabase.auth.updateUser({ password });
