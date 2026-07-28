@@ -37,10 +37,11 @@ type Row = {
   quantidade_seats: number;
   valor_total: number | null;
   unidade_id: string | null;
+  centro_custo_id: string | null;
 };
 
 const TIPOS = ["EA", "MPSA", "Open Value", "NCE", "Perpetua", "SaaS", "Outro"];
-const initial = { fornecedor: "", numero_contrato: "", tipo_contrato: "SaaS", data_inicio: "", data_fim: "", quantidade_seats: 0, valor_total: "", unidade_id: null as string | null };
+const initial = { fornecedor: "", numero_contrato: "", tipo_contrato: "SaaS", data_inicio: "", data_fim: "", quantidade_seats: 0, valor_total: "", unidade_id: null as string | null, centro_custo_id: null as string | null };
 
 function urgencyBadge(dataFim: string | null) {
   if (!dataFim) return <Badge variant="outline">sem vencimento</Badge>;
@@ -73,6 +74,10 @@ function Page() {
     queryKey: ["unidades-lite"],
     queryFn: async () => (await supabase.from("unidades").select("id, nome").eq("ativo", true).order("nome")).data ?? [],
   });
+  const { data: centros } = useQuery({
+    queryKey: ["centros_custo-lite"],
+    queryFn: async () => (await supabase.from("centros_custo").select("id,nome").order("nome")).data ?? [],
+  });
   const filtered = useFilteredList(rows, q, ["fornecedor", "numero_contrato", "tipo_contrato"]);
 
   function openNew() { setEditing(null); setForm(initial); setOpen(true); }
@@ -87,6 +92,7 @@ function Page() {
       quantidade_seats: r.quantidade_seats,
       valor_total: r.valor_total?.toString() ?? "",
       unidade_id: r.unidade_id,
+      centro_custo_id: r.centro_custo_id,
     });
     setOpen(true);
   }
@@ -100,6 +106,7 @@ function Page() {
       quantidade_seats: Number(form.quantidade_seats) || 0,
       valor_total: form.valor_total ? Number(form.valor_total) : null,
       unidade_id: form.unidade_id,
+      centro_custo_id: form.centro_custo_id,
     };
     const { error } = editing
       ? await supabase.from("contratos").update(payload).eq("id", editing.id)
@@ -191,6 +198,16 @@ function Page() {
               options={(unidades ?? []).map((u) => ({ value: u.id, label: u.nome }))}
             />
           </div>
+        </div>
+        <div>
+          <Label>Centro de custo</Label>
+          <Combobox
+            placeholder="Nenhum"
+            searchPlaceholder="Buscar centro…"
+            value={form.centro_custo_id}
+            onChange={(v) => setForm({ ...form, centro_custo_id: v })}
+            options={(centros ?? []).map((c: any) => ({ value: c.id, label: c.nome }))}
+          />
         </div>
       </CrudDialog>
       <AditivosDialog

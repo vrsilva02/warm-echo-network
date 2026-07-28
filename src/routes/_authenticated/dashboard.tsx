@@ -19,8 +19,14 @@ import {
   Cell,
   Legend,
 } from "recharts";
-import { AlertTriangle, CheckCircle2, XCircle, KeySquare, FileWarning, Snowflake } from "lucide-react";
+import { AlertTriangle, CheckCircle2, XCircle, KeySquare, FileWarning, Snowflake, ShieldAlert, Coins, Settings2 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Link } from "@tanstack/react-router";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useEffect, useState } from "react";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: DashboardPage,
@@ -47,13 +53,16 @@ function useDashboardData() {
   return useQuery({
     queryKey: ["dashboard"],
     queryFn: async () => {
-      const [elp, ativos, vencendo, ociosas, ocioseFin, risco] = await Promise.all([
+      const [elp, ativos, vencendo, ociosas, ocioseFin, risco, custoOc, gapEdr, tco] = await Promise.all([
         supabase.from("vw_elp").select("*"),
-        supabase.from("ativos").select("status_ciclo_vida"),
+        supabase.from("ativos").select("id, status_ciclo_vida, centro_custo_id, centros_custo(nome)"),
         supabase.from("vw_contratos_vencendo").select("id,dias_para_vencer,urgencia"),
         supabase.from("vw_licencas_ociosas").select("licenca_id"),
         supabase.from("vw_ociosidade_financeira").select("*"),
         supabase.rpc("fn_risco_compliance", { _categoria: null as unknown as string }),
+        supabase.from("vw_custo_ociosas").select("*"),
+        supabase.from("vw_gap_edr").select("ativo_id"),
+        supabase.from("vw_tco_ativo").select("ativo_id,tco_anual_estimado"),
       ]);
       return {
         elp: (elp.data ?? []) as ElpRow[],
@@ -62,6 +71,9 @@ function useDashboardData() {
         licencasOciosas: ociosas.data?.length ?? 0,
         ocioseFin: (ocioseFin.data ?? []) as Array<{ produto_id: string; nome_oficial: string; categoria: string; licencas_ociosas: number; valor_ocioso: number }>,
         risco: (risco.data ?? []) as Array<{ categoria: string; deficit_pct: number; criticidade_media: number; score: number }>,
+        custoOciosasMensal: (custoOc.data ?? []).reduce((a: number, r: any) => a + Number(r.custo_mensal_desperdicado ?? 0), 0),
+        gapEdrCount: gapEdr.data?.length ?? 0,
+        tco: (tco.data ?? []) as Array<{ ativo_id: string; tco_anual_estimado: number | null }>,
       };
     },
   });
@@ -141,6 +153,12 @@ function DashboardPage() {
           icon={<AlertTriangle className="h-4 w-4 text-destructive" />}
           hint="Maior score de risco de compliance entre categorias (0–100): déficit(%) × criticidade média do fabricante ÷ 5."
         />
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+        <CustoOciosasCard valor={data?.custoOciosasMensal ?? 0} />
+        <GapEdrCard count={data?.gapEdrCount ?? 0} />
+        <TcoPorCentroCard tco={data?.tco ?? []} ativos={(data?.ativos ?? []) as any[]} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
@@ -339,6 +357,112 @@ function KpiCard({ title, value, icon, hint }: { title: string; value: number | 
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-semibold tabular-nums">{value}</div>
+      </CardContent>
+    </Card>
+  );
+}
+
+const OCIOSAS_KEY = "gestorait.ociosas.limit";
+
+function brl(v: number) {
+  return `R$ ${Number(v ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+function CustoOciosasCard({ valor }: { valor: number }) {
+  const [limit, setLimit] = useState<number>(5000);
+  useEffect(() => {
+    const v = Number(localStorage.getItem(OCIOSAS_KEY) ?? "5000");
+    if (!Number.isNaN(v)) setLimit(v);
+  }, []);
+  function saveLimit(v: number) { setLimit(v); localStorage.setItem(OCIOSAS_KEY, String(v)); }
+  const excede = valor > limit;
+  const tone = excede ? "text-destructive" : "text-foreground";
+  return (
+    <Card className={excede ? "border-destructive/40" : ""}>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-xs text-muted-foreground flex items-center gap-1">
+          <Snowflake className="h-3.5 w-3.5" /> Custo mensal em licenças ociosas
+        </CardTitle>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button size="icon" variant="ghost" className="h-6 w-6" title="Definir limite">
+              <Settings2 className="h-3.5 w-3.5" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-56">
+            <div className="space-y-2">
+              <Label className="text-xs">Limite de alerta (R$/mês)</Label>
+              <Input type="number" step="100" value={limit} onChange={(e) => saveLimit(Number(e.target.value) || 0)} />
+              <p className="text-[10px] text-muted-foreground">Destaca o card quando o valor ultrapassa este limite.</p>
+            </div>
+          </PopoverContent>
+        </Popover>
+      </CardHeader>
+      <CardContent>
+        <div className={`text-2xl font-semibold tabular-nums ${tone}`}>{brl(valor)}</div>
+        <div className="text-[11px] text-muted-foreground mt-1">Limite: {brl(limit)}{excede && " · acima do limite"}</div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function GapEdrCard({ count }: { count: number }) {
+  const tone = count > 0 ? "text-destructive" : "text-[color:var(--success)]";
+  return (
+    <Card className={count > 0 ? "border-destructive/40" : ""}>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-xs text-muted-foreground flex items-center gap-1">
+          <ShieldAlert className="h-3.5 w-3.5" /> Ativos sem cobertura EDR
+        </CardTitle>
+        <Button asChild variant="ghost" size="sm" className="h-6 text-xs">
+          <Link to="/alertas" search={{ tipo: "edr" } as any}>Ver</Link>
+        </Button>
+      </CardHeader>
+      <CardContent>
+        <div className={`text-2xl font-semibold tabular-nums ${tone}`}>{count}</div>
+        <div className="text-[11px] text-muted-foreground mt-1">
+          {count === 0 ? "Cobertura total" : "Ativos em uso sem licença EDR vinculada"}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function TcoPorCentroCard({ tco, ativos }: { tco: Array<{ ativo_id: string; tco_anual_estimado: number | null }>; ativos: any[] }) {
+  const map = new Map<string, number>();
+  const nomes = new Map<string, string>();
+  const byAtivo = new Map(tco.map((r) => [r.ativo_id, Number(r.tco_anual_estimado ?? 0)]));
+  ativos.forEach((a) => {
+    if (!a.centro_custo_id) return;
+    const nome = a.centros_custo?.nome ?? "—";
+    nomes.set(a.centro_custo_id, nome);
+    map.set(a.centro_custo_id, (map.get(a.centro_custo_id) ?? 0) + (byAtivo.get(a.id) ?? 0));
+  });
+  const rows = Array.from(map.entries())
+    .map(([id, v]) => ({ nome: nomes.get(id) ?? "—", valor: v }))
+    .sort((a, b) => b.valor - a.valor)
+    .slice(0, 5);
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-xs text-muted-foreground flex items-center gap-1">
+          <Coins className="h-3.5 w-3.5" /> TCO por centro de custo (top 5)
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="h-40 p-0 pl-2">
+        {rows.length === 0 ? (
+          <div className="h-full flex items-center justify-center text-xs text-muted-foreground">Sem centros vinculados.</div>
+        ) : (
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={rows} layout="vertical" margin={{ top: 4, right: 12, left: 4, bottom: 4 }}>
+              <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+              <XAxis type="number" fontSize={10} tickFormatter={(v) => `R$ ${(v/1000).toFixed(0)}k`} />
+              <YAxis type="category" dataKey="nome" fontSize={10} width={80} />
+              <Tooltip formatter={(v: any) => brl(Number(v))} />
+              <Bar dataKey="valor" fill="hsl(215 85% 55%)" />
+            </BarChart>
+          </ResponsiveContainer>
+        )}
       </CardContent>
     </Card>
   );

@@ -16,6 +16,8 @@ import {
   UserCog,
   ClipboardList,
   Building2,
+  Network,
+  Wallet,
 } from "lucide-react";
 import {
   Sidebar,
@@ -44,6 +46,7 @@ const main = [
   { title: "Licenças", url: "/licencas", icon: KeySquare },
   { title: "Alocações", url: "/alocacoes", icon: Link2 },
   { title: "Solicitações", url: "/solicitacoes", icon: ClipboardList },
+  { title: "Serviços", url: "/servicos", icon: Network },
 ] as const;
 
 const fase2 = [
@@ -62,6 +65,7 @@ export function AppSidebar() {
 
   const admin = [
     { title: "Unidades", url: "/unidades", icon: Building2 },
+    { title: "Centros de Custo", url: "/centros-custo", icon: Wallet },
     { title: "Gestão de Acessos", url: "/acessos", icon: UserCog },
   ] as const;
 

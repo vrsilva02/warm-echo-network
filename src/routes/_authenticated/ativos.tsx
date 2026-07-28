@@ -11,13 +11,15 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Pencil, Trash2, Laptop } from "lucide-react";
+import { Pencil, Trash2, Laptop, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
 import { logAction } from "@/lib/audit";
 import { useConfirm } from "@/components/confirm-dialog";
 import { Combobox } from "@/components/combobox";
 import { AtivosImportExport } from "@/components/ativos-import-export";
+import { EdrBadge, useGapEdrSet } from "@/components/edr-badge";
+import { Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_authenticated/ativos")({
   component: AtivosPage,
@@ -38,7 +40,9 @@ type Ativo = {
   setor: string | null;
   status_ciclo_vida: string;
   usuario_responsavel_id: string | null;
+  centro_custo_id: string | null;
   usuarios?: { nome: string } | null;
+  centros_custo?: { nome: string } | null;
 };
 
 const STATUS = ["em_estoque", "em_uso", "em_manutencao", "baixado"];
@@ -52,6 +56,7 @@ const initial = {
   setor: "",
   status_ciclo_vida: "em_estoque",
   usuario_responsavel_id: null as string | null,
+  centro_custo_id: null as string | null,
 };
 
 function statusBadge(s: string) {
@@ -77,7 +82,7 @@ function AtivosPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("ativos")
-        .select("*, usuarios(nome)")
+        .select("*, usuarios(nome), centros_custo(nome)")
         .order("hostname");
       if (error) throw error;
       return data as unknown as Ativo[];
@@ -88,6 +93,11 @@ function AtivosPage() {
     queryKey: ["usuarios-lite"],
     queryFn: async () => (await supabase.from("usuarios").select("id,nome").eq("status", "ativo").order("nome")).data ?? [],
   });
+  const { data: centros } = useQuery({
+    queryKey: ["centros_custo-lite"],
+    queryFn: async () => (await supabase.from("centros_custo").select("id,nome").order("nome")).data ?? [],
+  });
+  const { set: edrSet } = useGapEdrSet();
 
   function openNew() {
     setEditing(null);
@@ -104,6 +114,7 @@ function AtivosPage() {
       setor: r.setor ?? "",
       status_ciclo_vida: r.status_ciclo_vida,
       usuario_responsavel_id: r.usuario_responsavel_id,
+      centro_custo_id: r.centro_custo_id,
     });
     setOpen(true);
   }
@@ -117,6 +128,7 @@ function AtivosPage() {
       setor: form.setor || null,
       status_ciclo_vida: form.status_ciclo_vida,
       usuario_responsavel_id: form.usuario_responsavel_id,
+      centro_custo_id: form.centro_custo_id,
     };
     const { error } = editing
       ? await supabase.from("ativos").update(payload).eq("id", editing.id)
@@ -197,7 +209,12 @@ function AtivosPage() {
   const columns: Column<Ativo>[] = [
     {
       id: "hostname", header: "Hostname",
-      accessor: (r) => <span className="font-medium">{r.hostname}</span>,
+      accessor: (r) => (
+        <span className="font-medium inline-flex items-center gap-1.5">
+          <Link to="/ativos/$id" params={{ id: r.id }} className="hover:underline">{r.hostname}</Link>
+          <EdrBadge ativoId={r.id} set={edrSet} />
+        </span>
+      ),
       sortValue: (r) => r.hostname.toLowerCase(),
       searchValue: (r) => r.hostname, exportValue: (r) => r.hostname,
     },
@@ -223,6 +240,12 @@ function AtivosPage() {
       searchValue: (r) => r.setor, exportValue: (r) => r.setor,
     },
     {
+      id: "centro", header: "Centro de custo", defaultHidden: true,
+      accessor: (r) => r.centros_custo?.nome ?? "—",
+      sortValue: (r) => r.centros_custo?.nome ?? "",
+      searchValue: (r) => r.centros_custo?.nome, exportValue: (r) => r.centros_custo?.nome,
+    },
+    {
       id: "responsavel", header: "Responsável",
       accessor: (r) => r.usuarios?.nome ?? "—",
       sortValue: (r) => r.usuarios?.nome ?? "",
@@ -238,6 +261,9 @@ function AtivosPage() {
       id: "acoes", header: "Ações", alwaysVisible: true,
       accessor: (r) => (
         <div className="flex gap-1">
+          <Button asChild size="icon" variant="ghost" title="Ver ficha">
+            <Link to="/ativos/$id" params={{ id: r.id }}><ExternalLink className="h-4 w-4" /></Link>
+          </Button>
           {canWrite && (
             <>
               <Button size="icon" variant="ghost" onClick={() => openEdit(r)}><Pencil className="h-4 w-4" /></Button>
@@ -343,15 +369,27 @@ function AtivosPage() {
             </Select>
           </div>
         </div>
-        <div>
-          <Label>Responsável</Label>
-          <Combobox
-            placeholder="Nenhum"
-            searchPlaceholder="Buscar colaborador…"
-            value={form.usuario_responsavel_id}
-            onChange={(v) => setForm({ ...form, usuario_responsavel_id: v })}
-            options={(users ?? []).map((u) => ({ value: u.id, label: u.nome }))}
-          />
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <Label>Responsável</Label>
+            <Combobox
+              placeholder="Nenhum"
+              searchPlaceholder="Buscar colaborador…"
+              value={form.usuario_responsavel_id}
+              onChange={(v) => setForm({ ...form, usuario_responsavel_id: v })}
+              options={(users ?? []).map((u) => ({ value: u.id, label: u.nome }))}
+            />
+          </div>
+          <div>
+            <Label>Centro de custo</Label>
+            <Combobox
+              placeholder="Nenhum"
+              searchPlaceholder="Buscar centro…"
+              value={form.centro_custo_id}
+              onChange={(v) => setForm({ ...form, centro_custo_id: v })}
+              options={(centros ?? []).map((c: any) => ({ value: c.id, label: c.nome }))}
+            />
+          </div>
         </div>
       </CrudDialog>
     </>
