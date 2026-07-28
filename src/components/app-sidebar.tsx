@@ -18,6 +18,8 @@ import {
   Building2,
   Network,
   Wallet,
+  Wrench,
+  Boxes,
 } from "lucide-react";
 import {
   Sidebar,
@@ -50,6 +52,9 @@ const main = [
 ] as const;
 
 const fase2 = [
+  { title: "Ordens de serviço", url: "/ordens-servico", icon: Wrench },
+  { title: "Peças", url: "/pecas", icon: Package },
+  { title: "Estoque", url: "/estoque", icon: Boxes },
   { title: "Reconciliação", url: "/reconciliacao", icon: Upload },
   { title: "Alertas", url: "/alertas", icon: Bell },
   { title: "Auditoria", url: "/auditoria", icon: ScrollText },

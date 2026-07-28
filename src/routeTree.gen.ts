@@ -23,7 +23,10 @@ import { Route as AuthenticatedServicosRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedRelatoriosRouteImport } from './routes/_authenticated/relatorios'
 import { Route as AuthenticatedReconciliacaoRouteImport } from './routes/_authenticated/reconciliacao'
 import { Route as AuthenticatedProdutosRouteImport } from './routes/_authenticated/produtos'
+import { Route as AuthenticatedPecasRouteImport } from './routes/_authenticated/pecas'
+import { Route as AuthenticatedOrdensServicoRouteImport } from './routes/_authenticated/ordens-servico'
 import { Route as AuthenticatedLicencasRouteImport } from './routes/_authenticated/licencas'
+import { Route as AuthenticatedEstoqueRouteImport } from './routes/_authenticated/estoque'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedContratosRouteImport } from './routes/_authenticated/contratos'
 import { Route as AuthenticatedColaboradoresRouteImport } from './routes/_authenticated/colaboradores'
@@ -35,6 +38,7 @@ import { Route as AuthenticatedAlertasRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedAcessosRouteImport } from './routes/_authenticated/acessos'
 import { Route as Authenticated403RouteImport } from './routes/_authenticated/403'
 import { Route as AuthenticatedServicosIdRouteImport } from './routes/_authenticated/servicos_.$id'
+import { Route as AuthenticatedOrdensServicoIdRouteImport } from './routes/_authenticated/ordens-servico_.$id'
 import { Route as AuthenticatedAtivosIdRouteImport } from './routes/_authenticated/ativos_.$id'
 import { Route as AuthenticatedAuditoriaTabelaIdRouteImport } from './routes/_authenticated/auditoria_.$tabela.$id'
 
@@ -109,9 +113,25 @@ const AuthenticatedProdutosRoute = AuthenticatedProdutosRouteImport.update({
   path: '/produtos',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedPecasRoute = AuthenticatedPecasRouteImport.update({
+  id: '/pecas',
+  path: '/pecas',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedOrdensServicoRoute =
+  AuthenticatedOrdensServicoRouteImport.update({
+    id: '/ordens-servico',
+    path: '/ordens-servico',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedLicencasRoute = AuthenticatedLicencasRouteImport.update({
   id: '/licencas',
   path: '/licencas',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedEstoqueRoute = AuthenticatedEstoqueRouteImport.update({
+  id: '/estoque',
+  path: '/estoque',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
@@ -171,6 +191,12 @@ const AuthenticatedServicosIdRoute = AuthenticatedServicosIdRouteImport.update({
   path: '/servicos/$id',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedOrdensServicoIdRoute =
+  AuthenticatedOrdensServicoIdRouteImport.update({
+    id: '/ordens-servico_/$id',
+    path: '/ordens-servico/$id',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedAtivosIdRoute = AuthenticatedAtivosIdRouteImport.update({
   id: '/ativos_/$id',
   path: '/ativos/$id',
@@ -201,7 +227,10 @@ export interface FileRoutesByFullPath {
   '/colaboradores': typeof AuthenticatedColaboradoresRoute
   '/contratos': typeof AuthenticatedContratosRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/estoque': typeof AuthenticatedEstoqueRoute
   '/licencas': typeof AuthenticatedLicencasRoute
+  '/ordens-servico': typeof AuthenticatedOrdensServicoRoute
+  '/pecas': typeof AuthenticatedPecasRoute
   '/produtos': typeof AuthenticatedProdutosRoute
   '/reconciliacao': typeof AuthenticatedReconciliacaoRoute
   '/relatorios': typeof AuthenticatedRelatoriosRoute
@@ -209,6 +238,7 @@ export interface FileRoutesByFullPath {
   '/solicitacoes': typeof AuthenticatedSolicitacoesRoute
   '/unidades': typeof AuthenticatedUnidadesRoute
   '/ativos/$id': typeof AuthenticatedAtivosIdRoute
+  '/ordens-servico/$id': typeof AuthenticatedOrdensServicoIdRoute
   '/servicos/$id': typeof AuthenticatedServicosIdRoute
   '/auditoria/$tabela/$id': typeof AuthenticatedAuditoriaTabelaIdRoute
 }
@@ -230,7 +260,10 @@ export interface FileRoutesByTo {
   '/colaboradores': typeof AuthenticatedColaboradoresRoute
   '/contratos': typeof AuthenticatedContratosRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/estoque': typeof AuthenticatedEstoqueRoute
   '/licencas': typeof AuthenticatedLicencasRoute
+  '/ordens-servico': typeof AuthenticatedOrdensServicoRoute
+  '/pecas': typeof AuthenticatedPecasRoute
   '/produtos': typeof AuthenticatedProdutosRoute
   '/reconciliacao': typeof AuthenticatedReconciliacaoRoute
   '/relatorios': typeof AuthenticatedRelatoriosRoute
@@ -238,6 +271,7 @@ export interface FileRoutesByTo {
   '/solicitacoes': typeof AuthenticatedSolicitacoesRoute
   '/unidades': typeof AuthenticatedUnidadesRoute
   '/ativos/$id': typeof AuthenticatedAtivosIdRoute
+  '/ordens-servico/$id': typeof AuthenticatedOrdensServicoIdRoute
   '/servicos/$id': typeof AuthenticatedServicosIdRoute
   '/auditoria/$tabela/$id': typeof AuthenticatedAuditoriaTabelaIdRoute
 }
@@ -261,7 +295,10 @@ export interface FileRoutesById {
   '/_authenticated/colaboradores': typeof AuthenticatedColaboradoresRoute
   '/_authenticated/contratos': typeof AuthenticatedContratosRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/estoque': typeof AuthenticatedEstoqueRoute
   '/_authenticated/licencas': typeof AuthenticatedLicencasRoute
+  '/_authenticated/ordens-servico': typeof AuthenticatedOrdensServicoRoute
+  '/_authenticated/pecas': typeof AuthenticatedPecasRoute
   '/_authenticated/produtos': typeof AuthenticatedProdutosRoute
   '/_authenticated/reconciliacao': typeof AuthenticatedReconciliacaoRoute
   '/_authenticated/relatorios': typeof AuthenticatedRelatoriosRoute
@@ -269,6 +306,7 @@ export interface FileRoutesById {
   '/_authenticated/solicitacoes': typeof AuthenticatedSolicitacoesRoute
   '/_authenticated/unidades': typeof AuthenticatedUnidadesRoute
   '/_authenticated/ativos_/$id': typeof AuthenticatedAtivosIdRoute
+  '/_authenticated/ordens-servico_/$id': typeof AuthenticatedOrdensServicoIdRoute
   '/_authenticated/servicos_/$id': typeof AuthenticatedServicosIdRoute
   '/_authenticated/auditoria_/$tabela/$id': typeof AuthenticatedAuditoriaTabelaIdRoute
 }
@@ -292,7 +330,10 @@ export interface FileRouteTypes {
     | '/colaboradores'
     | '/contratos'
     | '/dashboard'
+    | '/estoque'
     | '/licencas'
+    | '/ordens-servico'
+    | '/pecas'
     | '/produtos'
     | '/reconciliacao'
     | '/relatorios'
@@ -300,6 +341,7 @@ export interface FileRouteTypes {
     | '/solicitacoes'
     | '/unidades'
     | '/ativos/$id'
+    | '/ordens-servico/$id'
     | '/servicos/$id'
     | '/auditoria/$tabela/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -321,7 +363,10 @@ export interface FileRouteTypes {
     | '/colaboradores'
     | '/contratos'
     | '/dashboard'
+    | '/estoque'
     | '/licencas'
+    | '/ordens-servico'
+    | '/pecas'
     | '/produtos'
     | '/reconciliacao'
     | '/relatorios'
@@ -329,6 +374,7 @@ export interface FileRouteTypes {
     | '/solicitacoes'
     | '/unidades'
     | '/ativos/$id'
+    | '/ordens-servico/$id'
     | '/servicos/$id'
     | '/auditoria/$tabela/$id'
   id:
@@ -351,7 +397,10 @@ export interface FileRouteTypes {
     | '/_authenticated/colaboradores'
     | '/_authenticated/contratos'
     | '/_authenticated/dashboard'
+    | '/_authenticated/estoque'
     | '/_authenticated/licencas'
+    | '/_authenticated/ordens-servico'
+    | '/_authenticated/pecas'
     | '/_authenticated/produtos'
     | '/_authenticated/reconciliacao'
     | '/_authenticated/relatorios'
@@ -359,6 +408,7 @@ export interface FileRouteTypes {
     | '/_authenticated/solicitacoes'
     | '/_authenticated/unidades'
     | '/_authenticated/ativos_/$id'
+    | '/_authenticated/ordens-servico_/$id'
     | '/_authenticated/servicos_/$id'
     | '/_authenticated/auditoria_/$tabela/$id'
   fileRoutesById: FileRoutesById
@@ -474,11 +524,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProdutosRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/pecas': {
+      id: '/_authenticated/pecas'
+      path: '/pecas'
+      fullPath: '/pecas'
+      preLoaderRoute: typeof AuthenticatedPecasRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/ordens-servico': {
+      id: '/_authenticated/ordens-servico'
+      path: '/ordens-servico'
+      fullPath: '/ordens-servico'
+      preLoaderRoute: typeof AuthenticatedOrdensServicoRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/licencas': {
       id: '/_authenticated/licencas'
       path: '/licencas'
       fullPath: '/licencas'
       preLoaderRoute: typeof AuthenticatedLicencasRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/estoque': {
+      id: '/_authenticated/estoque'
+      path: '/estoque'
+      fullPath: '/estoque'
+      preLoaderRoute: typeof AuthenticatedEstoqueRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/dashboard': {
@@ -558,6 +629,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedServicosIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/ordens-servico_/$id': {
+      id: '/_authenticated/ordens-servico_/$id'
+      path: '/ordens-servico/$id'
+      fullPath: '/ordens-servico/$id'
+      preLoaderRoute: typeof AuthenticatedOrdensServicoIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/ativos_/$id': {
       id: '/_authenticated/ativos_/$id'
       path: '/ativos/$id'
@@ -586,7 +664,10 @@ interface AuthenticatedRouteChildren {
   AuthenticatedColaboradoresRoute: typeof AuthenticatedColaboradoresRoute
   AuthenticatedContratosRoute: typeof AuthenticatedContratosRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedEstoqueRoute: typeof AuthenticatedEstoqueRoute
   AuthenticatedLicencasRoute: typeof AuthenticatedLicencasRoute
+  AuthenticatedOrdensServicoRoute: typeof AuthenticatedOrdensServicoRoute
+  AuthenticatedPecasRoute: typeof AuthenticatedPecasRoute
   AuthenticatedProdutosRoute: typeof AuthenticatedProdutosRoute
   AuthenticatedReconciliacaoRoute: typeof AuthenticatedReconciliacaoRoute
   AuthenticatedRelatoriosRoute: typeof AuthenticatedRelatoriosRoute
@@ -594,6 +675,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedSolicitacoesRoute: typeof AuthenticatedSolicitacoesRoute
   AuthenticatedUnidadesRoute: typeof AuthenticatedUnidadesRoute
   AuthenticatedAtivosIdRoute: typeof AuthenticatedAtivosIdRoute
+  AuthenticatedOrdensServicoIdRoute: typeof AuthenticatedOrdensServicoIdRoute
   AuthenticatedServicosIdRoute: typeof AuthenticatedServicosIdRoute
   AuthenticatedAuditoriaTabelaIdRoute: typeof AuthenticatedAuditoriaTabelaIdRoute
 }
@@ -609,7 +691,10 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedColaboradoresRoute: AuthenticatedColaboradoresRoute,
   AuthenticatedContratosRoute: AuthenticatedContratosRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedEstoqueRoute: AuthenticatedEstoqueRoute,
   AuthenticatedLicencasRoute: AuthenticatedLicencasRoute,
+  AuthenticatedOrdensServicoRoute: AuthenticatedOrdensServicoRoute,
+  AuthenticatedPecasRoute: AuthenticatedPecasRoute,
   AuthenticatedProdutosRoute: AuthenticatedProdutosRoute,
   AuthenticatedReconciliacaoRoute: AuthenticatedReconciliacaoRoute,
   AuthenticatedRelatoriosRoute: AuthenticatedRelatoriosRoute,
@@ -617,6 +702,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedSolicitacoesRoute: AuthenticatedSolicitacoesRoute,
   AuthenticatedUnidadesRoute: AuthenticatedUnidadesRoute,
   AuthenticatedAtivosIdRoute: AuthenticatedAtivosIdRoute,
+  AuthenticatedOrdensServicoIdRoute: AuthenticatedOrdensServicoIdRoute,
   AuthenticatedServicosIdRoute: AuthenticatedServicosIdRoute,
   AuthenticatedAuditoriaTabelaIdRoute: AuthenticatedAuditoriaTabelaIdRoute,
 }
