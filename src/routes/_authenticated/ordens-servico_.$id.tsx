@@ -39,7 +39,7 @@ type PecaUsada = {
 type Sugestao = { peca_id: string; nome: string; saldo: number; custo_unitario: number | null };
 
 function Page() {
-  const { canWrite } = useAuth();
+  const { canOperateOS, user } = useAuth();
   const { id } = Route.useParams();
   const qc = useQueryClient();
   const [addOpen, setAddOpen] = useState(false);
@@ -82,7 +82,7 @@ function Page() {
         description={<Link to="/ativos/$id" params={{ id: os.ativo_id }} className="hover:text-primary">{os.ativos?.hostname}</Link>}
        
         actions={
-          canWrite && os.status !== "concluida" && os.status !== "cancelada" ? (
+          canOperateOS && os.status !== "concluida" && os.status !== "cancelada" ? (
             <div className="flex gap-2">
               {os.status !== "em_andamento" && <Button size="sm" variant="outline" onClick={() => mudarStatus("em_andamento")}>Iniciar</Button>}
               {os.status !== "aguardando_peca" && <Button size="sm" variant="outline" onClick={() => mudarStatus("aguardando_peca")}>Aguardar peça</Button>}
@@ -124,7 +124,7 @@ function Page() {
       <Card className="mt-4">
         <CardHeader className="flex-row items-center justify-between space-y-0">
           <CardTitle className="text-sm flex items-center gap-2"><Package className="h-4 w-4" /> Peças utilizadas</CardTitle>
-          {canWrite && os.status !== "concluida" && os.status !== "cancelada" && (
+          {canOperateOS && os.status !== "concluida" && os.status !== "cancelada" && (
             <Button size="sm" onClick={() => setAddOpen(true)}>Adicionar peça</Button>
           )}
         </CardHeader>
@@ -151,7 +151,7 @@ function Page() {
                   <TableCell className="text-right tabular-nums">R$ {(p.quantidade * Number(p.custo_unitario ?? 0)).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</TableCell>
                   <TableCell className="text-xs">{new Date(p.created_at).toLocaleString("pt-BR")}</TableCell>
                   <TableCell className="text-right">
-                    {canWrite && os.status !== "concluida" && (
+                    {canOperateOS && os.status !== "concluida" && (
                       <Button size="icon" variant="ghost" onClick={() => removerPeca(p.id)}><Trash2 className="h-4 w-4" /></Button>
                     )}
                   </TableCell>
@@ -161,6 +161,8 @@ function Page() {
           </Table>
         </CardContent>
       </Card>
+
+      <AnexosCard osId={id} canOperate={canOperateOS} uploaderId={user?.id ?? null} />
 
       <AddPecaDialog open={addOpen} onOpenChange={setAddOpen} osId={id} ativoTipo={os.ativos?.tipo ?? null} onWaitPart={() => mudarStatus("aguardando_peca")} />
     </>
@@ -259,5 +261,156 @@ function AddPecaDialog({ open, onOpenChange, osId, ativoTipo, onWaitPart }: {
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function AnexosCard({ osId, canOperate, uploaderId }: { osId: string; canOperate: boolean; uploaderId: string | null }) {
+  const qc = useQueryClient();
+  const [busy, setBusy] = useState(false);
+  const [descricao, setDescricao] = useState("");
+
+  const { data: anexos } = useQuery({
+    queryKey: ["os_anexos", osId],
+    queryFn: async () => {
+      const { data } = await (supabase as any)
+        .from("ordens_servico_anexos")
+        .select("*")
+        .eq("ordem_servico_id", osId)
+        .order("created_at", { ascending: false });
+      return (data ?? []) as Array<{
+        id: string; storage_path: string; nome_arquivo: string;
+        mime_type: string | null; tamanho_bytes: number | null;
+        descricao: string | null; created_at: string;
+      }>;
+    },
+  });
+
+  async function upload(file: File) {
+    if (!uploaderId) return toast.error("Sessão inválida.");
+    if (file.size > 20 * 1024 * 1024) return toast.error("Arquivo maior que 20 MB.");
+    setBusy(true);
+    try {
+      const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+      const path = `${osId}/${Date.now()}_${safe}`;
+      const { error: upErr } = await supabase.storage
+        .from("os-evidencias")
+        .upload(path, file, { contentType: file.type || undefined, upsert: false });
+      if (upErr) throw upErr;
+      const { error: insErr } = await (supabase as any).from("ordens_servico_anexos").insert({
+        ordem_servico_id: osId,
+        storage_path: path,
+        nome_arquivo: file.name,
+        mime_type: file.type || null,
+        tamanho_bytes: file.size,
+        descricao: descricao || null,
+        uploaded_by: uploaderId,
+      });
+      if (insErr) throw insErr;
+      toast.success("Evidência anexada");
+      setDescricao("");
+      qc.invalidateQueries({ queryKey: ["os_anexos", osId] });
+    } catch (e: any) {
+      toast.error(e?.message ?? "Falha no upload");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function baixar(path: string, nome: string) {
+    const { data, error } = await supabase.storage.from("os-evidencias").createSignedUrl(path, 60);
+    if (error || !data) return toast.error("Não foi possível abrir o arquivo");
+    const a = document.createElement("a");
+    a.href = data.signedUrl;
+    a.download = nome;
+    a.target = "_blank";
+    a.rel = "noopener";
+    a.click();
+  }
+
+  async function remover(id: string, path: string) {
+    if (!confirm("Remover esta evidência?")) return;
+    await supabase.storage.from("os-evidencias").remove([path]);
+    const { error } = await (supabase as any).from("ordens_servico_anexos").delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    qc.invalidateQueries({ queryKey: ["os_anexos", osId] });
+  }
+
+  function fmtSize(n: number | null) {
+    if (!n) return "—";
+    if (n < 1024) return `${n} B`;
+    if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
+    return `${(n / 1024 / 1024).toFixed(2)} MB`;
+  }
+
+  return (
+    <Card className="mt-4">
+      <CardHeader className="flex-row items-center justify-between space-y-0">
+        <CardTitle className="text-sm">Evidências (fotos / documentos)</CardTitle>
+        {canOperate && (
+          <div className="flex items-center gap-2">
+            <Input
+              placeholder="Descrição (opcional)"
+              className="h-8 w-56"
+              value={descricao}
+              onChange={(e) => setDescricao(e.target.value)}
+            />
+            <label>
+              <input
+                type="file"
+                accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx"
+                className="hidden"
+                disabled={busy}
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) upload(f);
+                  e.target.value = "";
+                }}
+              />
+              <Button size="sm" asChild disabled={busy}>
+                <span>{busy ? "Enviando…" : "Anexar arquivo"}</span>
+              </Button>
+            </label>
+          </div>
+        )}
+      </CardHeader>
+      <CardContent className="p-0">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Arquivo</TableHead>
+              <TableHead>Descrição</TableHead>
+              <TableHead>Tipo</TableHead>
+              <TableHead className="text-right">Tamanho</TableHead>
+              <TableHead>Enviado em</TableHead>
+              <TableHead></TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {(anexos ?? []).length === 0 ? (
+              <TableRow><TableCell colSpan={6} className="text-center text-sm text-muted-foreground py-6">Nenhuma evidência anexada.</TableCell></TableRow>
+            ) : anexos!.map((a) => (
+              <TableRow key={a.id}>
+                <TableCell>
+                  <button className="text-left font-medium hover:text-primary" onClick={() => baixar(a.storage_path, a.nome_arquivo)}>
+                    {a.nome_arquivo}
+                  </button>
+                </TableCell>
+                <TableCell className="text-sm text-muted-foreground">{a.descricao ?? "—"}</TableCell>
+                <TableCell className="text-xs">{a.mime_type ?? "—"}</TableCell>
+                <TableCell className="text-right tabular-nums text-xs">{fmtSize(a.tamanho_bytes)}</TableCell>
+                <TableCell className="text-xs">{new Date(a.created_at).toLocaleString("pt-BR")}</TableCell>
+                <TableCell className="text-right">
+                  {canOperate && (
+                    <Button size="icon" variant="ghost" onClick={() => remover(a.id, a.storage_path)}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
   );
 }

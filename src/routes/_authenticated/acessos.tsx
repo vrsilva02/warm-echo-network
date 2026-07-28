@@ -33,7 +33,7 @@ export const Route = createFileRoute("/_authenticated/acessos")({
   }),
 });
 
-const ROLES: AppRole[] = ["admin", "gestor_ti", "padrao", "visitante"];
+const ROLES: AppRole[] = ["admin", "gestor_ti", "tecnico", "auditoria", "padrao", "visitante"];
 
 type Profile = { id: string; nome: string | null; email: string | null; created_at: string };
 type UserRoleRow = { user_id: string; role: AppRole };
@@ -43,9 +43,10 @@ function roleBadge(r: AppRole) {
   const map: Record<AppRole, string> = {
     admin: "bg-primary/15 text-primary border-primary/30",
     gestor_ti: "bg-[color:var(--success)]/15 text-[color:var(--success)] border-[color:var(--success)]/30",
+    tecnico: "bg-[color:var(--warning)]/15 text-[color:var(--warning)] border-[color:var(--warning)]/30",
     padrao: "bg-secondary text-secondary-foreground border-border",
     visitante: "bg-muted text-muted-foreground",
-    auditoria: "bg-muted text-muted-foreground",
+    auditoria: "bg-[color:var(--info)]/15 text-[color:var(--info)] border-[color:var(--info)]/30",
   };
   return (
     <Badge key={r} variant="outline" className={map[r]}>

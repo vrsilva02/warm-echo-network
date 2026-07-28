@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
-export type AppRole = "admin" | "gestor_ti" | "padrao" | "visitante" | "auditoria";
+export type AppRole = "admin" | "gestor_ti" | "padrao" | "visitante" | "auditoria" | "tecnico";
 
 interface AuthCtx {
   session: Session | null;
@@ -12,7 +12,9 @@ interface AuthCtx {
   isAdmin: boolean;
   isGestor: boolean;
   isAuditoria: boolean;
+  isTecnico: boolean;
   canWrite: boolean;
+  canOperateOS: boolean;
   signOut: () => Promise<void>;
 }
 
@@ -51,6 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isAdmin = roles.includes("admin");
   const isGestor = roles.includes("gestor_ti");
   const isAuditoria = roles.includes("auditoria");
+  const isTecnico = roles.includes("tecnico");
 
   const value: AuthCtx = {
     session,
@@ -60,7 +63,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isAdmin,
     isGestor,
     isAuditoria,
+    isTecnico,
     canWrite: isAdmin || isGestor,
+    canOperateOS: isAdmin || isGestor || isTecnico,
     signOut: async () => {
       await supabase.auth.signOut();
     },
@@ -78,9 +83,10 @@ export function roleLabel(r: AppRole): string {
   const map: Record<AppRole, string> = {
     admin: "Admin",
     gestor_ti: "Gestão",
+    tecnico: "Técnico",
     padrao: "Padrão",
     visitante: "Visitante",
-    auditoria: "Visitante",
+    auditoria: "Auditoria",
   };
   return map[r] ?? r;
 }
