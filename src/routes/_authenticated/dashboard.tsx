@@ -19,7 +19,7 @@ import {
   Cell,
   Legend,
 } from "recharts";
-import { AlertTriangle, CheckCircle2, XCircle, KeySquare, FileWarning, Snowflake, ShieldAlert, Coins, Settings2 } from "lucide-react";
+import { AlertTriangle, CheckCircle2, XCircle, KeySquare, FileWarning, Snowflake, ShieldAlert, Coins, Settings2, Wrench, Package } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Link } from "@tanstack/react-router";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
