@@ -194,16 +194,7 @@ function AcessosPage() {
   }
 
   if (!isAdmin) {
-    return (
-      <>
-        <PageHeader title="Gestão de Acessos" description="Controle de perfis e permissões." />
-        <div className="rounded-lg border bg-card p-8 text-center">
-          <ShieldAlert className="mx-auto h-10 w-10 text-muted-foreground" />
-          <h2 className="mt-3 text-lg font-semibold">Acesso restrito</h2>
-          <p className="text-sm text-muted-foreground">Apenas administradores podem gerenciar acessos.</p>
-        </div>
-      </>
-    );
+    return <RequireRole roles={["admin"]}>{null}</RequireRole>;
   }
 
   return (
