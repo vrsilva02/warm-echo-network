@@ -47,13 +47,16 @@ function useDashboardData() {
   return useQuery({
     queryKey: ["dashboard"],
     queryFn: async () => {
-      const [elp, ativos, vencendo, ociosas, ocioseFin, risco] = await Promise.all([
+      const [elp, ativos, vencendo, ociosas, ocioseFin, risco, custoOc, gapEdr, tco] = await Promise.all([
         supabase.from("vw_elp").select("*"),
-        supabase.from("ativos").select("status_ciclo_vida"),
+        supabase.from("ativos").select("status_ciclo_vida, centro_custo_id, centros_custo(nome)"),
         supabase.from("vw_contratos_vencendo").select("id,dias_para_vencer,urgencia"),
         supabase.from("vw_licencas_ociosas").select("licenca_id"),
         supabase.from("vw_ociosidade_financeira").select("*"),
         supabase.rpc("fn_risco_compliance", { _categoria: null as unknown as string }),
+        supabase.from("vw_custo_ociosas").select("*"),
+        supabase.from("vw_gap_edr").select("ativo_id"),
+        supabase.from("vw_tco_ativo").select("ativo_id,tco_anual_estimado"),
       ]);
       return {
         elp: (elp.data ?? []) as ElpRow[],
@@ -62,6 +65,9 @@ function useDashboardData() {
         licencasOciosas: ociosas.data?.length ?? 0,
         ocioseFin: (ocioseFin.data ?? []) as Array<{ produto_id: string; nome_oficial: string; categoria: string; licencas_ociosas: number; valor_ocioso: number }>,
         risco: (risco.data ?? []) as Array<{ categoria: string; deficit_pct: number; criticidade_media: number; score: number }>,
+        custoOciosasMensal: (custoOc.data ?? []).reduce((a: number, r: any) => a + Number(r.custo_mensal_desperdicado ?? 0), 0),
+        gapEdrCount: gapEdr.data?.length ?? 0,
+        tco: (tco.data ?? []) as Array<{ ativo_id: string; tco_anual_estimado: number | null }>,
       };
     },
   });
