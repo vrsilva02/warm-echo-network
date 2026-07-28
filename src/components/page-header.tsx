@@ -9,8 +9,8 @@ export function PageHeader({
   actions,
   showBreadcrumbs = true,
 }: {
-  title: string;
-  description?: string;
+  title: ReactNode;
+  description?: ReactNode;
   actions?: ReactNode;
   showBreadcrumbs?: boolean;
 }) {
