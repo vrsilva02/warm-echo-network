@@ -18,6 +18,8 @@ import {
   Building2,
   Network,
   Wallet,
+  Wrench,
+  Boxes,
 } from "lucide-react";
 import {
   Sidebar,
