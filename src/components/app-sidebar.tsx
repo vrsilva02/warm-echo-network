@@ -128,7 +128,7 @@ export function AppSidebar() {
           <SidebarGroupLabel>Compliance</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {fase2.map((item) => (
+              {fase2Visible.map((item) => (
                 <SidebarMenuItem key={item.url}>
                   <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={`${item.title} (em breve)`}>
                     <Link to={item.url}>
