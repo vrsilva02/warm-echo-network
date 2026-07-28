@@ -809,6 +809,50 @@ export type Database = {
           },
         ]
       }
+      ordens_servico_anexos: {
+        Row: {
+          created_at: string
+          descricao: string | null
+          id: string
+          mime_type: string | null
+          nome_arquivo: string
+          ordem_servico_id: string
+          storage_path: string
+          tamanho_bytes: number | null
+          uploaded_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          mime_type?: string | null
+          nome_arquivo: string
+          ordem_servico_id: string
+          storage_path: string
+          tamanho_bytes?: number | null
+          uploaded_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          mime_type?: string | null
+          nome_arquivo?: string
+          ordem_servico_id?: string
+          storage_path?: string
+          tamanho_bytes?: number | null
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ordens_servico_anexos_ordem_servico_id_fkey"
+            columns: ["ordem_servico_id"]
+            isOneToOne: false
+            referencedRelation: "ordens_servico"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ordens_servico_pecas: {
         Row: {
           created_at: string
@@ -1426,7 +1470,9 @@ export type Database = {
       }
     }
     Functions: {
+      can_operate_os: { Args: { _user_id: string }; Returns: boolean }
       can_read: { Args: { _user_id: string }; Returns: boolean }
+      can_read_os: { Args: { _user_id: string }; Returns: boolean }
       fn_log_action: {
         Args: {
           p_acao: string
@@ -1454,6 +1500,7 @@ export type Database = {
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
       is_gestor_or_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_tecnico: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       aditivo_tipo: "quantidade" | "prazo" | "valor" | "outro"
