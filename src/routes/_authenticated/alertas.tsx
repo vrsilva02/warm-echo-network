@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,14 +8,22 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DataTable } from "@/components/data-table";
-import { AlertTriangle, FileWarning, Snowflake, XCircle, ShieldCheck } from "lucide-react";
+import { AlertTriangle, FileWarning, Snowflake, XCircle, ShieldCheck, ShieldAlert } from "lucide-react";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Combobox } from "@/components/combobox";
+import { toast } from "sonner";
+import { z } from "zod";
+
+const searchSchema = z.object({ tipo: z.enum(["todos", "contrato", "compliance", "ocioso", "edr"]).optional() });
 
 export const Route = createFileRoute("/_authenticated/alertas")({
   component: Page,
+  validateSearch: (s) => searchSchema.parse(s),
   head: () => ({
     meta: [
       { title: "Alertas — GestoraIT" },
-      { name: "description", content: "Central de alertas: contratos vencendo, déficit de compliance e licenças ociosas." },
+      { name: "description", content: "Central de alertas: contratos vencendo, déficit de compliance, licenças ociosas e gap EDR." },
     ],
   }),
 });
@@ -23,27 +31,28 @@ export const Route = createFileRoute("/_authenticated/alertas")({
 type Sev = "critico" | "alto" | "medio";
 type Alerta = {
   id: string;
-  tipo: "contrato" | "compliance" | "ocioso";
+  tipo: "contrato" | "compliance" | "ocioso" | "edr";
   severidade: Sev;
   titulo: string;
   descricao: string;
   detalhe: string;
   acaoLink?: string;
   acaoLabel?: string;
+  ativoId?: string;
 };
 
 function useAlertas() {
   return useQuery({
     queryKey: ["alertas"],
     queryFn: async () => {
-      const [vc, elp, oc] = await Promise.all([
+      const [vc, elp, oc, gap] = await Promise.all([
         supabase.from("vw_contratos_vencendo").select("*"),
         supabase.from("vw_elp").select("*"),
         supabase.from("vw_licencas_ociosas").select("*"),
+        supabase.from("vw_gap_edr").select("*"),
       ]);
       const alertas: Alerta[] = [];
 
-      // Contratos
       for (const c of (vc.data ?? []) as any[]) {
         const dias = c.dias_para_vencer;
         if (dias == null || dias > 90) continue;
@@ -60,7 +69,6 @@ function useAlertas() {
         });
       }
 
-      // Compliance (déficit ELP)
       for (const p of (elp.data ?? []) as any[]) {
         if (p.status_compliance !== "deficit") continue;
         const excesso = Number(p.licencas_alocadas) - Number(p.licencas_compradas);
@@ -76,7 +84,6 @@ function useAlertas() {
         });
       }
 
-      // Ociosidade
       for (const o of (oc.data ?? []) as any[]) {
         alertas.push({
           id: `o-${o.licenca_id}`,
@@ -90,6 +97,18 @@ function useAlertas() {
         });
       }
 
+      for (const g of (gap.data ?? []) as any[]) {
+        alertas.push({
+          id: `e-${g.ativo_id}`,
+          tipo: "edr",
+          severidade: "alto",
+          titulo: `${g.hostname ?? "Ativo"} sem cobertura EDR`,
+          descricao: `Setor ${g.setor ?? "—"} · status ${g.status_ciclo_vida}`,
+          detalhe: "Nenhuma licença EDR ativa vinculada a este ativo.",
+          ativoId: g.ativo_id,
+        });
+      }
+
       return alertas;
     },
   });
@@ -98,8 +117,10 @@ function useAlertas() {
 const SEV_ORDER: Record<Sev, number> = { critico: 0, alto: 1, medio: 2 };
 
 function Page() {
+  const search = Route.useSearch();
   const { data, isLoading } = useAlertas();
-  const [tab, setTab] = useState<"todos" | "contrato" | "compliance" | "ocioso">("todos");
+  const [tab, setTab] = useState<"todos" | "contrato" | "compliance" | "ocioso" | "edr">(search.tipo ?? "todos");
+  const [linkEdr, setLinkEdr] = useState<{ ativoId: string; hostname: string } | null>(null);
 
   const alertas = useMemo(() => {
     const list = (data ?? []).slice().sort((a, b) => SEV_ORDER[a.severidade] - SEV_ORDER[b.severidade]);
@@ -108,7 +129,7 @@ function Page() {
   }, [data, tab]);
 
   const counts = useMemo(() => {
-    const c = { total: 0, critico: 0, alto: 0, medio: 0, contrato: 0, compliance: 0, ocioso: 0 };
+    const c = { total: 0, critico: 0, alto: 0, medio: 0, contrato: 0, compliance: 0, ocioso: 0, edr: 0 };
     (data ?? []).forEach((a) => {
       c.total++;
       c[a.severidade]++;
@@ -119,7 +140,7 @@ function Page() {
 
   return (
     <>
-      <PageHeader title="Alertas" description="Regras automáticas com base em contratos, compliance ELP e licenças ociosas." />
+      <PageHeader title="Alertas" description="Regras automáticas com base em contratos, compliance ELP, ociosidade e gap EDR." />
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
         <KpiCard title="Total" value={counts.total} icon={<ShieldCheck className="h-4 w-4" />} />
@@ -131,15 +152,10 @@ function Page() {
       <Tabs value={tab} onValueChange={(v) => setTab(v as any)} className="mb-4">
         <TabsList>
           <TabsTrigger value="todos">Todos ({counts.total})</TabsTrigger>
-          <TabsTrigger value="contrato">
-            <FileWarning className="h-3 w-3 mr-1" /> Contratos ({counts.contrato})
-          </TabsTrigger>
-          <TabsTrigger value="compliance">
-            <XCircle className="h-3 w-3 mr-1" /> Compliance ({counts.compliance})
-          </TabsTrigger>
-          <TabsTrigger value="ocioso">
-            <Snowflake className="h-3 w-3 mr-1" /> Ociosidade ({counts.ocioso})
-          </TabsTrigger>
+          <TabsTrigger value="contrato"><FileWarning className="h-3 w-3 mr-1" /> Contratos ({counts.contrato})</TabsTrigger>
+          <TabsTrigger value="compliance"><XCircle className="h-3 w-3 mr-1" /> Compliance ({counts.compliance})</TabsTrigger>
+          <TabsTrigger value="ocioso"><Snowflake className="h-3 w-3 mr-1" /> Ociosidade ({counts.ocioso})</TabsTrigger>
+          <TabsTrigger value="edr"><ShieldAlert className="h-3 w-3 mr-1" /> Gap EDR ({counts.edr})</TabsTrigger>
         </TabsList>
         <TabsContent value={tab} className="mt-4">
           <DataTable
@@ -153,7 +169,11 @@ function Page() {
                 <div className="text-xs text-muted-foreground">{a.descricao}</div>
               </div>,
               <span key="d" className="text-sm text-muted-foreground">{a.detalhe}</span>,
-              a.acaoLink ? (
+              a.tipo === "edr" && a.ativoId ? (
+                <Button key="ac" size="sm" variant="outline" onClick={() => setLinkEdr({ ativoId: a.ativoId!, hostname: a.titulo })}>
+                  Vincular EDR
+                </Button>
+              ) : a.acaoLink ? (
                 <Button key="ac" asChild size="sm" variant="outline">
                   <Link to={a.acaoLink}>{a.acaoLabel}</Link>
                 </Button>
@@ -169,11 +189,76 @@ function Page() {
           <p>· <strong className="text-foreground">Contrato crítico:</strong> vencido ou vence em até 30 dias.</p>
           <p>· <strong className="text-foreground">Contrato alto:</strong> vence entre 31 e 60 dias.</p>
           <p>· <strong className="text-foreground">Contrato médio:</strong> vence entre 61 e 90 dias.</p>
-          <p>· <strong className="text-foreground">Compliance:</strong> qualquer produto com status <em>déficit</em> no ELP (alocado &gt; comprado).</p>
+          <p>· <strong className="text-foreground">Compliance:</strong> produto com status <em>déficit</em> no ELP (alocado &gt; comprado).</p>
           <p>· <strong className="text-foreground">Ociosidade:</strong> licenças sem alocação ativa há mais de 90 dias.</p>
+          <p>· <strong className="text-foreground">Gap EDR:</strong> ativos em uso sem licença EDR ativa vinculada.</p>
         </CardContent>
       </Card>
+
+      <VincularEdrDialog target={linkEdr} onClose={() => setLinkEdr(null)} />
     </>
+  );
+}
+
+function VincularEdrDialog({ target, onClose }: { target: { ativoId: string; hostname: string } | null; onClose: () => void }) {
+  const qc = useQueryClient();
+  const [licencaId, setLicencaId] = useState<string | null>(null);
+  const { data: licencas } = useQuery({
+    queryKey: ["licencas-edr"],
+    enabled: !!target,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("licencas")
+        .select("id, quantidade, produtos_catalogo!inner(id, nome_oficial, categoria)")
+        .eq("produtos_catalogo.categoria", "EDR");
+      return data ?? [];
+    },
+  });
+  async function salvar() {
+    if (!target || !licencaId) return;
+    const { error } = await supabase.from("alocacoes").insert({
+      ativo_id: target.ativoId,
+      licenca_id: licencaId,
+      data_inicio: new Date().toISOString(),
+      observacao: "Vinculação automática via alerta Gap EDR",
+    });
+    if (error) return toast.error(error.message);
+    toast.success("EDR vinculado ao ativo");
+    setLicencaId(null);
+    qc.invalidateQueries({ queryKey: ["alertas"] });
+    qc.invalidateQueries({ queryKey: ["gap-edr"] });
+    onClose();
+  }
+  return (
+    <Dialog open={!!target} onOpenChange={(v) => !v && onClose()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Vincular EDR — {target?.hostname}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div>
+            <Label>Licença EDR disponível</Label>
+            <Combobox
+              placeholder="Selecionar licença…"
+              searchPlaceholder="Buscar produto EDR…"
+              value={licencaId}
+              onChange={setLicencaId}
+              options={(licencas ?? []).map((l: any) => ({
+                value: l.id,
+                label: `${l.produtos_catalogo?.nome_oficial ?? "EDR"} · ${l.quantidade} seats`,
+              }))}
+            />
+            {(licencas ?? []).length === 0 && (
+              <p className="text-xs text-muted-foreground mt-1">Nenhuma licença de produto categoria EDR encontrada.</p>
+            )}
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Cancelar</Button>
+          <Button onClick={salvar} disabled={!licencaId}>Vincular agora</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -199,6 +284,6 @@ function SevBadge({ sev }: { sev: Sev }) {
 }
 
 function TipoBadge({ tipo }: { tipo: Alerta["tipo"] }) {
-  const map = { contrato: "Contrato", compliance: "Compliance", ocioso: "Ociosidade" } as const;
+  const map = { contrato: "Contrato", compliance: "Compliance", ocioso: "Ociosidade", edr: "Gap EDR" } as const;
   return <Badge variant="outline">{map[tipo]}</Badge>;
 }
