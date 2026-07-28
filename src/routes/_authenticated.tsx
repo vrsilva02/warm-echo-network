@@ -34,6 +34,7 @@ function ProtectedLayout() {
               GestoraIT · Painel
             </div>
             <div className="flex-1" />
+            <NotificationsBell />
             <CommandPaletteTrigger />
           </header>
           <main className="flex-1 p-6 overflow-auto">
@@ -41,6 +42,7 @@ function ProtectedLayout() {
           </main>
         </div>
         <CommandPalette />
+        <SessionTimeout />
       </div>
     </SidebarProvider>
   );
