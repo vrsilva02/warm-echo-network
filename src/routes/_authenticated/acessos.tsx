@@ -33,7 +33,7 @@ export const Route = createFileRoute("/_authenticated/acessos")({
   }),
 });
 
-const ROLES: AppRole[] = ["admin", "gestor_ti", "padrao", "visitante"];
+const ROLES: AppRole[] = ["admin", "gestor_ti", "tecnico", "auditoria", "padrao", "visitante"];
 
 type Profile = { id: string; nome: string | null; email: string | null; created_at: string };
 type UserRoleRow = { user_id: string; role: AppRole };
