@@ -20,6 +20,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedUnidadesRouteImport } from './routes/_authenticated/unidades'
 import { Route as AuthenticatedSolicitacoesRouteImport } from './routes/_authenticated/solicitacoes'
 import { Route as AuthenticatedServicosRouteImport } from './routes/_authenticated/servicos'
+import { Route as AuthenticatedRelatoriosOsRouteImport } from './routes/_authenticated/relatorios-os'
 import { Route as AuthenticatedRelatoriosRouteImport } from './routes/_authenticated/relatorios'
 import { Route as AuthenticatedReconciliacaoRouteImport } from './routes/_authenticated/reconciliacao'
 import { Route as AuthenticatedProdutosRouteImport } from './routes/_authenticated/produtos'
@@ -97,6 +98,12 @@ const AuthenticatedServicosRoute = AuthenticatedServicosRouteImport.update({
   path: '/servicos',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedRelatoriosOsRoute =
+  AuthenticatedRelatoriosOsRouteImport.update({
+    id: '/relatorios-os',
+    path: '/relatorios-os',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedRelatoriosRoute = AuthenticatedRelatoriosRouteImport.update({
   id: '/relatorios',
   path: '/relatorios',
@@ -234,6 +241,7 @@ export interface FileRoutesByFullPath {
   '/produtos': typeof AuthenticatedProdutosRoute
   '/reconciliacao': typeof AuthenticatedReconciliacaoRoute
   '/relatorios': typeof AuthenticatedRelatoriosRoute
+  '/relatorios-os': typeof AuthenticatedRelatoriosOsRoute
   '/servicos': typeof AuthenticatedServicosRoute
   '/solicitacoes': typeof AuthenticatedSolicitacoesRoute
   '/unidades': typeof AuthenticatedUnidadesRoute
@@ -267,6 +275,7 @@ export interface FileRoutesByTo {
   '/produtos': typeof AuthenticatedProdutosRoute
   '/reconciliacao': typeof AuthenticatedReconciliacaoRoute
   '/relatorios': typeof AuthenticatedRelatoriosRoute
+  '/relatorios-os': typeof AuthenticatedRelatoriosOsRoute
   '/servicos': typeof AuthenticatedServicosRoute
   '/solicitacoes': typeof AuthenticatedSolicitacoesRoute
   '/unidades': typeof AuthenticatedUnidadesRoute
@@ -302,6 +311,7 @@ export interface FileRoutesById {
   '/_authenticated/produtos': typeof AuthenticatedProdutosRoute
   '/_authenticated/reconciliacao': typeof AuthenticatedReconciliacaoRoute
   '/_authenticated/relatorios': typeof AuthenticatedRelatoriosRoute
+  '/_authenticated/relatorios-os': typeof AuthenticatedRelatoriosOsRoute
   '/_authenticated/servicos': typeof AuthenticatedServicosRoute
   '/_authenticated/solicitacoes': typeof AuthenticatedSolicitacoesRoute
   '/_authenticated/unidades': typeof AuthenticatedUnidadesRoute
@@ -337,6 +347,7 @@ export interface FileRouteTypes {
     | '/produtos'
     | '/reconciliacao'
     | '/relatorios'
+    | '/relatorios-os'
     | '/servicos'
     | '/solicitacoes'
     | '/unidades'
@@ -370,6 +381,7 @@ export interface FileRouteTypes {
     | '/produtos'
     | '/reconciliacao'
     | '/relatorios'
+    | '/relatorios-os'
     | '/servicos'
     | '/solicitacoes'
     | '/unidades'
@@ -404,6 +416,7 @@ export interface FileRouteTypes {
     | '/_authenticated/produtos'
     | '/_authenticated/reconciliacao'
     | '/_authenticated/relatorios'
+    | '/_authenticated/relatorios-os'
     | '/_authenticated/servicos'
     | '/_authenticated/solicitacoes'
     | '/_authenticated/unidades'
@@ -501,6 +514,13 @@ declare module '@tanstack/react-router' {
       path: '/servicos'
       fullPath: '/servicos'
       preLoaderRoute: typeof AuthenticatedServicosRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/relatorios-os': {
+      id: '/_authenticated/relatorios-os'
+      path: '/relatorios-os'
+      fullPath: '/relatorios-os'
+      preLoaderRoute: typeof AuthenticatedRelatoriosOsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/relatorios': {
@@ -671,6 +691,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedProdutosRoute: typeof AuthenticatedProdutosRoute
   AuthenticatedReconciliacaoRoute: typeof AuthenticatedReconciliacaoRoute
   AuthenticatedRelatoriosRoute: typeof AuthenticatedRelatoriosRoute
+  AuthenticatedRelatoriosOsRoute: typeof AuthenticatedRelatoriosOsRoute
   AuthenticatedServicosRoute: typeof AuthenticatedServicosRoute
   AuthenticatedSolicitacoesRoute: typeof AuthenticatedSolicitacoesRoute
   AuthenticatedUnidadesRoute: typeof AuthenticatedUnidadesRoute
@@ -698,6 +719,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedProdutosRoute: AuthenticatedProdutosRoute,
   AuthenticatedReconciliacaoRoute: AuthenticatedReconciliacaoRoute,
   AuthenticatedRelatoriosRoute: AuthenticatedRelatoriosRoute,
+  AuthenticatedRelatoriosOsRoute: AuthenticatedRelatoriosOsRoute,
   AuthenticatedServicosRoute: AuthenticatedServicosRoute,
   AuthenticatedSolicitacoesRoute: AuthenticatedSolicitacoesRoute,
   AuthenticatedUnidadesRoute: AuthenticatedUnidadesRoute,
