@@ -53,6 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isAdmin = roles.includes("admin");
   const isGestor = roles.includes("gestor_ti");
   const isAuditoria = roles.includes("auditoria");
+  const isTecnico = roles.includes("tecnico");
 
   const value: AuthCtx = {
     session,
@@ -62,7 +63,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isAdmin,
     isGestor,
     isAuditoria,
+    isTecnico,
     canWrite: isAdmin || isGestor,
+    canOperateOS: isAdmin || isGestor || isTecnico,
     signOut: async () => {
       await supabase.auth.signOut();
     },
@@ -80,9 +83,10 @@ export function roleLabel(r: AppRole): string {
   const map: Record<AppRole, string> = {
     admin: "Admin",
     gestor_ti: "Gestão",
+    tecnico: "Técnico",
     padrao: "Padrão",
     visitante: "Visitante",
-    auditoria: "Visitante",
+    auditoria: "Auditoria",
   };
   return map[r] ?? r;
 }
