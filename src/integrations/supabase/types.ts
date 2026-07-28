@@ -98,6 +98,7 @@ export type Database = {
           centro_custo_id: string | null
           created_at: string | null
           data_aquisicao: string | null
+          data_fim_garantia: string | null
           data_ultima_transicao: string | null
           hostname: string
           id: string
@@ -116,6 +117,7 @@ export type Database = {
           centro_custo_id?: string | null
           created_at?: string | null
           data_aquisicao?: string | null
+          data_fim_garantia?: string | null
           data_ultima_transicao?: string | null
           hostname: string
           id?: string
@@ -134,6 +136,7 @@ export type Database = {
           centro_custo_id?: string | null
           created_at?: string | null
           data_aquisicao?: string | null
+          data_fim_garantia?: string | null
           data_ultima_transicao?: string | null
           hostname?: string
           id?: string
@@ -512,6 +515,67 @@ export type Database = {
           },
         ]
       }
+      estoque_movimentacoes: {
+        Row: {
+          created_at: string
+          criado_por: string | null
+          custo_unitario: number | null
+          id: string
+          observacao: string | null
+          ordem_servico_id: string | null
+          origem: string
+          peca_id: string
+          quantidade: number
+          tipo: Database["public"]["Enums"]["mov_tipo"]
+        }
+        Insert: {
+          created_at?: string
+          criado_por?: string | null
+          custo_unitario?: number | null
+          id?: string
+          observacao?: string | null
+          ordem_servico_id?: string | null
+          origem?: string
+          peca_id: string
+          quantidade: number
+          tipo: Database["public"]["Enums"]["mov_tipo"]
+        }
+        Update: {
+          created_at?: string
+          criado_por?: string | null
+          custo_unitario?: number | null
+          id?: string
+          observacao?: string | null
+          ordem_servico_id?: string | null
+          origem?: string
+          peca_id?: string
+          quantidade?: number
+          tipo?: Database["public"]["Enums"]["mov_tipo"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "estoque_movimentacoes_peca_id_fkey"
+            columns: ["peca_id"]
+            isOneToOne: false
+            referencedRelation: "pecas_catalogo"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "estoque_movimentacoes_peca_id_fkey"
+            columns: ["peca_id"]
+            isOneToOne: false
+            referencedRelation: "vw_estoque_saldo"
+            referencedColumns: ["peca_id"]
+          },
+          {
+            foreignKeyName: "estoque_movimentacoes_peca_id_fkey"
+            columns: ["peca_id"]
+            isOneToOne: false
+            referencedRelation: "vw_pecas_reposicao"
+            referencedColumns: ["peca_id"]
+          },
+        ]
+      }
       fabricantes: {
         Row: {
           created_at: string | null
@@ -674,6 +738,174 @@ export type Database = {
             referencedColumns: ["produto_id"]
           },
         ]
+      }
+      ordens_servico: {
+        Row: {
+          ativo_id: string
+          created_at: string
+          data_abertura: string
+          data_conclusao: string | null
+          descricao_defeito: string
+          id: string
+          numero: number
+          observacoes: string | null
+          prioridade: Database["public"]["Enums"]["os_prioridade"]
+          status: Database["public"]["Enums"]["os_status"]
+          status_ativo_anterior: string | null
+          tecnico_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          ativo_id: string
+          created_at?: string
+          data_abertura?: string
+          data_conclusao?: string | null
+          descricao_defeito: string
+          id?: string
+          numero?: number
+          observacoes?: string | null
+          prioridade?: Database["public"]["Enums"]["os_prioridade"]
+          status?: Database["public"]["Enums"]["os_status"]
+          status_ativo_anterior?: string | null
+          tecnico_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ativo_id?: string
+          created_at?: string
+          data_abertura?: string
+          data_conclusao?: string | null
+          descricao_defeito?: string
+          id?: string
+          numero?: number
+          observacoes?: string | null
+          prioridade?: Database["public"]["Enums"]["os_prioridade"]
+          status?: Database["public"]["Enums"]["os_status"]
+          status_ativo_anterior?: string | null
+          tecnico_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ordens_servico_ativo_id_fkey"
+            columns: ["ativo_id"]
+            isOneToOne: false
+            referencedRelation: "ativos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ordens_servico_ativo_id_fkey"
+            columns: ["ativo_id"]
+            isOneToOne: false
+            referencedRelation: "vw_gap_edr"
+            referencedColumns: ["ativo_id"]
+          },
+          {
+            foreignKeyName: "ordens_servico_ativo_id_fkey"
+            columns: ["ativo_id"]
+            isOneToOne: false
+            referencedRelation: "vw_tco_ativo"
+            referencedColumns: ["ativo_id"]
+          },
+        ]
+      }
+      ordens_servico_pecas: {
+        Row: {
+          created_at: string
+          custo_unitario: number | null
+          id: string
+          ordem_servico_id: string
+          peca_id: string
+          quantidade: number
+        }
+        Insert: {
+          created_at?: string
+          custo_unitario?: number | null
+          id?: string
+          ordem_servico_id: string
+          peca_id: string
+          quantidade?: number
+        }
+        Update: {
+          created_at?: string
+          custo_unitario?: number | null
+          id?: string
+          ordem_servico_id?: string
+          peca_id?: string
+          quantidade?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ordens_servico_pecas_ordem_servico_id_fkey"
+            columns: ["ordem_servico_id"]
+            isOneToOne: false
+            referencedRelation: "ordens_servico"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ordens_servico_pecas_peca_id_fkey"
+            columns: ["peca_id"]
+            isOneToOne: false
+            referencedRelation: "pecas_catalogo"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ordens_servico_pecas_peca_id_fkey"
+            columns: ["peca_id"]
+            isOneToOne: false
+            referencedRelation: "vw_estoque_saldo"
+            referencedColumns: ["peca_id"]
+          },
+          {
+            foreignKeyName: "ordens_servico_pecas_peca_id_fkey"
+            columns: ["peca_id"]
+            isOneToOne: false
+            referencedRelation: "vw_pecas_reposicao"
+            referencedColumns: ["peca_id"]
+          },
+        ]
+      }
+      pecas_catalogo: {
+        Row: {
+          categoria: string
+          created_at: string
+          custo_unitario: number | null
+          estoque_minimo: number
+          fabricante: string | null
+          fornecedor_padrao: string | null
+          id: string
+          modelos_compativeis: string[]
+          nome: string
+          observacao: string | null
+          updated_at: string
+        }
+        Insert: {
+          categoria: string
+          created_at?: string
+          custo_unitario?: number | null
+          estoque_minimo?: number
+          fabricante?: string | null
+          fornecedor_padrao?: string | null
+          id?: string
+          modelos_compativeis?: string[]
+          nome: string
+          observacao?: string | null
+          updated_at?: string
+        }
+        Update: {
+          categoria?: string
+          created_at?: string
+          custo_unitario?: number | null
+          estoque_minimo?: number
+          fabricante?: string | null
+          fornecedor_padrao?: string | null
+          id?: string
+          modelos_compativeis?: string[]
+          nome?: string
+          observacao?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       produtos_aliases: {
         Row: {
@@ -1019,6 +1251,38 @@ export type Database = {
       }
     }
     Views: {
+      vw_ativos_defeito_recorrente: {
+        Row: {
+          ativo_id: string | null
+          hostname: string | null
+          os_count: number | null
+          setor: string | null
+          ultima_os: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ordens_servico_ativo_id_fkey"
+            columns: ["ativo_id"]
+            isOneToOne: false
+            referencedRelation: "ativos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ordens_servico_ativo_id_fkey"
+            columns: ["ativo_id"]
+            isOneToOne: false
+            referencedRelation: "vw_gap_edr"
+            referencedColumns: ["ativo_id"]
+          },
+          {
+            foreignKeyName: "ordens_servico_ativo_id_fkey"
+            columns: ["ativo_id"]
+            isOneToOne: false
+            referencedRelation: "vw_tco_ativo"
+            referencedColumns: ["ativo_id"]
+          },
+        ]
+      }
       vw_contratos_vencendo: {
         Row: {
           created_at: string | null
@@ -1082,6 +1346,19 @@ export type Database = {
         }
         Relationships: []
       }
+      vw_estoque_saldo: {
+        Row: {
+          categoria: string | null
+          custo_unitario: number | null
+          estoque_minimo: number | null
+          fabricante: string | null
+          fornecedor_padrao: string | null
+          nome: string | null
+          peca_id: string | null
+          saldo: number | null
+        }
+        Relationships: []
+      }
       vw_gap_edr: {
         Row: {
           ativo_id: string | null
@@ -1119,6 +1396,20 @@ export type Database = {
           nome_oficial: string | null
           produto_id: string | null
           valor_ocioso: number | null
+        }
+        Relationships: []
+      }
+      vw_pecas_reposicao: {
+        Row: {
+          categoria: string | null
+          custo_unitario: number | null
+          estoque_minimo: number | null
+          fabricante: string | null
+          fornecedor_padrao: string | null
+          nome: string | null
+          peca_id: string | null
+          quantidade_sugerida: number | null
+          saldo: number | null
         }
         Relationships: []
       }
@@ -1167,6 +1458,14 @@ export type Database = {
     Enums: {
       aditivo_tipo: "quantidade" | "prazo" | "valor" | "outro"
       app_role: "admin" | "gestor_ti" | "auditoria" | "padrao" | "visitante"
+      mov_tipo: "entrada" | "saida" | "ajuste"
+      os_prioridade: "baixa" | "media" | "alta" | "critica"
+      os_status:
+        | "aberta"
+        | "em_andamento"
+        | "aguardando_peca"
+        | "concluida"
+        | "cancelada"
       solicitacao_status: "pendente" | "aprovada" | "rejeitada" | "cancelada"
     }
     CompositeTypes: {
@@ -1297,6 +1596,15 @@ export const Constants = {
     Enums: {
       aditivo_tipo: ["quantidade", "prazo", "valor", "outro"],
       app_role: ["admin", "gestor_ti", "auditoria", "padrao", "visitante"],
+      mov_tipo: ["entrada", "saida", "ajuste"],
+      os_prioridade: ["baixa", "media", "alta", "critica"],
+      os_status: [
+        "aberta",
+        "em_andamento",
+        "aguardando_peca",
+        "concluida",
+        "cancelada",
+      ],
       solicitacao_status: ["pendente", "aprovada", "rejeitada", "cancelada"],
     },
   },
