@@ -3,6 +3,8 @@ import { useAuth } from "@/lib/auth";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { CommandPalette, CommandPaletteTrigger } from "@/components/command-palette";
+import { NotificationsBell } from "@/components/notifications-bell";
+import { SessionTimeout } from "@/components/session-timeout";
 import { Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated")({
