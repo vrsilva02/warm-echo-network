@@ -39,7 +39,7 @@ type PecaUsada = {
 type Sugestao = { peca_id: string; nome: string; saldo: number; custo_unitario: number | null };
 
 function Page() {
-  const { canWrite } = useAuth();
+  const { canOperateOS, user } = useAuth();
   const { id } = Route.useParams();
   const qc = useQueryClient();
   const [addOpen, setAddOpen] = useState(false);
