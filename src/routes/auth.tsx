@@ -28,7 +28,7 @@ function AuthPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [nome, setNome] = useState("");
+  
   const [busy, setBusy] = useState(false);
 
   if (loading) {
