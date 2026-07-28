@@ -82,7 +82,7 @@ function AtivosPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("ativos")
-        .select("*, usuarios(nome)")
+        .select("*, usuarios(nome), centros_custo(nome)")
         .order("hostname");
       if (error) throw error;
       return data as unknown as Ativo[];
@@ -93,6 +93,11 @@ function AtivosPage() {
     queryKey: ["usuarios-lite"],
     queryFn: async () => (await supabase.from("usuarios").select("id,nome").eq("status", "ativo").order("nome")).data ?? [],
   });
+  const { data: centros } = useQuery({
+    queryKey: ["centros_custo-lite"],
+    queryFn: async () => (await supabase.from("centros_custo").select("id,nome").order("nome")).data ?? [],
+  });
+  const { set: edrSet } = useGapEdrSet();
 
   function openNew() {
     setEditing(null);
@@ -109,6 +114,7 @@ function AtivosPage() {
       setor: r.setor ?? "",
       status_ciclo_vida: r.status_ciclo_vida,
       usuario_responsavel_id: r.usuario_responsavel_id,
+      centro_custo_id: r.centro_custo_id,
     });
     setOpen(true);
   }
@@ -122,6 +128,7 @@ function AtivosPage() {
       setor: form.setor || null,
       status_ciclo_vida: form.status_ciclo_vida,
       usuario_responsavel_id: form.usuario_responsavel_id,
+      centro_custo_id: form.centro_custo_id,
     };
     const { error } = editing
       ? await supabase.from("ativos").update(payload).eq("id", editing.id)
