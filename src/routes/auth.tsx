@@ -50,21 +50,6 @@ function AuthPage() {
     navigate({ to: "/dashboard" });
   }
 
-  async function handleSignup(e: React.FormEvent) {
-    e.preventDefault();
-    setBusy(true);
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: window.location.origin,
-        data: { nome },
-      },
-    });
-    setBusy(false);
-    if (error) return toast.error(error.message);
-    toast.success("Conta criada. Faça login.");
-  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/40 px-4">
