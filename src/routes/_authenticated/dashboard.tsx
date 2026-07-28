@@ -53,7 +53,7 @@ function useDashboardData() {
   return useQuery({
     queryKey: ["dashboard"],
     queryFn: async () => {
-      const [elp, ativos, vencendo, ociosas, ocioseFin, risco, custoOc, gapEdr, tco] = await Promise.all([
+      const [elp, ativos, vencendo, ociosas, ocioseFin, risco, custoOc, gapEdr, tco, osAbertas, osAguardando, pecasRep, defRec] = await Promise.all([
         supabase.from("vw_elp").select("*"),
         supabase.from("ativos").select("id, status_ciclo_vida, centro_custo_id, centros_custo(nome)"),
         supabase.from("vw_contratos_vencendo").select("id,dias_para_vencer,urgencia"),
@@ -63,6 +63,10 @@ function useDashboardData() {
         supabase.from("vw_custo_ociosas").select("*"),
         supabase.from("vw_gap_edr").select("ativo_id"),
         supabase.from("vw_tco_ativo").select("ativo_id,tco_anual_estimado"),
+        (supabase as any).from("ordens_servico").select("id", { count: "exact", head: true }).in("status", ["aberta", "em_andamento"]),
+        (supabase as any).from("ordens_servico").select("id", { count: "exact", head: true }).eq("status", "aguardando_peca"),
+        (supabase as any).from("vw_pecas_reposicao").select("peca_id"),
+        (supabase as any).from("vw_ativos_defeito_recorrente").select("ativo_id"),
       ]);
       return {
         elp: (elp.data ?? []) as ElpRow[],
@@ -74,6 +78,10 @@ function useDashboardData() {
         custoOciosasMensal: (custoOc.data ?? []).reduce((a: number, r: any) => a + Number(r.custo_mensal_desperdicado ?? 0), 0),
         gapEdrCount: gapEdr.data?.length ?? 0,
         tco: (tco.data ?? []) as Array<{ ativo_id: string; tco_anual_estimado: number | null }>,
+        osAbertasCount: (osAbertas as any).count ?? 0,
+        osAguardandoPecaCount: (osAguardando as any).count ?? 0,
+        pecasReposicaoCount: (pecasRep.data ?? []).length,
+        defeitoRecorrenteCount: (defRec.data ?? []).length,
       };
     },
   });
