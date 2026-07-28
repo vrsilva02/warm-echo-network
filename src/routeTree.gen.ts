@@ -31,6 +31,7 @@ import { Route as AuthenticatedAtivosRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedAlocacoesRouteImport } from './routes/_authenticated/alocacoes'
 import { Route as AuthenticatedAlertasRouteImport } from './routes/_authenticated/alertas'
 import { Route as AuthenticatedAcessosRouteImport } from './routes/_authenticated/acessos'
+import { Route as Authenticated403RouteImport } from './routes/_authenticated/403'
 import { Route as AuthenticatedAuditoriaTabelaIdRouteImport } from './routes/_authenticated/auditoria_.$tabela.$id'
 
 const SignupRoute = SignupRouteImport.update({
@@ -145,6 +146,11 @@ const AuthenticatedAcessosRoute = AuthenticatedAcessosRouteImport.update({
   path: '/acessos',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const Authenticated403Route = Authenticated403RouteImport.update({
+  id: '/403',
+  path: '/403',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedAuditoriaTabelaIdRoute =
   AuthenticatedAuditoriaTabelaIdRouteImport.update({
     id: '/auditoria_/$tabela/$id',
@@ -160,6 +166,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/sign-up': typeof SignUpRoute
   '/signup': typeof SignupRoute
+  '/403': typeof Authenticated403Route
   '/acessos': typeof AuthenticatedAcessosRoute
   '/alertas': typeof AuthenticatedAlertasRoute
   '/alocacoes': typeof AuthenticatedAlocacoesRoute
@@ -184,6 +191,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/sign-up': typeof SignUpRoute
   '/signup': typeof SignupRoute
+  '/403': typeof Authenticated403Route
   '/acessos': typeof AuthenticatedAcessosRoute
   '/alertas': typeof AuthenticatedAlertasRoute
   '/alocacoes': typeof AuthenticatedAlocacoesRoute
@@ -210,6 +218,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/sign-up': typeof SignUpRoute
   '/signup': typeof SignupRoute
+  '/_authenticated/403': typeof Authenticated403Route
   '/_authenticated/acessos': typeof AuthenticatedAcessosRoute
   '/_authenticated/alertas': typeof AuthenticatedAlertasRoute
   '/_authenticated/alocacoes': typeof AuthenticatedAlocacoesRoute
@@ -236,6 +245,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/sign-up'
     | '/signup'
+    | '/403'
     | '/acessos'
     | '/alertas'
     | '/alocacoes'
@@ -260,6 +270,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/sign-up'
     | '/signup'
+    | '/403'
     | '/acessos'
     | '/alertas'
     | '/alocacoes'
@@ -285,6 +296,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/sign-up'
     | '/signup'
+    | '/_authenticated/403'
     | '/_authenticated/acessos'
     | '/_authenticated/alertas'
     | '/_authenticated/alocacoes'
@@ -469,6 +481,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAcessosRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/403': {
+      id: '/_authenticated/403'
+      path: '/403'
+      fullPath: '/403'
+      preLoaderRoute: typeof Authenticated403RouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/auditoria_/$tabela/$id': {
       id: '/_authenticated/auditoria_/$tabela/$id'
       path: '/auditoria/$tabela/$id'
@@ -480,6 +499,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteChildren {
+  Authenticated403Route: typeof Authenticated403Route
   AuthenticatedAcessosRoute: typeof AuthenticatedAcessosRoute
   AuthenticatedAlertasRoute: typeof AuthenticatedAlertasRoute
   AuthenticatedAlocacoesRoute: typeof AuthenticatedAlocacoesRoute
@@ -498,6 +518,7 @@ interface AuthenticatedRouteChildren {
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  Authenticated403Route: Authenticated403Route,
   AuthenticatedAcessosRoute: AuthenticatedAcessosRoute,
   AuthenticatedAlertasRoute: AuthenticatedAlertasRoute,
   AuthenticatedAlocacoesRoute: AuthenticatedAlocacoesRoute,
