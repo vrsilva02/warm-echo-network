@@ -164,6 +164,12 @@ export function AppSidebar() {
           <LogOut className="h-4 w-4" />
           {!collapsed && <span className="ml-2">Sair</span>}
         </Button>
+        {!collapsed && (
+          <div className="mt-2 border-t pt-2 px-2 pb-1 flex flex-col items-center gap-1">
+            <span className="text-[9px] uppercase tracking-wider text-muted-foreground">Powered by</span>
+            <img src={mtrLogo.url} alt="MTR2.TECH" className="h-5 w-auto opacity-80 dark:invert-0 invert" />
+          </div>
+        )}
       </SidebarFooter>
     </Sidebar>
   );
