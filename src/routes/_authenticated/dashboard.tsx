@@ -55,7 +55,7 @@ function useDashboardData() {
     queryFn: async () => {
       const [elp, ativos, vencendo, ociosas, ocioseFin, risco, custoOc, gapEdr, tco] = await Promise.all([
         supabase.from("vw_elp").select("*"),
-        supabase.from("ativos").select("status_ciclo_vida, centro_custo_id, centros_custo(nome)"),
+        supabase.from("ativos").select("id, status_ciclo_vida, centro_custo_id, centros_custo(nome)"),
         supabase.from("vw_contratos_vencendo").select("id,dias_para_vencer,urgencia"),
         supabase.from("vw_licencas_ociosas").select("licenca_id"),
         supabase.from("vw_ociosidade_financeira").select("*"),
