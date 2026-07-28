@@ -74,6 +74,10 @@ function Page() {
     queryKey: ["unidades-lite"],
     queryFn: async () => (await supabase.from("unidades").select("id, nome").eq("ativo", true).order("nome")).data ?? [],
   });
+  const { data: centros } = useQuery({
+    queryKey: ["centros_custo-lite"],
+    queryFn: async () => (await supabase.from("centros_custo").select("id,nome").order("nome")).data ?? [],
+  });
   const filtered = useFilteredList(rows, q, ["fornecedor", "numero_contrato", "tipo_contrato"]);
 
   function openNew() { setEditing(null); setForm(initial); setOpen(true); }
@@ -88,6 +92,7 @@ function Page() {
       quantidade_seats: r.quantidade_seats,
       valor_total: r.valor_total?.toString() ?? "",
       unidade_id: r.unidade_id,
+      centro_custo_id: r.centro_custo_id,
     });
     setOpen(true);
   }
@@ -101,6 +106,7 @@ function Page() {
       quantidade_seats: Number(form.quantidade_seats) || 0,
       valor_total: form.valor_total ? Number(form.valor_total) : null,
       unidade_id: form.unidade_id,
+      centro_custo_id: form.centro_custo_id,
     };
     const { error } = editing
       ? await supabase.from("contratos").update(payload).eq("id", editing.id)
