@@ -199,6 +199,16 @@ function Page() {
             />
           </div>
         </div>
+        <div>
+          <Label>Centro de custo</Label>
+          <Combobox
+            placeholder="Nenhum"
+            searchPlaceholder="Buscar centro…"
+            value={form.centro_custo_id}
+            onChange={(v) => setForm({ ...form, centro_custo_id: v })}
+            options={(centros ?? []).map((c: any) => ({ value: c.id, label: c.nome }))}
+          />
+        </div>
       </CrudDialog>
       <AditivosDialog
         contratoId={aditivo?.id ?? null}
