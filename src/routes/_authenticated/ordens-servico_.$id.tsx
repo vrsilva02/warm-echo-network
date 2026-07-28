@@ -162,6 +162,8 @@ function Page() {
         </CardContent>
       </Card>
 
+      <AnexosCard osId={id} canOperate={canOperateOS} uploaderId={user?.id ?? null} />
+
       <AddPecaDialog open={addOpen} onOpenChange={setAddOpen} osId={id} ativoTipo={os.ativos?.tipo ?? null} onWaitPart={() => mudarStatus("aguardando_peca")} />
     </>
   );
