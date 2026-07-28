@@ -57,6 +57,20 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "alocacoes_ativo_id_fkey"
+            columns: ["ativo_id"]
+            isOneToOne: false
+            referencedRelation: "vw_gap_edr"
+            referencedColumns: ["ativo_id"]
+          },
+          {
+            foreignKeyName: "alocacoes_ativo_id_fkey"
+            columns: ["ativo_id"]
+            isOneToOne: false
+            referencedRelation: "vw_tco_ativo"
+            referencedColumns: ["ativo_id"]
+          },
+          {
             foreignKeyName: "alocacoes_licenca_id_fkey"
             columns: ["licenca_id"]
             isOneToOne: false
@@ -81,7 +95,9 @@ export type Database = {
       }
       ativos: {
         Row: {
+          centro_custo_id: string | null
           created_at: string | null
+          data_aquisicao: string | null
           data_ultima_transicao: string | null
           hostname: string
           id: string
@@ -93,9 +109,13 @@ export type Database = {
           unidade_id: string | null
           updated_at: string | null
           usuario_responsavel_id: string | null
+          valor_aquisicao: number | null
+          vida_util_meses: number | null
         }
         Insert: {
+          centro_custo_id?: string | null
           created_at?: string | null
+          data_aquisicao?: string | null
           data_ultima_transicao?: string | null
           hostname: string
           id?: string
@@ -107,9 +127,13 @@ export type Database = {
           unidade_id?: string | null
           updated_at?: string | null
           usuario_responsavel_id?: string | null
+          valor_aquisicao?: number | null
+          vida_util_meses?: number | null
         }
         Update: {
+          centro_custo_id?: string | null
           created_at?: string | null
+          data_aquisicao?: string | null
           data_ultima_transicao?: string | null
           hostname?: string
           id?: string
@@ -121,8 +145,17 @@ export type Database = {
           unidade_id?: string | null
           updated_at?: string | null
           usuario_responsavel_id?: string | null
+          valor_aquisicao?: number | null
+          vida_util_meses?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "ativos_centro_custo_id_fkey"
+            columns: ["centro_custo_id"]
+            isOneToOne: false
+            referencedRelation: "centros_custo"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "ativos_unidade_id_fkey"
             columns: ["unidade_id"]
@@ -172,6 +205,140 @@ export type Database = {
             referencedRelation: "ativos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "ativos_historico_status_ativo_id_fkey"
+            columns: ["ativo_id"]
+            isOneToOne: false
+            referencedRelation: "vw_gap_edr"
+            referencedColumns: ["ativo_id"]
+          },
+          {
+            foreignKeyName: "ativos_historico_status_ativo_id_fkey"
+            columns: ["ativo_id"]
+            isOneToOne: false
+            referencedRelation: "vw_tco_ativo"
+            referencedColumns: ["ativo_id"]
+          },
+        ]
+      }
+      ativos_relacionamentos: {
+        Row: {
+          ativo_filho_id: string | null
+          ativo_pai_id: string | null
+          created_at: string
+          id: string
+          tipo_relacao: string | null
+        }
+        Insert: {
+          ativo_filho_id?: string | null
+          ativo_pai_id?: string | null
+          created_at?: string
+          id?: string
+          tipo_relacao?: string | null
+        }
+        Update: {
+          ativo_filho_id?: string | null
+          ativo_pai_id?: string | null
+          created_at?: string
+          id?: string
+          tipo_relacao?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ativos_relacionamentos_ativo_filho_id_fkey"
+            columns: ["ativo_filho_id"]
+            isOneToOne: false
+            referencedRelation: "ativos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ativos_relacionamentos_ativo_filho_id_fkey"
+            columns: ["ativo_filho_id"]
+            isOneToOne: false
+            referencedRelation: "vw_gap_edr"
+            referencedColumns: ["ativo_id"]
+          },
+          {
+            foreignKeyName: "ativos_relacionamentos_ativo_filho_id_fkey"
+            columns: ["ativo_filho_id"]
+            isOneToOne: false
+            referencedRelation: "vw_tco_ativo"
+            referencedColumns: ["ativo_id"]
+          },
+          {
+            foreignKeyName: "ativos_relacionamentos_ativo_pai_id_fkey"
+            columns: ["ativo_pai_id"]
+            isOneToOne: false
+            referencedRelation: "ativos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ativos_relacionamentos_ativo_pai_id_fkey"
+            columns: ["ativo_pai_id"]
+            isOneToOne: false
+            referencedRelation: "vw_gap_edr"
+            referencedColumns: ["ativo_id"]
+          },
+          {
+            foreignKeyName: "ativos_relacionamentos_ativo_pai_id_fkey"
+            columns: ["ativo_pai_id"]
+            isOneToOne: false
+            referencedRelation: "vw_tco_ativo"
+            referencedColumns: ["ativo_id"]
+          },
+        ]
+      }
+      ativos_servicos: {
+        Row: {
+          ativo_id: string | null
+          created_at: string
+          id: string
+          servico_id: string | null
+          tipo_dependencia: string | null
+        }
+        Insert: {
+          ativo_id?: string | null
+          created_at?: string
+          id?: string
+          servico_id?: string | null
+          tipo_dependencia?: string | null
+        }
+        Update: {
+          ativo_id?: string | null
+          created_at?: string
+          id?: string
+          servico_id?: string | null
+          tipo_dependencia?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ativos_servicos_ativo_id_fkey"
+            columns: ["ativo_id"]
+            isOneToOne: false
+            referencedRelation: "ativos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ativos_servicos_ativo_id_fkey"
+            columns: ["ativo_id"]
+            isOneToOne: false
+            referencedRelation: "vw_gap_edr"
+            referencedColumns: ["ativo_id"]
+          },
+          {
+            foreignKeyName: "ativos_servicos_ativo_id_fkey"
+            columns: ["ativo_id"]
+            isOneToOne: false
+            referencedRelation: "vw_tco_ativo"
+            referencedColumns: ["ativo_id"]
+          },
+          {
+            foreignKeyName: "ativos_servicos_servico_id_fkey"
+            columns: ["servico_id"]
+            isOneToOne: false
+            referencedRelation: "servicos"
+            referencedColumns: ["id"]
+          },
         ]
       }
       auditoria_log: {
@@ -207,8 +374,33 @@ export type Database = {
         }
         Relationships: []
       }
+      centros_custo: {
+        Row: {
+          codigo: string | null
+          created_at: string
+          id: string
+          nome: string
+          updated_at: string
+        }
+        Insert: {
+          codigo?: string | null
+          created_at?: string
+          id?: string
+          nome: string
+          updated_at?: string
+        }
+        Update: {
+          codigo?: string | null
+          created_at?: string
+          id?: string
+          nome?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       contratos: {
         Row: {
+          centro_custo_id: string | null
           created_at: string | null
           data_fim: string | null
           data_inicio: string
@@ -221,6 +413,7 @@ export type Database = {
           valor_total: number | null
         }
         Insert: {
+          centro_custo_id?: string | null
           created_at?: string | null
           data_fim?: string | null
           data_inicio: string
@@ -233,6 +426,7 @@ export type Database = {
           valor_total?: number | null
         }
         Update: {
+          centro_custo_id?: string | null
           created_at?: string | null
           data_fim?: string | null
           data_inicio?: string
@@ -245,6 +439,13 @@ export type Database = {
           valor_total?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "contratos_centro_custo_id_fkey"
+            columns: ["centro_custo_id"]
+            isOneToOne: false
+            referencedRelation: "centros_custo"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "contratos_unidade_id_fkey"
             columns: ["unidade_id"]
@@ -630,6 +831,41 @@ export type Database = {
         }
         Relationships: []
       }
+      servicos: {
+        Row: {
+          created_at: string
+          criticidade: string | null
+          id: string
+          nome: string
+          responsavel_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          criticidade?: string | null
+          id?: string
+          nome: string
+          responsavel_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          criticidade?: string | null
+          id?: string
+          nome?: string
+          responsavel_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "servicos_responsavel_id_fkey"
+            columns: ["responsavel_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       solicitacoes_licenca: {
         Row: {
           aprovador_id: string | null
@@ -825,6 +1061,14 @@ export type Database = {
         }
         Relationships: []
       }
+      vw_custo_ociosas: {
+        Row: {
+          custo_mensal_desperdicado: number | null
+          nome_oficial: string | null
+          qtd_ociosa: number | null
+        }
+        Relationships: []
+      }
       vw_elp: {
         Row: {
           categoria: string | null
@@ -835,6 +1079,27 @@ export type Database = {
           produto_id: string | null
           saldo: number | null
           status_compliance: string | null
+        }
+        Relationships: []
+      }
+      vw_gap_edr: {
+        Row: {
+          ativo_id: string | null
+          hostname: string | null
+          setor: string | null
+          status_ciclo_vida: string | null
+        }
+        Insert: {
+          ativo_id?: string | null
+          hostname?: string | null
+          setor?: string | null
+          status_ciclo_vida?: string | null
+        }
+        Update: {
+          ativo_id?: string | null
+          hostname?: string | null
+          setor?: string | null
+          status_ciclo_vida?: string | null
         }
         Relationships: []
       }
@@ -854,6 +1119,17 @@ export type Database = {
           nome_oficial: string | null
           produto_id: string | null
           valor_ocioso: number | null
+        }
+        Relationships: []
+      }
+      vw_tco_ativo: {
+        Row: {
+          ativo_id: string | null
+          custo_licencas_mensal: number | null
+          hostname: string | null
+          tco_anual_estimado: number | null
+          valor_aquisicao: number | null
+          valor_residual: number | null
         }
         Relationships: []
       }
