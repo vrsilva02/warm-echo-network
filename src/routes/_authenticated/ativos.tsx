@@ -209,7 +209,12 @@ function AtivosPage() {
   const columns: Column<Ativo>[] = [
     {
       id: "hostname", header: "Hostname",
-      accessor: (r) => <span className="font-medium">{r.hostname}</span>,
+      accessor: (r) => (
+        <span className="font-medium inline-flex items-center gap-1.5">
+          <Link to="/ativos/$id" params={{ id: r.id }} className="hover:underline">{r.hostname}</Link>
+          <EdrBadge ativoId={r.id} set={edrSet} />
+        </span>
+      ),
       sortValue: (r) => r.hostname.toLowerCase(),
       searchValue: (r) => r.hostname, exportValue: (r) => r.hostname,
     },
@@ -235,6 +240,12 @@ function AtivosPage() {
       searchValue: (r) => r.setor, exportValue: (r) => r.setor,
     },
     {
+      id: "centro", header: "Centro de custo", defaultHidden: true,
+      accessor: (r) => r.centros_custo?.nome ?? "—",
+      sortValue: (r) => r.centros_custo?.nome ?? "",
+      searchValue: (r) => r.centros_custo?.nome, exportValue: (r) => r.centros_custo?.nome,
+    },
+    {
       id: "responsavel", header: "Responsável",
       accessor: (r) => r.usuarios?.nome ?? "—",
       sortValue: (r) => r.usuarios?.nome ?? "",
@@ -250,6 +261,9 @@ function AtivosPage() {
       id: "acoes", header: "Ações", alwaysVisible: true,
       accessor: (r) => (
         <div className="flex gap-1">
+          <Button asChild size="icon" variant="ghost" title="Ver ficha">
+            <Link to="/ativos/$id" params={{ id: r.id }}><ExternalLink className="h-4 w-4" /></Link>
+          </Button>
           {canWrite && (
             <>
               <Button size="icon" variant="ghost" onClick={() => openEdit(r)}><Pencil className="h-4 w-4" /></Button>
