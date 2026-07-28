@@ -21,6 +21,7 @@ import { ShieldAlert, KeyRound, UserPlus, History } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth, roleLabel, type AppRole } from "@/lib/auth";
 import { inviteUser } from "@/lib/admin-users.functions";
+import { RequireRole } from "@/components/require-role";
 
 export const Route = createFileRoute("/_authenticated/acessos")({
   component: AcessosPage,
@@ -194,16 +195,7 @@ function AcessosPage() {
   }
 
   if (!isAdmin) {
-    return (
-      <>
-        <PageHeader title="Gestão de Acessos" description="Controle de perfis e permissões." />
-        <div className="rounded-lg border bg-card p-8 text-center">
-          <ShieldAlert className="mx-auto h-10 w-10 text-muted-foreground" />
-          <h2 className="mt-3 text-lg font-semibold">Acesso restrito</h2>
-          <p className="text-sm text-muted-foreground">Apenas administradores podem gerenciar acessos.</p>
-        </div>
-      </>
-    );
+    return <RequireRole roles={["admin"]}>{null}</RequireRole>;
   }
 
   return (
