@@ -49,6 +49,36 @@ export async function encerrarAlocacoes(
 }
 
 /**
+ * Verifica se uma chave individual já está vinculada a outro ativo em alocação ativa.
+ * Retorna dados do conflito ou null quando livre.
+ */
+export async function chaveIndividualEmUso(
+  chave: string,
+  opts?: { ignoreAlocacaoId?: string; ignoreAtivoId?: string | null },
+): Promise<{ alocacao_id: string; ativo_id: string | null; hostname: string | null } | null> {
+  const trimmed = chave.trim();
+  if (!trimmed) return null;
+  const { data, error } = await supabase
+    .from("alocacoes")
+    .select("id, ativo_id, ativos(hostname)")
+    .eq("chave_individual", trimmed)
+    .is("data_fim", null);
+  if (error || !data) return null;
+  const conflito = data.find(
+    (a: any) =>
+      a.id !== opts?.ignoreAlocacaoId &&
+      a.ativo_id &&
+      a.ativo_id !== (opts?.ignoreAtivoId ?? null),
+  ) as any;
+  if (!conflito) return null;
+  return {
+    alocacao_id: conflito.id,
+    ativo_id: conflito.ativo_id,
+    hostname: conflito.ativos?.hostname ?? null,
+  };
+}
+
+/**
  * Cria uma alocação. Se saldo < 0 após, o log de auditoria registra "deficit_gerado".
  */
 export async function criarAlocacao(input: {
@@ -59,6 +89,18 @@ export async function criarAlocacao(input: {
   observacao?: string | null;
   saldoAntes: number;
 }): Promise<{ ok: boolean; error?: string; deficit: boolean }> {
+  if (input.chave_individual && input.chave_individual.trim()) {
+    const conflito = await chaveIndividualEmUso(input.chave_individual, {
+      ignoreAtivoId: input.ativo_id ?? null,
+    });
+    if (conflito) {
+      return {
+        ok: false,
+        deficit: false,
+        error: `Esta chave de licença já está em uso no ativo "${conflito.hostname ?? conflito.ativo_id}". Encerre a alocação anterior antes de reutilizá-la.`,
+      };
+    }
+  }
   const { error, data } = await supabase
     .from("alocacoes")
     .insert({
