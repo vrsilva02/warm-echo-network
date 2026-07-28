@@ -55,24 +55,37 @@ const fase2 = [
   { title: "Ordens de serviço", url: "/ordens-servico", icon: Wrench },
   { title: "Peças", url: "/pecas", icon: Package },
   { title: "Estoque", url: "/estoque", icon: Boxes },
+  { title: "Relatórios de OS", url: "/relatorios-os", icon: BarChart3 },
   { title: "Reconciliação", url: "/reconciliacao", icon: Upload },
   { title: "Alertas", url: "/alertas", icon: Bell },
   { title: "Auditoria", url: "/auditoria", icon: ScrollText },
   { title: "Relatórios", url: "/relatorios", icon: BarChart3 },
 ] as const;
 
+// Rotas visíveis apenas para o perfil Técnico (somente OS e estoque)
+const TECNICO_ALLOWED = new Set<string>([
+  "/ordens-servico", "/pecas", "/estoque", "/relatorios-os", "/ativos",
+]);
+
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const pathname = useRouterState({ select: (r) => r.location.pathname });
-  const { user, roles, signOut, isAdmin } = useAuth();
+  const { user, roles, signOut, isAdmin, isTecnico } = useAuth();
   const primaryRole = roles[0];
+  const tecnicoOnly = isTecnico && !isAdmin && roles.length === 1;
 
   const admin = [
     { title: "Unidades", url: "/unidades", icon: Building2 },
     { title: "Centros de Custo", url: "/centros-custo", icon: Wallet },
     { title: "Gestão de Acessos", url: "/acessos", icon: UserCog },
   ] as const;
+
+  const filterMenu = <T extends { url: string }>(items: readonly T[]) =>
+    tecnicoOnly ? items.filter((i) => TECNICO_ALLOWED.has(i.url)) : items;
+
+  const mainVisible = filterMenu(main);
+  const fase2Visible = filterMenu(fase2);
 
   const isActive = (path: string) => pathname === path || pathname.startsWith(path + "/");
 
