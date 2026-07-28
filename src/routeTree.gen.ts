@@ -38,6 +38,7 @@ import { Route as AuthenticatedAlertasRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedAcessosRouteImport } from './routes/_authenticated/acessos'
 import { Route as Authenticated403RouteImport } from './routes/_authenticated/403'
 import { Route as AuthenticatedServicosIdRouteImport } from './routes/_authenticated/servicos_.$id'
+import { Route as AuthenticatedOrdensServicoIdRouteImport } from './routes/_authenticated/ordens-servico_.$id'
 import { Route as AuthenticatedAtivosIdRouteImport } from './routes/_authenticated/ativos_.$id'
 import { Route as AuthenticatedAuditoriaTabelaIdRouteImport } from './routes/_authenticated/auditoria_.$tabela.$id'
 
@@ -190,6 +191,12 @@ const AuthenticatedServicosIdRoute = AuthenticatedServicosIdRouteImport.update({
   path: '/servicos/$id',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedOrdensServicoIdRoute =
+  AuthenticatedOrdensServicoIdRouteImport.update({
+    id: '/ordens-servico_/$id',
+    path: '/ordens-servico/$id',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedAtivosIdRoute = AuthenticatedAtivosIdRouteImport.update({
   id: '/ativos_/$id',
   path: '/ativos/$id',
@@ -231,6 +238,7 @@ export interface FileRoutesByFullPath {
   '/solicitacoes': typeof AuthenticatedSolicitacoesRoute
   '/unidades': typeof AuthenticatedUnidadesRoute
   '/ativos/$id': typeof AuthenticatedAtivosIdRoute
+  '/ordens-servico/$id': typeof AuthenticatedOrdensServicoIdRoute
   '/servicos/$id': typeof AuthenticatedServicosIdRoute
   '/auditoria/$tabela/$id': typeof AuthenticatedAuditoriaTabelaIdRoute
 }
@@ -263,6 +271,7 @@ export interface FileRoutesByTo {
   '/solicitacoes': typeof AuthenticatedSolicitacoesRoute
   '/unidades': typeof AuthenticatedUnidadesRoute
   '/ativos/$id': typeof AuthenticatedAtivosIdRoute
+  '/ordens-servico/$id': typeof AuthenticatedOrdensServicoIdRoute
   '/servicos/$id': typeof AuthenticatedServicosIdRoute
   '/auditoria/$tabela/$id': typeof AuthenticatedAuditoriaTabelaIdRoute
 }
@@ -297,6 +306,7 @@ export interface FileRoutesById {
   '/_authenticated/solicitacoes': typeof AuthenticatedSolicitacoesRoute
   '/_authenticated/unidades': typeof AuthenticatedUnidadesRoute
   '/_authenticated/ativos_/$id': typeof AuthenticatedAtivosIdRoute
+  '/_authenticated/ordens-servico_/$id': typeof AuthenticatedOrdensServicoIdRoute
   '/_authenticated/servicos_/$id': typeof AuthenticatedServicosIdRoute
   '/_authenticated/auditoria_/$tabela/$id': typeof AuthenticatedAuditoriaTabelaIdRoute
 }
@@ -331,6 +341,7 @@ export interface FileRouteTypes {
     | '/solicitacoes'
     | '/unidades'
     | '/ativos/$id'
+    | '/ordens-servico/$id'
     | '/servicos/$id'
     | '/auditoria/$tabela/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -363,6 +374,7 @@ export interface FileRouteTypes {
     | '/solicitacoes'
     | '/unidades'
     | '/ativos/$id'
+    | '/ordens-servico/$id'
     | '/servicos/$id'
     | '/auditoria/$tabela/$id'
   id:
@@ -396,6 +408,7 @@ export interface FileRouteTypes {
     | '/_authenticated/solicitacoes'
     | '/_authenticated/unidades'
     | '/_authenticated/ativos_/$id'
+    | '/_authenticated/ordens-servico_/$id'
     | '/_authenticated/servicos_/$id'
     | '/_authenticated/auditoria_/$tabela/$id'
   fileRoutesById: FileRoutesById
@@ -616,6 +629,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedServicosIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/ordens-servico_/$id': {
+      id: '/_authenticated/ordens-servico_/$id'
+      path: '/ordens-servico/$id'
+      fullPath: '/ordens-servico/$id'
+      preLoaderRoute: typeof AuthenticatedOrdensServicoIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/ativos_/$id': {
       id: '/_authenticated/ativos_/$id'
       path: '/ativos/$id'
@@ -655,6 +675,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedSolicitacoesRoute: typeof AuthenticatedSolicitacoesRoute
   AuthenticatedUnidadesRoute: typeof AuthenticatedUnidadesRoute
   AuthenticatedAtivosIdRoute: typeof AuthenticatedAtivosIdRoute
+  AuthenticatedOrdensServicoIdRoute: typeof AuthenticatedOrdensServicoIdRoute
   AuthenticatedServicosIdRoute: typeof AuthenticatedServicosIdRoute
   AuthenticatedAuditoriaTabelaIdRoute: typeof AuthenticatedAuditoriaTabelaIdRoute
 }
@@ -681,6 +702,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedSolicitacoesRoute: AuthenticatedSolicitacoesRoute,
   AuthenticatedUnidadesRoute: AuthenticatedUnidadesRoute,
   AuthenticatedAtivosIdRoute: AuthenticatedAtivosIdRoute,
+  AuthenticatedOrdensServicoIdRoute: AuthenticatedOrdensServicoIdRoute,
   AuthenticatedServicosIdRoute: AuthenticatedServicosIdRoute,
   AuthenticatedAuditoriaTabelaIdRoute: AuthenticatedAuditoriaTabelaIdRoute,
 }
