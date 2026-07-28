@@ -33,6 +33,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useAuth, roleLabel } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
+import mtrLogo from "@/assets/mtr2-tech-logo.png.asset.json";
 
 const main = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
