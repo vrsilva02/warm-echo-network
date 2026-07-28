@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Loader2, ShieldCheck } from "lucide-react";
+import { PasswordStrength, evaluatePassword } from "@/components/password-strength";
 
 export const Route = createFileRoute("/reset-password")({
   ssr: false,
@@ -41,7 +42,8 @@ function ResetPasswordPage() {
 
   async function handleReset(e: React.FormEvent) {
     e.preventDefault();
-    if (password.length < 8) return toast.error("A senha deve ter no mínimo 8 caracteres.");
+    const { valid } = evaluatePassword(password);
+    if (!valid) return toast.error("A senha não atende aos requisitos mínimos.");
     if (password !== confirm) return toast.error("As senhas não coincidem.");
     setBusy(true);
     const { error } = await supabase.auth.updateUser({ password });
@@ -88,6 +90,7 @@ function ResetPasswordPage() {
                     onChange={(e) => setPassword(e.target.value)}
                   />
                 </div>
+                <PasswordStrength password={password} />
                 <div>
                   <Label htmlFor="pw2">Confirmar senha</Label>
                   <Input
