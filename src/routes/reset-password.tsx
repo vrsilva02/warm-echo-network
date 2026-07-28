@@ -90,6 +90,7 @@ function ResetPasswordPage() {
                     onChange={(e) => setPassword(e.target.value)}
                   />
                 </div>
+                <PasswordStrength password={password} />
                 <div>
                   <Label htmlFor="pw2">Confirmar senha</Label>
                   <Input
