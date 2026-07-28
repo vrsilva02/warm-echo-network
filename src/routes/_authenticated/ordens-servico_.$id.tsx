@@ -73,14 +73,14 @@ function Page() {
     ? Math.round((new Date(os.fechado_em).getTime() - new Date(os.aberto_em).getTime()) / 60000)
     : null;
 
-  if (!os) return <PageHeader title="OS não encontrada" backHref="/ordens-servico" />;
+  if (!os) return <PageHeader title="OS não encontrada" />;
 
   return (
     <>
       <PageHeader
         title={`OS #${os.numero}`}
         description={<Link to="/ativos/$id" params={{ id: os.ativo_id }} className="hover:text-primary">{os.ativos?.hostname}</Link>}
-        backHref="/ordens-servico"
+       
         actions={
           canWrite && os.status !== "concluida" && os.status !== "cancelada" ? (
             <div className="flex gap-2">
