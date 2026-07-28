@@ -21,6 +21,7 @@ import { ShieldAlert, KeyRound, UserPlus, History } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth, roleLabel, type AppRole } from "@/lib/auth";
 import { inviteUser } from "@/lib/admin-users.functions";
+import { RequireRole } from "@/components/require-role";
 
 export const Route = createFileRoute("/_authenticated/acessos")({
   component: AcessosPage,
