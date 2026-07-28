@@ -65,6 +65,7 @@ export function AppSidebar() {
 
   const admin = [
     { title: "Unidades", url: "/unidades", icon: Building2 },
+    { title: "Centros de Custo", url: "/centros-custo", icon: Wallet },
     { title: "Gestão de Acessos", url: "/acessos", icon: UserCog },
   ] as const;
 
