@@ -117,6 +117,15 @@ function Page() {
     if (chaveObrigatoria && !form.chave_individual.trim()) {
       return toast.error("Produto OEM/Retail: informe a chave individual desta alocação.");
     }
+    const chave = form.chave_individual.trim();
+    if (chave && form.ativo_id) {
+      const conflito = await chaveIndividualEmUso(chave, { ignoreAtivoId: form.ativo_id });
+      if (conflito) {
+        return toast.error(
+          `Licença já em uso no ativo "${conflito.hostname ?? conflito.ativo_id}". Encerre a alocação anterior antes de reutilizar esta chave.`,
+        );
+      }
+    }
     const { error } = await supabase.from("alocacoes").insert({
       licenca_id: form.licenca_id,
       usuario_id: form.usuario_id,
