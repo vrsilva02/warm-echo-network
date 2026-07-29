@@ -17,6 +17,7 @@ export type BulkJob<R = unknown> = {
   label: string;
   total: number;
   processed: number;
+  phase?: string;
   status: BulkJobStatus;
   startedAt: number;
   finishedAt?: number;
@@ -25,7 +26,18 @@ export type BulkJob<R = unknown> = {
   acknowledged?: boolean;
 };
 
-type Runner<R> = (onProgress: (processed: number) => void) => Promise<R>;
+type Runner<R> = (
+  onProgress: (processed: number) => void,
+  setPhase: (phase: string) => void,
+) => Promise<R>;
+
+/** Divide um array em lotes de tamanho fixo (usado nas gravações em massa). */
+export function chunk<T>(arr: T[], size: number): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
+  return out;
+}
+
 
 class Manager {
   private jobs = new Map<string, BulkJob>();
@@ -49,12 +61,14 @@ class Manager {
   }
 
   acknowledge(scope: string) {
-    const job = this.getLatest(scope);
-    if (job && job.status !== "running") {
-      job.acknowledged = true;
+    const id = this.latestByScope.get(scope);
+    const job = id ? this.jobs.get(id) : undefined;
+    if (id && job && job.status !== "running") {
+      this.jobs.set(id, { ...job, acknowledged: true });
       this.emit();
     }
   }
+
 
   start<R>(opts: {
     scope: string;
@@ -81,30 +95,53 @@ class Manager {
     this.latestByScope.set(opts.scope, id);
     this.emit();
 
+    // Atualiza o job de forma imutável (nova referência) para que
+    // useSyncExternalStore detecte a mudança e o progresso apareça na UI.
+    const patch = (p: Partial<BulkJob<R>>) => {
+      const cur = this.jobs.get(id) as BulkJob<R>;
+      this.jobs.set(id, { ...cur, ...p });
+      this.emit();
+    };
+
+    let lastTick = 0;
     void opts
-      .run((n) => {
-        job.processed = Math.min(n, job.total);
-        this.emit();
-      })
+      .run(
+        (n) => {
+          const processed = Math.min(n, opts.total);
+          const now = Date.now();
+          // Throttle: no máximo ~10 atualizações por segundo.
+          if (processed >= opts.total || now - lastTick > 100) {
+            lastTick = now;
+            patch({ processed });
+          }
+        },
+        (phase) => patch({ phase }),
+      )
       .then((report) => {
-        job.status = "done";
-        job.processed = job.total;
-        job.finishedAt = Date.now();
-        job.report = report;
-        this.emit();
+        patch({
+          status: "done",
+          processed: opts.total,
+          finishedAt: Date.now(),
+          phase: undefined,
+          report,
+        });
         toast.success(opts.successToast(report));
         opts.onDone?.(report);
       })
       .catch((err) => {
-        job.status = "error";
-        job.finishedAt = Date.now();
-        job.error = err instanceof Error ? err.message : String(err);
-        this.emit();
-        toast.error(`${opts.label}: falha na importação — ${job.error}`);
+        patch({
+          status: "error",
+          finishedAt: Date.now(),
+          error: err instanceof Error ? err.message : String(err),
+        });
+        toast.error(
+          `${opts.label}: falha na importação — ${err instanceof Error ? err.message : String(err)}`,
+        );
       });
 
     return id;
   }
+
 }
 
 export const bulkImportManager = new Manager();

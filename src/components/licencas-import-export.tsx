@@ -14,7 +14,9 @@ import { downloadXLSX } from "@/lib/export";
 import { logAction } from "@/lib/audit";
 import { friendlyError } from "@/lib/errors";
 import { BulkImportDialog, BulkMetric } from "@/components/bulk-import-dialog";
-import { useLatestBulkJob } from "@/lib/bulk-import";
+import { useLatestBulkJob, chunk } from "@/lib/bulk-import";
+import { fetchAll } from "@/lib/fetch-all";
+
 
 /**
  * Colunas do template de importação em massa de licenças.
@@ -72,13 +74,15 @@ function nz(v: string | undefined): string | null {
 /* ------------------------ Exportar ------------------------ */
 
 export async function exportLicencas() {
-  const { data, error } = await supabase
-    .from("licencas")
-    .select(
-      "quantidade, custo_unitario, chave_ativacao, tipo_ativacao, numero_certificado, data_expiracao, limite_workstations, limite_file_servers, dias_carencia, politica_grupo, produtos_catalogo(nome_oficial, categoria, modelo_licenciamento, tipo_licenciamento, subtipo, fabricantes(nome)), contratos(numero_contrato)",
-    );
+  const tid = toast.loading("Preparando exportação…");
+  const { data, error } = await fetchAll<any>(
+    "licencas",
+    "quantidade, custo_unitario, chave_ativacao, tipo_ativacao, numero_certificado, data_expiracao, limite_workstations, limite_file_servers, dias_carencia, politica_grupo, produtos_catalogo(nome_oficial, categoria, modelo_licenciamento, tipo_licenciamento, subtipo, fabricantes(nome)), contratos(numero_contrato)",
+    undefined,
+    { onProgress: (n) => toast.loading(`Baixando dados… ${n} registro(s)`, { id: tid }) },
+  );
   if (error) {
-    toast.error(friendlyError(error));
+    toast.error(friendlyError(error), { id: tid });
     return;
   }
   const rows = (data ?? []).map((l: any) => [
@@ -100,11 +104,13 @@ export async function exportLicencas() {
     l.dias_carencia ?? "",
     l.politica_grupo ?? "",
   ]);
+  toast.loading("Gerando arquivo XLSX…", { id: tid });
   const fname = `licencas_${new Date().toISOString().slice(0, 10)}.xlsx`;
-  downloadXLSX(fname, COLUMNS as unknown as string[], rows);
+  await downloadXLSX(fname, COLUMNS as unknown as string[], rows);
   void logAction("EXPORT", "licencas", { formato: "xlsx", total: rows.length, arquivo: fname });
-  toast.success(`${rows.length} licença(s) exportada(s).`);
+  toast.success(`${rows.length} licença(s) exportada(s).`, { id: tid });
 }
+
 
 export function downloadTemplate() {
   const exemplo = [
@@ -142,7 +148,13 @@ type Report = {
   erros: { linha: number; motivo: string }[];
 };
 
-async function importarLinhas(rows: RawRow[], onProgress: (n: number) => void): Promise<Report> {
+const BATCH = 200;
+
+async function importarLinhas(
+  rows: RawRow[],
+  onProgress: (n: number) => void,
+  setPhase: (p: string) => void,
+): Promise<Report> {
   const rep: Report = {
     total: rows.length,
     inseridas: 0,
@@ -152,10 +164,11 @@ async function importarLinhas(rows: RawRow[], onProgress: (n: number) => void): 
     erros: [],
   };
 
+  setPhase("Carregando dados de referência…");
   const [{ data: fabs }, { data: prods }, { data: contratos }] = await Promise.all([
-    supabase.from("fabricantes").select("id, nome"),
-    supabase.from("produtos_catalogo").select("id, nome_oficial, fabricante_id"),
-    supabase.from("contratos").select("id, numero_contrato"),
+    fetchAll<any>("fabricantes", "id, nome"),
+    fetchAll<any>("produtos_catalogo", "id, nome_oficial, fabricante_id"),
+    fetchAll<any>("contratos", "id, numero_contrato"),
   ]);
   const fabByName = new Map<string, string>((fabs ?? []).map((f: any) => [f.nome.toLowerCase(), f.id]));
   const prodByKey = new Map<string, string>(
@@ -165,54 +178,94 @@ async function importarLinhas(rows: RawRow[], onProgress: (n: number) => void): 
     (contratos ?? []).filter((c: any) => c.numero_contrato).map((c: any) => [c.numero_contrato.toLowerCase(), c.id]),
   );
 
+  // 1) Fabricantes ausentes — criados em um único lote.
+  setPhase("Validando linhas…");
+  const novosFabs = new Map<string, string>();
+  for (const r of rows) {
+    const nome = nz(r.fabricante);
+    if (nome && !fabByName.has(nome.toLowerCase())) novosFabs.set(nome.toLowerCase(), nome);
+  }
+  if (novosFabs.size > 0) {
+    setPhase(`Criando ${novosFabs.size} fabricante(s)…`);
+    for (const lote of chunk(Array.from(novosFabs.values()), BATCH)) {
+      const { data, error } = await supabase
+        .from("fabricantes")
+        .insert(lote.map((nome) => ({ nome })) as any)
+        .select("id, nome");
+      if (error) {
+        rep.erros.push({ linha: 0, motivo: `Fabricantes: ${friendlyError(error)}` });
+        continue;
+      }
+      for (const f of data ?? []) {
+        fabByName.set((f as any).nome.toLowerCase(), (f as any).id);
+        rep.fabricantesCriados++;
+      }
+    }
+  }
+
+  // 2) Produtos ausentes — também em lote.
+  const novosProds = new Map<string, any>();
+  for (const r of rows) {
+    const fabNome = nz(r.fabricante);
+    const prodNome = nz(r.produto);
+    if (!fabNome || !prodNome) continue;
+    const fabId = fabByName.get(fabNome.toLowerCase());
+    if (!fabId) continue;
+    const key = `${fabId}||${prodNome.toLowerCase()}`;
+    if (prodByKey.has(key) || novosProds.has(key)) continue;
+    novosProds.set(key, {
+      nome_oficial: prodNome,
+      fabricante_id: fabId,
+      categoria: nz(r.categoria),
+      modelo_licenciamento: nz(r.modelo_licenciamento),
+      tipo_licenciamento: nz(r.tipo_licenciamento),
+      subtipo: nz(r.subtipo),
+    });
+  }
+  if (novosProds.size > 0) {
+    setPhase(`Criando ${novosProds.size} produto(s)…`);
+    for (const lote of chunk(Array.from(novosProds.values()), BATCH)) {
+      const { data, error } = await supabase
+        .from("produtos_catalogo")
+        .insert(lote as any)
+        .select("id, nome_oficial, fabricante_id");
+      if (error) {
+        rep.erros.push({ linha: 0, motivo: `Produtos: ${friendlyError(error)}` });
+        continue;
+      }
+      for (const p of data ?? []) {
+        prodByKey.set(`${(p as any).fabricante_id}||${(p as any).nome_oficial.toLowerCase()}`, (p as any).id);
+        rep.produtosCriados++;
+      }
+    }
+  }
+
+  // 3) Monta os payloads de licença validando linha a linha (sem I/O).
+  type Prepared = { linha: number; payload: Record<string, any> };
+  const prontas: Prepared[] = [];
   for (let i = 0; i < rows.length; i++) {
     const linha = i + 2;
     const r = rows[i];
 
-    for (const req of REQUIRED) {
-      if (!nz(r[req])) {
-        rep.erros.push({ linha, motivo: `Campo obrigatório vazio: ${req}` });
-      }
-    }
-    if (rep.erros.at(-1)?.linha === linha) { onProgress(i + 1); continue; }
-
-    const fabricanteNome = nz(r.fabricante)!;
-    const produtoNome = nz(r.produto)!;
-    const quantidade = toInt(r.quantidade);
-    if (!quantidade || quantidade <= 0) {
-      rep.erros.push({ linha, motivo: "quantidade deve ser um número inteiro > 0" });
-      onProgress(i + 1);
+    const faltando = REQUIRED.filter((req) => !nz(r[req]));
+    if (faltando.length > 0) {
+      rep.erros.push({ linha, motivo: `Campo obrigatório vazio: ${faltando.join(", ")}` });
       continue;
     }
 
-    let fabricanteId = fabByName.get(fabricanteNome.toLowerCase());
-    if (!fabricanteId) {
-      const { data, error } = await supabase.from("fabricantes").insert({ nome: fabricanteNome }).select("id").single();
-      if (error) { rep.erros.push({ linha, motivo: `Fabricante: ${friendlyError(error)}` }); onProgress(i + 1); continue; }
-      fabricanteId = data!.id;
-      fabByName.set(fabricanteNome.toLowerCase(), fabricanteId);
-      rep.fabricantesCriados++;
+    const quantidade = toInt(r.quantidade);
+    if (!quantidade || quantidade <= 0) {
+      rep.erros.push({ linha, motivo: "quantidade deve ser um número inteiro > 0" });
+      continue;
     }
 
-    const prodKey = `${fabricanteId}||${produtoNome.toLowerCase()}`;
-    let produtoId = prodByKey.get(prodKey);
+    const fabricanteId = fabByName.get(nz(r.fabricante)!.toLowerCase());
+    const produtoId = fabricanteId
+      ? prodByKey.get(`${fabricanteId}||${nz(r.produto)!.toLowerCase()}`)
+      : undefined;
     if (!produtoId) {
-      const { data, error } = await supabase
-        .from("produtos_catalogo")
-        .insert({
-          nome_oficial: produtoNome,
-          fabricante_id: fabricanteId,
-          categoria: nz(r.categoria)!,
-          modelo_licenciamento: nz(r.modelo_licenciamento)!,
-          tipo_licenciamento: nz(r.tipo_licenciamento)!,
-          subtipo: nz(r.subtipo),
-        })
-        .select("id")
-        .single();
-      if (error) { rep.erros.push({ linha, motivo: `Produto: ${friendlyError(error)}` }); onProgress(i + 1); continue; }
-      produtoId = data!.id;
-      prodByKey.set(prodKey, produtoId);
-      rep.produtosCriados++;
+      rep.erros.push({ linha, motivo: "Não foi possível resolver fabricante/produto desta linha" });
+      continue;
     }
 
     let contratoId: string | null = null;
@@ -226,26 +279,46 @@ async function importarLinhas(rows: RawRow[], onProgress: (n: number) => void): 
     const dataExp = toDate(r.data_expiracao);
     if (nz(r.data_expiracao) && !dataExp) {
       rep.erros.push({ linha, motivo: "data_expiracao inválida (use AAAA-MM-DD)" });
-      onProgress(i + 1);
       continue;
     }
-    const { error: insErr } = await supabase.from("licencas").insert({
-      produto_id: produtoId,
-      contrato_id: contratoId,
-      quantidade,
-      custo_unitario: toNum(r.custo_unitario),
-      chave_ativacao: nz(r.chave_ativacao),
-      tipo_ativacao: nz(r.tipo_ativacao),
-      numero_certificado: nz(r.numero_certificado),
-      data_expiracao: dataExp,
-      limite_workstations: toInt(r.limite_workstations),
-      limite_file_servers: toInt(r.limite_file_servers),
-      dias_carencia: toInt(r.dias_carencia) ?? 0,
-      politica_grupo: nz(r.politica_grupo),
+
+    prontas.push({
+      linha,
+      payload: {
+        produto_id: produtoId,
+        contrato_id: contratoId,
+        quantidade,
+        custo_unitario: toNum(r.custo_unitario),
+        chave_ativacao: nz(r.chave_ativacao),
+        tipo_ativacao: nz(r.tipo_ativacao),
+        numero_certificado: nz(r.numero_certificado),
+        data_expiracao: dataExp,
+        limite_workstations: toInt(r.limite_workstations),
+        limite_file_servers: toInt(r.limite_file_servers),
+        dias_carencia: toInt(r.dias_carencia) ?? 0,
+        politica_grupo: nz(r.politica_grupo),
+      },
     });
-    if (insErr) { rep.erros.push({ linha, motivo: `Licença: ${friendlyError(insErr)}` }); onProgress(i + 1); continue; }
-    rep.inseridas++;
-    onProgress(i + 1);
+  }
+
+  // 4) Insere as licenças em lotes.
+  let feitos = rows.length - prontas.length;
+  onProgress(feitos);
+  setPhase(`Inserindo ${prontas.length} licença(s)…`);
+  for (const lote of chunk(prontas, BATCH)) {
+    const { error } = await supabase.from("licencas").insert(lote.map((p) => p.payload) as any);
+    if (error) {
+      for (const p of lote) {
+        const { error: e2 } = await supabase.from("licencas").insert(p.payload as any);
+        if (e2) rep.erros.push({ linha: p.linha, motivo: `Licença: ${friendlyError(e2)}` });
+        else rep.inseridas++;
+        onProgress(++feitos);
+      }
+      continue;
+    }
+    rep.inseridas += lote.length;
+    feitos += lote.length;
+    onProgress(feitos);
   }
 
   void logAction("BULK_UPDATE", "licencas", {
@@ -259,6 +332,7 @@ async function importarLinhas(rows: RawRow[], onProgress: (n: number) => void): 
   });
   return rep;
 }
+
 
 /* ------------------------ Botão do cabeçalho ------------------------ */
 
