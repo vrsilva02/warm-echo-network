@@ -16,6 +16,7 @@ import { Boxes, Pencil, Trash2, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
 import { useConfirm } from "@/components/confirm-dialog";
+import { criticidadeTone } from "@/lib/status-tones";
 
 export const Route = createFileRoute("/_authenticated/servicos")({
   component: Page,

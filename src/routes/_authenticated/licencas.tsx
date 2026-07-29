@@ -24,7 +24,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
 import { useConfirm } from "@/components/confirm-dialog";
 import { logAction } from "@/lib/audit";
-import { encerrarAlocacao, encerrarAlocacoes, criarAlocacao } from "@/lib/licencas";
+import { encerrarAlocacao, encerrarAlocacoes, criarAlocacao, isChaveIndividualRequired } from "@/lib/licencas";
 import { friendlyError } from "@/lib/errors";
 import { MaskedKey } from "@/components/masked-key";
 import { LicencasImportExport } from "@/components/licencas-import-export";
