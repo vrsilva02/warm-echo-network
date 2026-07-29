@@ -38,10 +38,10 @@ type Produto = {
 };
 
 const CATEGORIAS = ["Windows", "Office", "EDR", "Outro"];
-const MODELOS = ["perpetua", "assinatura", "concurrent"];
-const TIPOS = ["por_dispositivo", "por_usuario", "concurrent"];
+const MODELOS = ["dispositivo", "usuario", "core", "concorrente"];
+const TIPOS = ["OEM", "Volume", "Retail", "Assinatura", "Perpetua"];
 
-const initial = { nome_oficial: "", categoria: "Office", fabricante_id: null as string | null, modelo_licenciamento: "assinatura", tipo_licenciamento: "por_usuario" };
+const initial = { nome_oficial: "", categoria: "Office", fabricante_id: null as string | null, modelo_licenciamento: "usuario", tipo_licenciamento: "Assinatura" };
 
 function Page() {
   const { canWrite } = useAuth();
@@ -201,7 +201,7 @@ function Page() {
             <Label>Tipo</Label>
             <Select value={form.tipo_licenciamento} onValueChange={(v) => setForm({ ...form, tipo_licenciamento: v })}>
               <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>{TIPOS.map((t) => <SelectItem key={t} value={t}>{t.replace("_", " ")}</SelectItem>)}</SelectContent>
+              <SelectContent>{TIPOS.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
             </Select>
           </div>
         </div>
