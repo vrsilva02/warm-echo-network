@@ -178,7 +178,7 @@ export function BulkImportDialog<Row extends Record<string, string>, Report>(
                 <label>
                   <input
                     type="file"
-                    accept=".csv,.xlsx,.xls,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+                    accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                     className="hidden"
                     onChange={(e) => void onPick(e.target.files?.[0] ?? null)}
                   />
@@ -189,9 +189,7 @@ export function BulkImportDialog<Row extends Record<string, string>, Report>(
               </div>
             </div>
             <div className="text-xs text-muted-foreground">
-              Formatos aceitos: <span className="font-mono">.csv</span>,{" "}
-              <span className="font-mono">.xlsx</span> ou <span className="font-mono">.xls</span>.
-              A primeira aba da planilha é utilizada.
+              Formato aceito: <span className="font-mono">.xlsx</span>. A primeira aba da planilha é utilizada.
             </div>
 
             {parsing && <div className="text-xs text-muted-foreground">Lendo arquivo…</div>}

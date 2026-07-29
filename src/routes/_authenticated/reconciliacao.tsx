@@ -249,7 +249,7 @@ function Page() {
       {canWrite && (
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle className="text-sm">Importar CSV</CardTitle>
+            <CardTitle className="text-sm">Importar planilha (.xlsx)</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <p className="text-xs text-muted-foreground">
@@ -269,8 +269,8 @@ function Page() {
                 </Select>
               </div>
               <div className="sm:col-span-2">
-                <Label>Arquivo CSV</Label>
-                <Input type="file" accept=".csv,text/csv" onChange={onFile} disabled={busy} />
+                <Label>Arquivo XLSX</Label>
+                <Input type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onChange={onFile} disabled={busy} />
               </div>
             </div>
             <div className="flex gap-2 flex-wrap">
