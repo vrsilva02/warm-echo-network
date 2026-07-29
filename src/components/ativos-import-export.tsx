@@ -16,6 +16,7 @@ import { friendlyError } from "@/lib/errors";
 import { BulkImportDialog, BulkMetric } from "@/components/bulk-import-dialog";
 import { useLatestBulkJob, chunk } from "@/lib/bulk-import";
 import { fetchAll } from "@/lib/fetch-all";
+import { ATIVOS_COLUMNS } from "@/lib/import-templates";
 
 
 /**
@@ -23,15 +24,7 @@ import { fetchAll } from "@/lib/fetch-all";
  * A ordem aqui é a mesma usada no CSV de exportação e no arquivo de exemplo,
  * garantindo que um export possa ser re-importado sem edições estruturais.
  */
-const COLUMNS = [
-  "hostname",
-  "tipo",
-  "numero_patrimonio",
-  "numero_serie",
-  "setor",
-  "status_ciclo_vida",
-  "responsavel_email",
-] as const;
+const COLUMNS = ATIVOS_COLUMNS;
 
 type Col = (typeof COLUMNS)[number];
 type RawRow = Partial<Record<Col, string>> & Record<string, string>;
