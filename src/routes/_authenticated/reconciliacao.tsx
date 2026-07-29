@@ -284,7 +284,7 @@ function Page() {
                 Reconciliar pendentes
               </Button>
               <Button size="sm" variant="outline" onClick={exportar}>
-                <Upload className="h-4 w-4 rotate-180" /> Exportar CSV
+                <Upload className="h-4 w-4 rotate-180" /> Exportar XLSX
               </Button>
             </div>
           </CardContent>

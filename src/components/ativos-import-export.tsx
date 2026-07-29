@@ -64,7 +64,7 @@ export async function exportAtivos() {
   ]);
   const fname = `ativos_${new Date().toISOString().slice(0, 10)}.xlsx`;
   downloadXLSX(fname, COLUMNS as unknown as string[], rows);
-  void logAction("EXPORT", "ativos", { formato: "csv", total: rows.length, arquivo: fname });
+  void logAction("EXPORT", "ativos", { formato: "xlsx", total: rows.length, arquivo: fname });
   toast.success(`${rows.length} ativo(s) exportado(s).`);
 }
 
@@ -205,7 +205,7 @@ export function AtivosImportExport({ canWrite, onImported }: { canWrite: boolean
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-64">
           <DropdownMenuItem onClick={() => void exportAtivos()}>
-            <Download className="h-4 w-4" /> Exportar CSV
+            <Download className="h-4 w-4" /> Exportar XLSX
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => downloadTemplate()}>
             <FileSpreadsheet className="h-4 w-4" /> Baixar template
@@ -224,7 +224,7 @@ export function AtivosImportExport({ canWrite, onImported }: { canWrite: boolean
                   </>
                 ) : (
                   <>
-                    <Upload className="h-4 w-4" /> Importar CSV / XLSX…
+                    <Upload className="h-4 w-4" /> Importar XLSX / CSV…
                   </>
                 )}
               </DropdownMenuItem>

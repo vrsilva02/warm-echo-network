@@ -140,7 +140,7 @@ function Page() {
               {reposicao?.length ?? 0} peça(s) em ponto de reposição. Quantidade sugerida = dobro do estoque mínimo menos o saldo atual.
             </p>
             <Button size="sm" variant="outline" onClick={exportarLista} disabled={!reposicao?.length}>
-              <Download className="h-4 w-4 mr-1" /> Gerar lista de compra (CSV)
+              <Download className="h-4 w-4 mr-1" /> Gerar lista de compra (XLSX)
             </Button>
           </div>
           <Card>

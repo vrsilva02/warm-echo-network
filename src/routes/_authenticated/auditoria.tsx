@@ -166,7 +166,7 @@ function Page() {
         <Input type="date" value={ate} onChange={(e) => setAte(e.target.value)} />
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={() => downloadXLSX(`auditoria_${desde}_${ate}.xlsx`, cols, exportRows())}>
-            <Download className="h-4 w-4 mr-1" /> CSV
+            <Download className="h-4 w-4 mr-1" /> XLSX
           </Button>
           <Button variant="outline" size="sm" onClick={() =>
             downloadPDF({

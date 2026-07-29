@@ -175,7 +175,7 @@ export function AdvancedTable<T>({
     }));
     downloadXLSX(`${exportFilename ?? storageKey}-${new Date().toISOString().slice(0, 10)}.xlsx`, header, body);
     void logAction("EXPORT", storageKey, {
-      formato: "csv",
+      formato: "xlsx",
       total_registros: processed.length,
       total_original: rows?.length ?? 0,
       filtro_view: activeView?.id ?? null,
@@ -219,7 +219,7 @@ export function AdvancedTable<T>({
         <div className="flex items-center gap-2">
           {toolbarExtras}
           <Button size="sm" variant="outline" onClick={exportVisible} className="gap-1">
-            <Download className="h-4 w-4" /> CSV
+            <Download className="h-4 w-4" /> XLSX
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

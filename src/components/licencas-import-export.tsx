@@ -102,7 +102,7 @@ export async function exportLicencas() {
   ]);
   const fname = `licencas_${new Date().toISOString().slice(0, 10)}.xlsx`;
   downloadXLSX(fname, COLUMNS as unknown as string[], rows);
-  void logAction("EXPORT", "licencas", { formato: "csv", total: rows.length, arquivo: fname });
+  void logAction("EXPORT", "licencas", { formato: "xlsx", total: rows.length, arquivo: fname });
   toast.success(`${rows.length} licença(s) exportada(s).`);
 }
 
@@ -285,7 +285,7 @@ export function LicencasImportExport({ canWrite, onImported }: { canWrite: boole
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-64">
           <DropdownMenuItem onClick={() => void exportLicencas()}>
-            <Download className="h-4 w-4" /> Exportar CSV
+            <Download className="h-4 w-4" /> Exportar XLSX
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => downloadTemplate()}>
             <FileSpreadsheet className="h-4 w-4" /> Baixar template
@@ -304,7 +304,7 @@ export function LicencasImportExport({ canWrite, onImported }: { canWrite: boole
                   </>
                 ) : (
                   <>
-                    <Upload className="h-4 w-4" /> Importar CSV / XLSX…
+                    <Upload className="h-4 w-4" /> Importar XLSX / CSV…
                   </>
                 )}
               </DropdownMenuItem>

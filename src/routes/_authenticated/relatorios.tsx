@@ -398,7 +398,7 @@ function ReportRunner({ tipo, filters, onSaveRecurring }: { tipo: ReportType; fi
           <Button size="sm" variant="outline" disabled={rows.length === 0} onClick={() => {
             downloadXLSX(`${tipo}-${stamp}.xlsx`, columns, rows);
             void logAction("EXPORT", tipo, { formato: "csv", total: rows.length, filtros: filters });
-          }}><Download className="h-4 w-4" /> CSV</Button>
+          }}><Download className="h-4 w-4" /> XLSX</Button>
           <Button size="sm" disabled={rows.length === 0} onClick={() => {
             downloadPDF({ filename: `${tipo}-${stamp}.pdf`, title: meta.title, subtitle: filterLabel, columns, rows });
             void logAction("EXPORT", tipo, { formato: "pdf", total: rows.length, filtros: filters });

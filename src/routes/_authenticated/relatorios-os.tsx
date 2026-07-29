@@ -19,7 +19,7 @@ export const Route = createFileRoute("/_authenticated/relatorios-os")({
   head: () => ({
     meta: [
       { title: "Relatórios de OS — GestoraIT" },
-      { name: "description", content: "Filtre ordens de serviço por período, ativo, técnico e status e exporte em CSV." },
+      { name: "description", content: "Filtre ordens de serviço por período, ativo, técnico e status e exporte em XLSX." },
       { property: "og:title", content: "Relatórios de OS — GestoraIT" },
       { property: "og:description", content: "Análise de OS com filtros e exportação." },
     ],
@@ -128,7 +128,7 @@ function Page() {
       <PageHeader
         title="Relatórios de OS"
         description="Ordens de serviço por período, ativo, técnico e status."
-        actions={<Button onClick={exportar} disabled={!rows?.length}><Download className="h-4 w-4 mr-2" />Exportar CSV</Button>}
+        actions={<Button onClick={exportar} disabled={!rows?.length}><Download className="h-4 w-4 mr-2" />Exportar XLSX</Button>}
       />
 
       <Card className="mb-4">
