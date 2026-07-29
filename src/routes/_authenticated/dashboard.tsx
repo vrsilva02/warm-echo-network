@@ -333,10 +333,10 @@ function DashboardPage() {
 
 function KpiCard({ title, value, icon, hint }: { title: string; value: number | string; icon: React.ReactNode; hint?: string }) {
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
-          {title}
+    <Card className="elevate">
+      <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
+        <CardTitle className="eyebrow flex items-center gap-1.5 pt-0.5 text-[0.6875rem]">
+          <span className="truncate">{title}</span>
           {hint && (
             <UITooltip>
               <TooltipTrigger asChild>
@@ -348,10 +348,12 @@ function KpiCard({ title, value, icon, hint }: { title: string; value: number | 
             </UITooltip>
           )}
         </CardTitle>
-        <span className="text-muted-foreground">{icon}</span>
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted/70 text-muted-foreground">
+          {icon}
+        </span>
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-semibold tabular-nums">{value}</div>
+        <div className="metric text-[1.75rem] leading-none">{value}</div>
       </CardContent>
     </Card>
   );
