@@ -105,7 +105,8 @@
   --secondary: oklch(0.965 0.008 250);
   --secondary-foreground: oklch(0.22 0.03 260);
   --muted: oklch(0.965 0.008 250);
-  --muted-foreground: oklch(0.5 0.02 258);
+  /* WCAG AA — 4.5:1 contra o background */
+  --muted-foreground: oklch(0.42 0.02 258);
   --accent: oklch(0.955 0.012 260);
   --accent-foreground: oklch(0.22 0.03 260);
 
