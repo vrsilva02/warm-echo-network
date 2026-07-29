@@ -118,20 +118,23 @@ export function BulkImportDialog<Row extends Record<string, string>, Report>(
         {running && job && (
           <div className="space-y-3 text-sm">
             <div className="rounded-md border p-3 space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="font-medium">Importando…</span>
-                <span className="tabular-nums text-muted-foreground">
+              <div className="flex items-center justify-between gap-3">
+                <span className="font-medium truncate">{job.phase ?? "Importando…"}</span>
+                <span className="tabular-nums text-muted-foreground shrink-0">
                   {job.processed} / {job.total} ({progressPct}%)
                 </span>
               </div>
               <Progress value={progressPct} />
-              <div className="text-xs text-muted-foreground">
-                Você pode fechar este diálogo — o processamento segue em segundo plano e você
-                será notificado ao concluir.
+              <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
+                <span>
+                  Você pode fechar este diálogo — o processamento segue em segundo plano.
+                </span>
+                {eta != null && <span className="tabular-nums shrink-0">~{eta}s restantes</span>}
               </div>
             </div>
           </div>
         )}
+
 
         {showReport && job?.report && (
           <div className="space-y-3 text-sm">

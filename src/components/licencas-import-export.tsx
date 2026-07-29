@@ -74,13 +74,15 @@ function nz(v: string | undefined): string | null {
 /* ------------------------ Exportar ------------------------ */
 
 export async function exportLicencas() {
-  const { data, error } = await supabase
-    .from("licencas")
-    .select(
-      "quantidade, custo_unitario, chave_ativacao, tipo_ativacao, numero_certificado, data_expiracao, limite_workstations, limite_file_servers, dias_carencia, politica_grupo, produtos_catalogo(nome_oficial, categoria, modelo_licenciamento, tipo_licenciamento, subtipo, fabricantes(nome)), contratos(numero_contrato)",
-    );
+  const tid = toast.loading("Preparando exportação…");
+  const { data, error } = await fetchAll<any>(
+    "licencas",
+    "quantidade, custo_unitario, chave_ativacao, tipo_ativacao, numero_certificado, data_expiracao, limite_workstations, limite_file_servers, dias_carencia, politica_grupo, produtos_catalogo(nome_oficial, categoria, modelo_licenciamento, tipo_licenciamento, subtipo, fabricantes(nome)), contratos(numero_contrato)",
+    undefined,
+    { onProgress: (n) => toast.loading(`Baixando dados… ${n} registro(s)`, { id: tid }) },
+  );
   if (error) {
-    toast.error(friendlyError(error));
+    toast.error(friendlyError(error), { id: tid });
     return;
   }
   const rows = (data ?? []).map((l: any) => [
@@ -102,11 +104,13 @@ export async function exportLicencas() {
     l.dias_carencia ?? "",
     l.politica_grupo ?? "",
   ]);
+  toast.loading("Gerando arquivo XLSX…", { id: tid });
   const fname = `licencas_${new Date().toISOString().slice(0, 10)}.xlsx`;
-  downloadXLSX(fname, COLUMNS as unknown as string[], rows);
+  await downloadXLSX(fname, COLUMNS as unknown as string[], rows);
   void logAction("EXPORT", "licencas", { formato: "xlsx", total: rows.length, arquivo: fname });
-  toast.success(`${rows.length} licença(s) exportada(s).`);
+  toast.success(`${rows.length} licença(s) exportada(s).`, { id: tid });
 }
+
 
 export function downloadTemplate() {
   const exemplo = [
