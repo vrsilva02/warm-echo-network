@@ -16,6 +16,7 @@ import { friendlyError } from "@/lib/errors";
 import { BulkImportDialog, BulkMetric } from "@/components/bulk-import-dialog";
 import { useLatestBulkJob, chunk } from "@/lib/bulk-import";
 import { fetchAll } from "@/lib/fetch-all";
+import { LICENCAS_COLUMNS } from "@/lib/import-templates";
 
 
 /**
@@ -23,25 +24,7 @@ import { fetchAll } from "@/lib/fetch-all";
  * A ordem aqui é a mesma usada no CSV de exportação e no arquivo de exemplo,
  * garantindo que um export possa ser re-importado sem edições estruturais.
  */
-const COLUMNS = [
-  "fabricante",
-  "produto",
-  "categoria",
-  "modelo_licenciamento",
-  "tipo_licenciamento",
-  "subtipo",
-  "numero_contrato",
-  "quantidade",
-  "custo_unitario",
-  "chave_ativacao",
-  "tipo_ativacao",
-  "numero_certificado",
-  "data_expiracao",
-  "limite_workstations",
-  "limite_file_servers",
-  "dias_carencia",
-  "politica_grupo",
-] as const;
+const COLUMNS = LICENCAS_COLUMNS;
 
 type Col = (typeof COLUMNS)[number];
 type RawRow = Partial<Record<Col, string>> & Record<string, string>;
