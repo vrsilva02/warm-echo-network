@@ -492,7 +492,7 @@ function RecurringDialog({
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="pdf">PDF</SelectItem>
-                  <SelectItem value="csv">CSV</SelectItem>
+                  <SelectItem value="xlsx">XLSX</SelectItem>
                 </SelectContent>
               </Select>
             </div>
