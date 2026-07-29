@@ -6,19 +6,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip as UITooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Info } from "lucide-react";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  Legend,
-} from "recharts";
+import { lazy, Suspense } from "react";
+
+const ElpBarChart = lazy(() => import("@/components/dashboard-charts").then((m) => ({ default: m.ElpBarChart })));
+const CicloVidaPieChart = lazy(() => import("@/components/dashboard-charts").then((m) => ({ default: m.CicloVidaPieChart })));
+const TcoCentroBarChart = lazy(() => import("@/components/dashboard-charts").then((m) => ({ default: m.TcoCentroBarChart })));
+
+function ChartFallback() {
+  return <div className="h-full w-full animate-pulse rounded-md bg-muted/50" />;
+}
 import { AlertTriangle, CheckCircle2, XCircle, KeySquare, FileWarning, Snowflake, ShieldAlert, Coins, Settings2, Wrench, Package } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Link } from "@tanstack/react-router";
@@ -248,17 +244,9 @@ function DashboardPage() {
                 Cadastre produtos e licenças para ver o gráfico.
               </div>
             ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartElp}>
-                  <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
-                  <XAxis dataKey="nome" fontSize={11} />
-                  <YAxis fontSize={11} />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="Compradas" fill="hsl(215 85% 55%)" />
-                  <Bar dataKey="Alocadas" fill="hsl(148 65% 45%)" />
-                </BarChart>
-              </ResponsiveContainer>
+              <Suspense fallback={<ChartFallback />}>
+                <ElpBarChart data={chartElp} />
+              </Suspense>
             )}
           </CardContent>
         </Card>
@@ -273,17 +261,9 @@ function DashboardPage() {
                 Sem ativos cadastrados.
               </div>
             ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie data={pieData} dataKey="value" nameKey="name" innerRadius={40} outerRadius={80}>
-                    {pieData.map((_, i) => (
-                      <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
+              <Suspense fallback={<ChartFallback />}>
+                <CicloVidaPieChart data={pieData} />
+              </Suspense>
             )}
           </CardContent>
         </Card>
@@ -469,15 +449,9 @@ function TcoPorCentroCard({ tco, ativos }: { tco: Array<{ ativo_id: string; tco_
         {rows.length === 0 ? (
           <div className="h-full flex items-center justify-center text-xs text-muted-foreground">Sem centros vinculados.</div>
         ) : (
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={rows} layout="vertical" margin={{ top: 4, right: 12, left: 4, bottom: 4 }}>
-              <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
-              <XAxis type="number" fontSize={10} tickFormatter={(v) => `R$ ${(v/1000).toFixed(0)}k`} />
-              <YAxis type="category" dataKey="nome" fontSize={10} width={80} />
-              <Tooltip formatter={(v: any) => brl(Number(v))} />
-              <Bar dataKey="valor" fill="hsl(215 85% 55%)" />
-            </BarChart>
-          </ResponsiveContainer>
+          <Suspense fallback={<ChartFallback />}>
+            <TcoCentroBarChart rows={rows} formatValue={brl} />
+          </Suspense>
         )}
       </CardContent>
     </Card>
