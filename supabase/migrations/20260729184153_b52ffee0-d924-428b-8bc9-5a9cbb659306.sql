@@ -1,0 +1,1 @@
+ALTER TABLE public.ativos ADD COLUMN IF NOT EXISTS marca text, ADD COLUMN IF NOT EXISTS modelo text;
