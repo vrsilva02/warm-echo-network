@@ -130,15 +130,10 @@ export function AppSidebar() {
             <SidebarMenu>
               {fase2Visible.map((item) => (
                 <SidebarMenuItem key={item.url}>
-                  <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={`${item.title} (em breve)`}>
+                  <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={item.title}>
                     <Link to={item.url}>
                       <item.icon />
                       <span>{item.title}</span>
-                      {!collapsed && (
-                        <Badge variant="secondary" className="ml-auto text-[9px]">
-                          em breve
-                        </Badge>
-                      )}
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
