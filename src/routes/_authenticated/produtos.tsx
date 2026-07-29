@@ -201,7 +201,7 @@ function Page() {
             <Label>Tipo</Label>
             <Select value={form.tipo_licenciamento} onValueChange={(v) => setForm({ ...form, tipo_licenciamento: v })}>
               <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>{TIPOS.map((t) => <SelectItem key={t} value={t}>{t.replace("_", " ")}</SelectItem>)}</SelectContent>
+              <SelectContent>{TIPOS.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
             </Select>
           </div>
         </div>
