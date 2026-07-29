@@ -10,15 +10,37 @@ type InviteInput = {
   redirectTo?: string;
 };
 
+/**
+ * Só aceitamos caminhos internos no redirectTo do convite.
+ * Isso evita "open redirect": um atacante não consegue fazer o e-mail de convite
+ * apontar para um domínio externo de phishing.
+ */
+function safeRedirectPath(value: unknown): string | undefined {
+  if (typeof value !== "string" || value.length === 0) return undefined;
+  try {
+    const url = new URL(value, "http://localhost");
+    // Rejeita URLs absolutas para outro host e caminhos protocol-relative (//evil.com)
+    if (/^[a-z][a-z0-9+.-]*:/i.test(value) || value.startsWith("//")) return undefined;
+    if (url.pathname.length > 512) return undefined;
+    return `${url.pathname}${url.search}`;
+  } catch {
+    return undefined;
+  }
+}
+
 function validate(input: unknown): InviteInput {
   const v = input as Partial<InviteInput> | undefined;
   const email = (v?.email ?? "").trim().toLowerCase();
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error("E-mail inválido");
+  if (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error("E-mail inválido");
   const allowed: AppRole[] = ["admin", "gestor_ti", "padrao", "visitante"];
-  const roles = Array.isArray(v?.roles) ? (v!.roles as AppRole[]).filter((r) => allowed.includes(r)) : [];
+  const roles = Array.isArray(v?.roles)
+    ? Array.from(new Set((v!.roles as AppRole[]).filter((r) => allowed.includes(r))))
+    : [];
   if (roles.length === 0) throw new Error("Selecione ao menos um perfil");
-  const nome = typeof v?.nome === "string" ? v!.nome.trim() : undefined;
-  const redirectTo = typeof v?.redirectTo === "string" ? v!.redirectTo : undefined;
+  let nome = typeof v?.nome === "string" ? v!.nome.trim().replace(/[\u0000-\u001f<>]/g, "") : undefined;
+  if (nome && nome.length > 120) nome = nome.slice(0, 120);
+  if (nome === "") nome = undefined;
+  const redirectTo = safeRedirectPath(v?.redirectTo);
   return { email, nome, roles, redirectTo };
 }
 
