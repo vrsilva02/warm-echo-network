@@ -90,7 +90,7 @@ export function BulkImportDialog<Row extends Record<string, string>, Report>(
       label: props.title,
       total: rows.length,
       successToast: props.successToast,
-      run: (onProgress) => props.runImport(rows, onProgress),
+      run: (onProgress, setPhase) => props.runImport(rows, onProgress, setPhase),
       onDone: props.onDone,
     });
     reset();

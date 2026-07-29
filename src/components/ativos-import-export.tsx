@@ -14,7 +14,9 @@ import { downloadXLSX } from "@/lib/export";
 import { logAction } from "@/lib/audit";
 import { friendlyError } from "@/lib/errors";
 import { BulkImportDialog, BulkMetric } from "@/components/bulk-import-dialog";
-import { useLatestBulkJob } from "@/lib/bulk-import";
+import { useLatestBulkJob, chunk } from "@/lib/bulk-import";
+import { fetchAll } from "@/lib/fetch-all";
+
 
 /**
  * Colunas do template de importação em massa de ativos.
