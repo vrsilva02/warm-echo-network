@@ -61,12 +61,14 @@ class Manager {
   }
 
   acknowledge(scope: string) {
-    const job = this.getLatest(scope);
-    if (job && job.status !== "running") {
-      job.acknowledged = true;
+    const id = this.latestByScope.get(scope);
+    const job = id ? this.jobs.get(id) : undefined;
+    if (id && job && job.status !== "running") {
+      this.jobs.set(id, { ...job, acknowledged: true });
       this.emit();
     }
   }
+
 
   start<R>(opts: {
     scope: string;
