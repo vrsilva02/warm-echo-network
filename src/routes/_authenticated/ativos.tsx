@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/page-header";
 import { AdvancedTable, type Column, type SavedView } from "@/components/advanced-table";
@@ -17,9 +17,13 @@ import { useAuth } from "@/lib/auth";
 import { logAction } from "@/lib/audit";
 import { useConfirm } from "@/components/confirm-dialog";
 import { Combobox } from "@/components/combobox";
-import { AtivosImportExport } from "@/components/ativos-import-export";
+
 import { EdrBadge, useGapEdrSet } from "@/components/edr-badge";
 import { Link } from "@tanstack/react-router";
+
+const AtivosImportExport = lazy(() =>
+  import("@/components/ativos-import-export").then((m) => ({ default: m.AtivosImportExport })),
+);
 
 export const Route = createFileRoute("/_authenticated/ativos")({
   component: AtivosPage,
@@ -289,6 +293,7 @@ function AtivosPage() {
         description="Notebooks, desktops, servidores e VDIs — com ciclo de vida controlado."
         actions={
           <div className="flex items-center gap-2">
+            <Suspense fallback={null}>
             <AtivosImportExport
               canWrite={canWrite}
               onImported={() => {
@@ -296,6 +301,7 @@ function AtivosPage() {
                 qc.invalidateQueries({ queryKey: ["dashboard"] });
               }}
             />
+            </Suspense>
             {canWrite && <Button size="sm" onClick={openNew}>Novo ativo</Button>}
           </div>
         }

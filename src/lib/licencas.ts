@@ -131,3 +131,10 @@ export async function criarAlocacao(input: {
   }
   return { ok: true, deficit };
 }
+
+/** True quando o produto usa chave por dispositivo (OEM/Retail) e cada alocação precisa da sua própria chave. */
+export function isChaveIndividualRequired(p: { modelo_licenciamento?: string | null; tipo_licenciamento?: string | null } | null | undefined): boolean {
+  if (!p) return false;
+  const s = `${p.modelo_licenciamento ?? ""} ${p.tipo_licenciamento ?? ""}`.toLowerCase();
+  return /(^|\W)(oem|retail)(\W|$)/.test(s);
+}

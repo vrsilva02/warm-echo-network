@@ -16,6 +16,7 @@ import { Boxes, Pencil, Trash2, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
 import { useConfirm } from "@/components/confirm-dialog";
+import { criticidadeTone } from "@/lib/status-tones";
 
 export const Route = createFileRoute("/_authenticated/servicos")({
   component: Page,
@@ -37,12 +38,6 @@ type Row = {
 const CRIT = ["baixa", "media", "alta", "critica"];
 const initial = { nome: "", criticidade: "media", responsavel_id: null as string | null };
 
-export function criticidadeTone(c: string | null | undefined): StatusTone {
-  if (c === "critica") return "critical";
-  if (c === "alta") return "warn";
-  if (c === "media") return "info";
-  return "neutral";
-}
 
 function Page() {
   const { canWrite } = useAuth();

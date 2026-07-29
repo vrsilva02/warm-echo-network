@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 // (Dialog imported below)
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useMemo, useState, lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,10 +24,14 @@ import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
 import { useConfirm } from "@/components/confirm-dialog";
 import { logAction } from "@/lib/audit";
-import { encerrarAlocacao, encerrarAlocacoes, criarAlocacao } from "@/lib/licencas";
+import { encerrarAlocacao, encerrarAlocacoes, criarAlocacao, isChaveIndividualRequired } from "@/lib/licencas";
 import { friendlyError } from "@/lib/errors";
 import { MaskedKey } from "@/components/masked-key";
-import { LicencasImportExport } from "@/components/licencas-import-export";
+
+const LicencasImportExport = lazy(() =>
+  import("@/components/licencas-import-export").then((m) => ({ default: m.LicencasImportExport })),
+);
+
 
 export const Route = createFileRoute("/_authenticated/licencas")({
   component: Page,
@@ -59,12 +63,6 @@ type ProdutoAgg = ElpRow & {
 
 type StatusFiltro = "todos" | "ativa" | "inativa" | "vencida";
 
-/** True quando o produto usa chave por dispositivo (OEM/Retail) e cada alocação precisa da sua própria chave. */
-export function isChaveIndividualRequired(p: { modelo_licenciamento?: string | null; tipo_licenciamento?: string | null } | null | undefined): boolean {
-  if (!p) return false;
-  const s = `${p.modelo_licenciamento ?? ""} ${p.tipo_licenciamento ?? ""}`.toLowerCase();
-  return /(^|\W)(oem|retail)(\W|$)/.test(s);
-}
 
 function statusLicenca(p: ProdutoAgg): StatusFiltro {
   const hoje = new Date().toISOString().slice(0, 10);
@@ -151,6 +149,7 @@ function Page() {
         description="Visão por categoria e SKU, atribuições ativas e histórico."
         actions={
           <div className="flex items-center gap-2">
+            <Suspense fallback={null}>
             <LicencasImportExport
               canWrite={canWrite}
               onImported={() => {
@@ -158,6 +157,7 @@ function Page() {
                 qc.invalidateQueries({ queryKey: ["dashboard"] });
               }}
             />
+            </Suspense>
 
             {canWrite && (
               <Button size="sm" onClick={() => { setEditingLicId(null); setDefaultCategoria(tab === "todas" ? null : tab); setNewLicOpen(true); }}>

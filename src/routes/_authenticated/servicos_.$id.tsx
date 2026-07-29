@@ -14,7 +14,7 @@ import { Trash2, Plus, AlertTriangle, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
 import { logAction } from "@/lib/audit";
-import { criticidadeTone } from "./servicos";
+import { criticidadeTone } from "@/lib/status-tones";
 
 export const Route = createFileRoute("/_authenticated/servicos_/$id")({
   component: Page,
