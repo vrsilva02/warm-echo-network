@@ -31,7 +31,12 @@ export type BulkImportDialogProps<Row, Report> = {
   renderPreviewCell: (row: Row, col: string) => React.ReactNode;
   renderReport: (report: Report) => React.ReactNode;
   onTemplate: () => void;
-  runImport: (rows: Row[], onProgress: (n: number) => void) => Promise<Report>;
+  runImport: (
+    rows: Row[],
+    onProgress: (n: number) => void,
+    setPhase: (p: string) => void,
+  ) => Promise<Report>;
+
   successToast: (report: Report) => string;
   onDone?: (report: Report) => void;
 };
