@@ -287,29 +287,37 @@ function AnexosCard({ osId, canOperate, uploaderId }: { osId: string; canOperate
 
   async function upload(file: File) {
     if (!uploaderId) return toast.error("Sessão inválida.");
+    if (file.size === 0) return toast.error("Arquivo vazio.");
     if (file.size > 20 * 1024 * 1024) return toast.error("Arquivo maior que 20 MB.");
     setBusy(true);
+    let uploadedPath: string | null = null;
     try {
-      const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+      const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, "_").slice(-120);
       const path = `${osId}/${Date.now()}_${safe}`;
       const { error: upErr } = await supabase.storage
         .from("os-evidencias")
         .upload(path, file, { contentType: file.type || undefined, upsert: false });
       if (upErr) throw upErr;
+      uploadedPath = path;
       const { error: insErr } = await (supabase as any).from("ordens_servico_anexos").insert({
         ordem_servico_id: osId,
         storage_path: path,
-        nome_arquivo: file.name,
+        nome_arquivo: file.name.slice(0, 200),
         mime_type: file.type || null,
         tamanho_bytes: file.size,
-        descricao: descricao || null,
+        descricao: descricao.trim().slice(0, 500) || null,
         uploaded_by: uploaderId,
       });
       if (insErr) throw insErr;
+      uploadedPath = null;
       toast.success("Evidência anexada");
       setDescricao("");
       qc.invalidateQueries({ queryKey: ["os_anexos", osId] });
     } catch (e: any) {
+      // Evita arquivo órfão no storage quando o registro no banco falha
+      if (uploadedPath) {
+        await supabase.storage.from("os-evidencias").remove([uploadedPath]).catch(() => {});
+      }
       toast.error(e?.message ?? "Falha no upload");
     } finally {
       setBusy(false);
@@ -317,23 +325,30 @@ function AnexosCard({ osId, canOperate, uploaderId }: { osId: string; canOperate
   }
 
   async function baixar(path: string, nome: string) {
-    const { data, error } = await supabase.storage.from("os-evidencias").createSignedUrl(path, 60);
-    if (error || !data) return toast.error("Não foi possível abrir o arquivo");
-    const a = document.createElement("a");
-    a.href = data.signedUrl;
-    a.download = nome;
-    a.target = "_blank";
-    a.rel = "noopener";
-    a.click();
+    try {
+      const { data, error } = await supabase.storage.from("os-evidencias").createSignedUrl(path, 60);
+      if (error || !data) throw error ?? new Error("sem url");
+      const a = document.createElement("a");
+      a.href = data.signedUrl;
+      a.download = nome;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      a.click();
+    } catch {
+      toast.error("Não foi possível abrir o arquivo");
+    }
   }
 
   async function remover(id: string, path: string) {
     if (!confirm("Remover esta evidência?")) return;
-    await supabase.storage.from("os-evidencias").remove([path]);
+    // Remove primeiro o registro (protegido por RLS); só então apaga o binário.
     const { error } = await (supabase as any).from("ordens_servico_anexos").delete().eq("id", id);
     if (error) return toast.error(error.message);
+    const { error: sErr } = await supabase.storage.from("os-evidencias").remove([path]);
+    if (sErr) toast.warning("Registro removido, mas o arquivo permaneceu no armazenamento.");
     qc.invalidateQueries({ queryKey: ["os_anexos", osId] });
   }
+
 
   function fmtSize(n: number | null) {
     if (!n) return "—";
