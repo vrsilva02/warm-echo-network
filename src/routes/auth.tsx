@@ -1,4 +1,4 @@
-import { createFileRoute, Navigate, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Navigate, useNavigate, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Loader2, ShieldCheck, ArrowLeft } from "lucide-react";
 import mtrLogo from "@/assets/mtr2-tech-logo.png.asset.json";
+import { emailSchema, passwordSchema } from "@/lib/sanitize";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
@@ -41,8 +42,15 @@ function AuthPage() {
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
+    const parsedEmail = emailSchema.safeParse(email);
+    if (!parsedEmail.success) return toast.error(parsedEmail.error.issues[0]?.message ?? "E-mail inválido");
+    const parsedPw = passwordSchema.safeParse(password);
+    if (!parsedPw.success) return toast.error(parsedPw.error.issues[0]?.message ?? "Senha inválida");
     setBusy(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await supabase.auth.signInWithPassword({
+      email: parsedEmail.data,
+      password: parsedPw.data,
+    });
     setBusy(false);
     if (error) return toast.error(error.message);
     toast.success("Bem-vindo");
@@ -51,9 +59,10 @@ function AuthPage() {
 
   async function handleForgot(e: React.FormEvent) {
     e.preventDefault();
-    if (!email) return toast.error("Informe seu e-mail.");
+    const parsedEmail = emailSchema.safeParse(email);
+    if (!parsedEmail.success) return toast.error(parsedEmail.error.issues[0]?.message ?? "E-mail inválido");
     setBusy(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    const { error } = await supabase.auth.resetPasswordForEmail(parsedEmail.data, {
       redirectTo: `${window.location.origin}/reset-password`,
     });
     setBusy(false);
@@ -134,9 +143,15 @@ function AuthPage() {
             )}
           </CardContent>
         </Card>
-        <div className="mt-6 flex flex-col items-center gap-1 opacity-70">
+        <div className="mt-6 flex flex-col items-center gap-2 opacity-80">
           <span className="text-[10px] uppercase tracking-widest text-muted-foreground">Powered by</span>
           <img src={mtrLogo.url} alt="MTR2.TECH" className="h-6 w-auto invert dark:invert-0" />
+          <Link
+            to="/privacidade"
+            className="mt-2 text-[11px] text-muted-foreground hover:text-foreground underline underline-offset-2"
+          >
+            Política de Privacidade · LGPD
+          </Link>
         </div>
       </div>
     </div>
