@@ -119,7 +119,7 @@ function DashboardPage() {
     <>
       <PageHeader title="Dashboard" description="Posição efetiva de licenças, contratos e ativos em tempo real." />
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5 mb-6">
         <KpiCard title="Licenças Windows" value={totais.Windows ?? 0} icon={<KeySquare className="h-4 w-4" />} hint="Soma de seats comprados em contratos ativos para produtos da categoria Windows." />
         <KpiCard title="Licenças Office" value={totais.Office ?? 0} icon={<KeySquare className="h-4 w-4" />} hint="Soma de seats comprados em contratos ativos para produtos da categoria Office." />
         <KpiCard title="Licenças EDR" value={totais.EDR ?? 0} icon={<KeySquare className="h-4 w-4" />} hint="Soma de seats comprados em contratos ativos para produtos de EDR/segurança." />
@@ -131,7 +131,7 @@ function DashboardPage() {
         />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5 mb-6">
         <KpiCard
           title="Contratos vencendo em 30 dias"
           value={data?.contratosVencendo30 ?? 0}
@@ -158,7 +158,7 @@ function DashboardPage() {
         />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5 mb-6">
         <KpiCard title="OS abertas" value={data?.osAbertasCount ?? 0} icon={<Wrench className="h-4 w-4 text-[color:var(--info)]" />} hint="Ordens de serviço com status aberta ou em andamento." />
         <KpiCard title="OS aguardando peça" value={data?.osAguardandoPecaCount ?? 0} icon={<Wrench className="h-4 w-4 text-[color:var(--warning)]" />} hint="Reparos pausados aguardando reposição de peça no estoque." />
         <KpiCard title="Peças em reposição" value={data?.pecasReposicaoCount ?? 0} icon={<Package className="h-4 w-4 text-[color:var(--warning)]" />} hint="Peças cujo saldo está abaixo do estoque mínimo." />
@@ -166,13 +166,13 @@ function DashboardPage() {
       </div>
 
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5 mb-6">
         <CustoOciosasCard valor={data?.custoOciosasMensal ?? 0} />
         <GapEdrCard count={data?.gapEdrCount ?? 0} />
         <TcoPorCentroCard tco={data?.tco ?? []} ativos={(data?.ativos ?? []) as any[]} />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-5 mb-6">
         <Card>
           <CardHeader><CardTitle className="text-sm">Top 5 produtos por valor ocioso</CardTitle></CardHeader>
           <CardContent>
@@ -232,7 +232,7 @@ function DashboardPage() {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-5 mb-6">
         <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle className="text-sm">Compradas × Alocadas por produto</CardTitle>
@@ -333,14 +333,14 @@ function DashboardPage() {
 
 function KpiCard({ title, value, icon, hint }: { title: string; value: number | string; icon: React.ReactNode; hint?: string }) {
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
-          {title}
+    <Card className="elevate min-w-0">
+      <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
+        <CardTitle className="eyebrow flex min-w-0 flex-1 items-start gap-1.5 pt-0.5 text-[0.6875rem] leading-[1.35]">
+          <span className="min-w-0">{title}</span>
           {hint && (
             <UITooltip>
               <TooltipTrigger asChild>
-                <button type="button" aria-label="Sobre este indicador" className="text-muted-foreground/60 hover:text-foreground">
+                <button type="button" aria-label="Sobre este indicador" className="shrink-0 text-muted-foreground/60 hover:text-foreground">
                   <Info className="h-3.5 w-3.5" />
                 </button>
               </TooltipTrigger>
@@ -348,10 +348,12 @@ function KpiCard({ title, value, icon, hint }: { title: string; value: number | 
             </UITooltip>
           )}
         </CardTitle>
-        <span className="text-muted-foreground">{icon}</span>
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted/70 text-muted-foreground">
+          {icon}
+        </span>
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-semibold tabular-nums">{value}</div>
+        <div className="metric text-[1.75rem] leading-none">{value}</div>
       </CardContent>
     </Card>
   );
