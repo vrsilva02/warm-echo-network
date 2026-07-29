@@ -54,7 +54,7 @@ describe("parseTabularFile com template XLSX", () => {
   });
 
   it("mantém números como texto (quantidade, custo) sem perder precisão", async () => {
-    const linha = LICENCAS_COLUMNS.map((c) =>
+    const linha: (string | number)[] = LICENCAS_COLUMNS.map((c) =>
       c === "quantidade" ? 50 : c === "custo_unitario" ? 45.9 : "",
     );
     linha[0] = "Microsoft";
