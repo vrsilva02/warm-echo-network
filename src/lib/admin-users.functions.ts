@@ -52,29 +52,40 @@ export const inviteUser = createServerFn({ method: "POST" })
       _user_id: context.userId,
       _role: "admin",
     });
-    if (rerr) throw new Error(rerr.message);
+    if (rerr) throw new Error("Não foi possível validar suas permissões.");
     if (!isAdmin) throw new Error("Apenas administradores podem convidar usuários.");
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
+    // Reconstrói o destino do convite sempre a partir da origem desta requisição,
+    // nunca a partir de um host enviado pelo cliente.
+    let redirectTo: string | undefined;
+    if (data.redirectTo) {
+      const { getWebRequest } = await import("@tanstack/react-start/server");
+      const origin = new URL(getWebRequest().url).origin;
+      redirectTo = `${origin}${data.redirectTo}`;
+    }
+
     const { data: invited, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(data.email, {
       data: data.nome ? { nome: data.nome } : undefined,
-      redirectTo: data.redirectTo,
+      redirectTo,
     });
     if (error) throw new Error(error.message);
     const newUserId = invited.user?.id;
     if (!newUserId) throw new Error("Falha ao criar usuário convidado.");
 
     // handle_new_user trigger cria profile + role default 'visitante'. Ajusta para as roles escolhidas.
-    await supabaseAdmin.from("user_roles").delete().eq("user_id", newUserId);
+    const { error: derr } = await supabaseAdmin.from("user_roles").delete().eq("user_id", newUserId);
+    if (derr) throw new Error("Convite criado, mas falhou ao ajustar os perfis do usuário.");
     const { error: ierr } = await supabaseAdmin
       .from("user_roles")
       .insert(data.roles.map((role) => ({ user_id: newUserId, role })));
-    if (ierr) throw new Error(ierr.message);
+    if (ierr) throw new Error("Convite criado, mas falhou ao aplicar os perfis do usuário.");
 
     if (data.nome) {
       await supabaseAdmin.from("profiles").update({ nome: data.nome }).eq("id", newUserId);
     }
+
 
     return { ok: true, userId: newUserId, email: data.email };
   });
