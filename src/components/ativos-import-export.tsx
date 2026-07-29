@@ -186,11 +186,11 @@ async function importarLinhas(
   // Gravação em lotes — 1 requisição a cada BATCH linhas em vez de 1 por linha.
   setPhase(`Inserindo ${inserts.length} novo(s) ativo(s)…`);
   for (const lote of chunk(inserts, BATCH)) {
-    const { error } = await supabase.from("ativos").insert(lote.map((p) => p.payload));
+    const { error } = await supabase.from("ativos").insert(lote.map((p) => p.payload) as any);
     if (error) {
       // Fallback linha a linha apenas no lote com problema, para isolar o erro.
       for (const p of lote) {
-        const { error: e2 } = await supabase.from("ativos").insert(p.payload);
+        const { error: e2 } = await supabase.from("ativos").insert(p.payload as any);
         if (e2) rep.erros.push({ linha: p.linha, motivo: `Inserir: ${friendlyError(e2)}` });
         else rep.inseridos++;
         onProgress(++feitos);
@@ -206,10 +206,10 @@ async function importarLinhas(
   for (const lote of chunk(updates, BATCH)) {
     const { error } = await supabase
       .from("ativos")
-      .upsert(lote.map((p) => ({ id: p.id, ...p.payload })), { onConflict: "id" });
+      .upsert(lote.map((p) => ({ id: p.id, ...p.payload })) as any, { onConflict: "id" });
     if (error) {
       for (const p of lote) {
-        const { error: e2 } = await supabase.from("ativos").update(p.payload).eq("id", p.id!);
+        const { error: e2 } = await supabase.from("ativos").update(p.payload as any).eq("id", p.id!);
         if (e2) rep.erros.push({ linha: p.linha, motivo: `Atualizar: ${friendlyError(e2)}` });
         else rep.atualizados++;
         onProgress(++feitos);
