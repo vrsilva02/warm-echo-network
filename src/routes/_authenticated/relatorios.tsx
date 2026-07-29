@@ -14,7 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { EmptyState } from "@/components/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Download, FileText, Save, Repeat, Trash2, Play } from "lucide-react";
-import { downloadCSV, downloadPDF } from "@/lib/export";
+import { downloadXLSX, downloadPDF } from "@/lib/export";
 import { logAction } from "@/lib/audit";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
@@ -396,7 +396,7 @@ function ReportRunner({ tipo, filters, onSaveRecurring }: { tipo: ReportType; fi
         <div className="flex gap-2 flex-wrap">
           <Button size="sm" variant="outline" onClick={() => refetch()}><Play className="h-4 w-4" /> Executar</Button>
           <Button size="sm" variant="outline" disabled={rows.length === 0} onClick={() => {
-            downloadCSV(`${tipo}-${stamp}.csv`, columns, rows);
+            downloadXLSX(`${tipo}-${stamp}.xlsx`, columns, rows);
             void logAction("EXPORT", tipo, { formato: "csv", total: rows.length, filtros: filters });
           }}><Download className="h-4 w-4" /> CSV</Button>
           <Button size="sm" disabled={rows.length === 0} onClick={() => {

@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Download, Eye, FileText, History, Loader2 } from "lucide-react";
-import { downloadCSV, downloadPDF } from "@/lib/export";
+import { downloadXLSX, downloadPDF } from "@/lib/export";
 
 export const Route = createFileRoute("/_authenticated/auditoria")({
   component: Page,
@@ -165,7 +165,7 @@ function Page() {
         <Input type="date" value={desde} onChange={(e) => setDesde(e.target.value)} />
         <Input type="date" value={ate} onChange={(e) => setAte(e.target.value)} />
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={() => downloadCSV(`auditoria_${desde}_${ate}.csv`, cols, exportRows())}>
+          <Button variant="outline" size="sm" onClick={() => downloadXLSX(`auditoria_${desde}_${ate}.xlsx`, cols, exportRows())}>
             <Download className="h-4 w-4 mr-1" /> CSV
           </Button>
           <Button variant="outline" size="sm" onClick={() =>

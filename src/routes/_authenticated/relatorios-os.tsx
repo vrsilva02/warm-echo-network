@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Combobox } from "@/components/combobox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { downloadCSV } from "@/lib/export";
+import { downloadXLSX } from "@/lib/export";
 import { Download, FileBarChart } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/relatorios-os")({
@@ -117,7 +117,7 @@ function Page() {
         r.descricao_defeito,
       ];
     });
-    downloadCSV(`ordens-servico_${de}_${ate}.csv`, cols, body);
+    downloadXLSX(`ordens-servico_${de}_${ate}.xlsx`, cols, body);
   }
 
   const ativoOpts = (ativos ?? []).map((a) => ({ value: a.id, label: a.hostname }));

@@ -7,7 +7,7 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLab
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Search, Columns3, Download, ArrowUp, ArrowDown, ArrowUpDown, X, ChevronUp, ChevronDown } from "lucide-react";
 import { TableSkeleton } from "@/components/skeletons";
-import { downloadCSV } from "@/lib/export";
+import { downloadXLSX } from "@/lib/export";
 import { logAction } from "@/lib/audit";
 
 export type Column<T> = {
@@ -173,7 +173,7 @@ export function AdvancedTable<T>({
       const v = c.exportValue ? c.exportValue(r) : c.searchValue ? c.searchValue(r) : "";
       return v ?? "";
     }));
-    downloadCSV(`${exportFilename ?? storageKey}-${new Date().toISOString().slice(0, 10)}.csv`, header, body);
+    downloadXLSX(`${exportFilename ?? storageKey}-${new Date().toISOString().slice(0, 10)}.xlsx`, header, body);
     void logAction("EXPORT", storageKey, {
       formato: "csv",
       total_registros: processed.length,
