@@ -116,72 +116,67 @@ function Page() {
   async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (!/\.xlsx$/i.test(file.name)) {
+      toast.error("Formato inválido. Envie um arquivo .xlsx.");
+      e.target.value = "";
+      return;
+    }
     setBusy(true);
-    const { default: Papa } = await import("papaparse");
-    Papa.parse<Record<string, string>>(file, {
-      header: true,
-      skipEmptyLines: true,
-      complete: async (res) => {
-        try {
-          const linhas = res.data.filter((r) => Object.keys(r).length > 0);
-          if (linhas.length === 0) {
-            toast.error("CSV vazio.");
-            return;
-          }
-          // colunas aceitas (case-insensitive)
-          const getCol = (row: any, ...names: string[]) => {
-            for (const n of names) {
-              const key = Object.keys(row).find((k) => k.toLowerCase().trim() === n.toLowerCase());
-              if (key && row[key]) return String(row[key]).trim();
-            }
-            return "";
-          };
-
-          const registros = linhas
-            .map((row) => {
-              const produto_nome_bruto = getCol(row, "produto", "software", "product", "nome");
-              if (!produto_nome_bruto) return null;
-              const hostname = getCol(row, "hostname", "host", "computador", "device") || null;
-              const ultima = getCol(row, "ultima_comunicacao", "last_seen", "last_communication");
-              return {
-                origem,
-                hostname,
-                produto_nome_bruto,
-                produto_id: matchProduto(produto_nome_bruto),
-                data_ultima_comunicacao: ultima ? new Date(ultima).toISOString() : null,
-                reconciliado: !!matchProduto(produto_nome_bruto),
-              };
-            })
-            .filter(Boolean) as any[];
-
-          if (registros.length === 0) {
-            toast.error("Nenhuma linha válida encontrada. Verifique se há coluna produto/software.");
-            return;
-          }
-
-          // Insert em lotes de 500
-          for (let i = 0; i < registros.length; i += 500) {
-            const chunk = registros.slice(i, i + 500);
-            const { error } = await supabase.from("inventario_importado").insert(chunk);
-            if (error) throw error;
-          }
-          const rec = registros.filter((r) => r.reconciliado).length;
-          toast.success(`${registros.length} linhas importadas · ${rec} reconciliadas automaticamente`);
-          qc.invalidateQueries({ queryKey: ["inventario"] });
-          qc.invalidateQueries({ queryKey: ["dashboard"] });
-        } catch (err: any) {
-          toast.error(err?.message ?? "Falha na importação");
-        } finally {
-          setBusy(false);
-          e.target.value = "";
+    try {
+      const { parseTabularFile } = await import("@/lib/import-parser");
+      const parsed = await parseTabularFile(file);
+      const linhas = parsed.rows.filter((r) => Object.keys(r).length > 0);
+      if (linhas.length === 0) {
+        toast.error("Planilha vazia.");
+        return;
+      }
+      const getCol = (row: any, ...names: string[]) => {
+        for (const n of names) {
+          const key = Object.keys(row).find((k) => k.toLowerCase().trim() === n.toLowerCase());
+          if (key && row[key]) return String(row[key]).trim();
         }
-      },
-      error: (err) => {
-        toast.error(err.message);
-        setBusy(false);
-      },
-    });
+        return "";
+      };
+
+      const registros = linhas
+        .map((row) => {
+          const produto_nome_bruto = getCol(row, "produto", "software", "product", "nome");
+          if (!produto_nome_bruto) return null;
+          const hostname = getCol(row, "hostname", "host", "computador", "device") || null;
+          const ultima = getCol(row, "ultima_comunicacao", "last_seen", "last_communication");
+          return {
+            origem,
+            hostname,
+            produto_nome_bruto,
+            produto_id: matchProduto(produto_nome_bruto),
+            data_ultima_comunicacao: ultima ? new Date(ultima).toISOString() : null,
+            reconciliado: !!matchProduto(produto_nome_bruto),
+          };
+        })
+        .filter(Boolean) as any[];
+
+      if (registros.length === 0) {
+        toast.error("Nenhuma linha válida encontrada. Verifique se há coluna produto/software.");
+        return;
+      }
+
+      for (let i = 0; i < registros.length; i += 500) {
+        const chunk = registros.slice(i, i + 500);
+        const { error } = await supabase.from("inventario_importado").insert(chunk);
+        if (error) throw error;
+      }
+      const rec = registros.filter((r) => r.reconciliado).length;
+      toast.success(`${registros.length} linhas importadas · ${rec} reconciliadas automaticamente`);
+      qc.invalidateQueries({ queryKey: ["inventario"] });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+    } catch (err: any) {
+      toast.error(err?.message ?? "Falha na importação");
+    } finally {
+      setBusy(false);
+      e.target.value = "";
+    }
   }
+
 
   async function reconciliarPendentes() {
     const pendentes = (rows ?? []).filter((r) => !r.reconciliado);
@@ -254,7 +249,7 @@ function Page() {
       {canWrite && (
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle className="text-sm">Importar CSV</CardTitle>
+            <CardTitle className="text-sm">Importar planilha (.xlsx)</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <p className="text-xs text-muted-foreground">
@@ -274,8 +269,8 @@ function Page() {
                 </Select>
               </div>
               <div className="sm:col-span-2">
-                <Label>Arquivo CSV</Label>
-                <Input type="file" accept=".csv,text/csv" onChange={onFile} disabled={busy} />
+                <Label>Arquivo XLSX</Label>
+                <Input type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onChange={onFile} disabled={busy} />
               </div>
             </div>
             <div className="flex gap-2 flex-wrap">
