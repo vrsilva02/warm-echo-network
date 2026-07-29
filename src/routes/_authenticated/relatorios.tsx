@@ -397,7 +397,7 @@ function ReportRunner({ tipo, filters, onSaveRecurring }: { tipo: ReportType; fi
           <Button size="sm" variant="outline" onClick={() => refetch()}><Play className="h-4 w-4" /> Executar</Button>
           <Button size="sm" variant="outline" disabled={rows.length === 0} onClick={() => {
             downloadXLSX(`${tipo}-${stamp}.xlsx`, columns, rows);
-            void logAction("EXPORT", tipo, { formato: "csv", total: rows.length, filtros: filters });
+            void logAction("EXPORT", tipo, { formato: "xlsx", total: rows.length, filtros: filters });
           }}><Download className="h-4 w-4" /> XLSX</Button>
           <Button size="sm" disabled={rows.length === 0} onClick={() => {
             downloadPDF({ filename: `${tipo}-${stamp}.pdf`, title: meta.title, subtitle: filterLabel, columns, rows });
@@ -447,7 +447,7 @@ function RecurringDialog({
   const qc = useQueryClient();
   const [nome, setNome] = useState(REPORT_META[tipo].title);
   const [freq, setFreq] = useState<"diario" | "semanal" | "mensal">("mensal");
-  const [formato, setFormato] = useState<"csv" | "pdf">("pdf");
+  const [formato, setFormato] = useState<"xlsx" | "pdf">("pdf");
   const [destinatarios, setDestinatarios] = useState("");
   const [busy, setBusy] = useState(false);
 
