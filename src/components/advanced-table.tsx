@@ -189,17 +189,17 @@ export function AdvancedTable<T>({
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+        <div className="flex flex-wrap items-center gap-2 min-w-0">
           {searchable && (
             <div className="relative w-full sm:w-72">
-              <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder={searchPlaceholder} value={query} onChange={(e) => setQuery(e.target.value)} className="pl-8" />
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden />
+              <Input placeholder={searchPlaceholder} value={query} onChange={(e) => setQuery(e.target.value)} className="pl-8" aria-label={searchPlaceholder} />
             </div>
           )}
           {savedViews && savedViews.length > 0 && (
-            <div className="flex flex-wrap gap-1">
-              <Button size="sm" variant={activeView ? "outline" : "secondary"} onClick={() => pickView(null)}>Todos</Button>
+            <div className="flex flex-wrap gap-1" role="tablist" aria-label="Visualizações salvas">
+              <Button size="sm" variant={activeView ? "outline" : "secondary"} onClick={() => pickView(null)} role="tab" aria-selected={!activeView}>Todos</Button>
               {savedViews.map((v) => (
                 <Button
                   key={v.id}
@@ -207,6 +207,8 @@ export function AdvancedTable<T>({
                   variant={activeView?.id === v.id ? "secondary" : "outline"}
                   onClick={() => pickView(v.id)}
                   className="gap-1"
+                  role="tab"
+                  aria-selected={activeView?.id === v.id}
                 >
                   {v.label}
                 </Button>
@@ -278,12 +280,18 @@ export function AdvancedTable<T>({
                 {visibleColumns.map((c) => {
                   const sortState = prefs.sort?.id === c.id ? prefs.sort.dir : null;
                   const sortable = !!c.sortValue;
+                  const ariaSort = sortState === "asc" ? "ascending" : sortState === "desc" ? "descending" : sortable ? "none" : undefined;
                   return (
-                    <TableHead key={c.id} className={c.numeric ? "text-right" : undefined}>
+                    <TableHead key={c.id} className={c.numeric ? "text-right" : undefined} aria-sort={ariaSort}>
                       {sortable ? (
-                        <button className="inline-flex items-center gap-1 hover:text-foreground" onClick={() => toggleSort(c.id)}>
+                        <button
+                          type="button"
+                          className="inline-flex items-center gap-1 rounded-sm px-1 -mx-1 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          onClick={() => toggleSort(c.id)}
+                          aria-label={`Ordenar por ${c.header}${sortState === "asc" ? " (crescente)" : sortState === "desc" ? " (decrescente)" : ""}`}
+                        >
                           {c.header}
-                          {sortState === "asc" ? <ArrowUp className="h-3 w-3" /> : sortState === "desc" ? <ArrowDown className="h-3 w-3" /> : <ArrowUpDown className="h-3 w-3 opacity-40" />}
+                          {sortState === "asc" ? <ArrowUp className="h-3 w-3" aria-hidden /> : sortState === "desc" ? <ArrowDown className="h-3 w-3" aria-hidden /> : <ArrowUpDown className="h-3 w-3 opacity-40" aria-hidden />}
                         </button>
                       ) : c.header}
                     </TableHead>

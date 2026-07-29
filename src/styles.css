@@ -105,7 +105,8 @@
   --secondary: oklch(0.965 0.008 250);
   --secondary-foreground: oklch(0.22 0.03 260);
   --muted: oklch(0.965 0.008 250);
-  --muted-foreground: oklch(0.5 0.02 258);
+  /* WCAG AA — 4.5:1 contra o background */
+  --muted-foreground: oklch(0.42 0.02 258);
   --accent: oklch(0.955 0.012 260);
   --accent-foreground: oklch(0.22 0.03 260);
 
@@ -169,7 +170,7 @@
   --secondary: oklch(0.27 0.03 260);
   --secondary-foreground: oklch(0.97 0.005 258);
   --muted: oklch(0.27 0.03 260);
-  --muted-foreground: oklch(0.72 0.02 258);
+  --muted-foreground: oklch(0.78 0.02 258);
   --accent: oklch(0.3 0.035 262);
   --accent-foreground: oklch(0.97 0.005 258);
   --destructive: oklch(0.7 0.19 22);
@@ -242,11 +243,34 @@
     font-feature-settings: "tnum";
   }
 
-  /* Refined focus ring */
+  /* Focus ring global — sempre visível, alto contraste, acessível */
   :focus-visible {
     outline: 2px solid var(--color-ring);
     outline-offset: 2px;
     border-radius: var(--radius-sm);
+    box-shadow: 0 0 0 4px oklch(from var(--color-ring) l c h / 0.2);
+  }
+
+  /* Skip-link e leitores de tela */
+  .sr-only-focusable:focus {
+    position: fixed;
+    top: 0.5rem;
+    left: 0.5rem;
+    z-index: 100;
+    padding: 0.5rem 0.75rem;
+    background: var(--color-background);
+    color: var(--color-foreground);
+    border: 2px solid var(--color-ring);
+    border-radius: var(--radius-md);
+  }
+
+  /* Alvos de toque mínimos em mobile (WCAG 2.5.5) */
+  @media (pointer: coarse) {
+    button:not([data-slot]):not([data-sidebar]),
+    [role="button"],
+    a[role="button"] {
+      min-height: 40px;
+    }
   }
 
   /* Premium scrollbar */
