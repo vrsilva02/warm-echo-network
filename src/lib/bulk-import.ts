@@ -17,6 +17,7 @@ export type BulkJob<R = unknown> = {
   label: string;
   total: number;
   processed: number;
+  phase?: string;
   status: BulkJobStatus;
   startedAt: number;
   finishedAt?: number;
@@ -25,7 +26,18 @@ export type BulkJob<R = unknown> = {
   acknowledged?: boolean;
 };
 
-type Runner<R> = (onProgress: (processed: number) => void) => Promise<R>;
+type Runner<R> = (
+  onProgress: (processed: number) => void,
+  setPhase: (phase: string) => void,
+) => Promise<R>;
+
+/** Divide um array em lotes de tamanho fixo (usado nas gravações em massa). */
+export function chunk<T>(arr: T[], size: number): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
+  return out;
+}
+
 
 class Manager {
   private jobs = new Map<string, BulkJob>();
