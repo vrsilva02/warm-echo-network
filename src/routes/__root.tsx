@@ -15,6 +15,7 @@ import { AuthProvider } from "@/lib/auth";
 import { Toaster } from "@/components/ui/sonner";
 import { ConfirmProvider } from "@/components/confirm-dialog";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { CookieConsent } from "@/components/cookie-consent";
 
 function NotFoundComponent() {
   return (
@@ -136,6 +137,7 @@ function RootComponent() {
           <ConfirmProvider>
             <Outlet />
             <Toaster richColors position="top-right" />
+            <CookieConsent />
           </ConfirmProvider>
         </TooltipProvider>
       </AuthProvider>
