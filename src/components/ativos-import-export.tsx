@@ -86,7 +86,7 @@ export function downloadTemplate() {
   ];
   const vazia = COLUMNS.map(() => "");
   downloadXLSX("template_ativos.xlsx", COLUMNS as unknown as string[], [exemplo, vazia]);
-  toast.success("Template baixado. Preencha e reimporte (CSV ou XLSX).");
+  toast.success("Template baixado. Preencha e reimporte em XLSX.");
 }
 
 /* ------------------------ Importar ------------------------ */
@@ -298,7 +298,7 @@ export function AtivosImportExport({ canWrite, onImported }: { canWrite: boolean
         onOpenChange={setOpen}
         scope="ativos"
         title="Importar ativos"
-        description="Envie um arquivo CSV ou XLSX seguindo o template. Ativos existentes (mesmo hostname) são atualizados; novos são criados. O responsável é vinculado quando o e-mail já existe em Usuários."
+        description="Envie um arquivo XLSX seguindo o template (inclui a coluna categoria). Ativos existentes (mesmo hostname) são atualizados; novos são criados. O responsável é vinculado quando o e-mail já existe em Usuários."
         requiredColumns={COLUMNS}
         previewColumns={["hostname", "tipo", "categoria", "marca", "modelo", "status_ciclo_vida"]}
         renderPreviewCell={(r, c) =>
