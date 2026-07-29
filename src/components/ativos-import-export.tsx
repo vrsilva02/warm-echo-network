@@ -47,12 +47,15 @@ function nz(v: string | undefined): string | null {
 /* ------------------------ Exportar ------------------------ */
 
 export async function exportAtivos() {
-  const { data, error } = await supabase
-    .from("ativos")
-    .select("hostname, tipo, numero_patrimonio, numero_serie, setor, status_ciclo_vida, usuarios(email)")
-    .order("hostname");
+  const tid = toast.loading("Preparando exportação…");
+  const { data, error } = await fetchAll<any>(
+    "ativos",
+    "hostname, tipo, numero_patrimonio, numero_serie, setor, status_ciclo_vida, usuarios(email)",
+    (q) => q.order("hostname"),
+    { onProgress: (n) => toast.loading(`Baixando dados… ${n} registro(s)`, { id: tid }) },
+  );
   if (error) {
-    toast.error(friendlyError(error));
+    toast.error(friendlyError(error), { id: tid });
     return;
   }
   const rows = (data ?? []).map((a: any) => [
@@ -64,11 +67,13 @@ export async function exportAtivos() {
     a.status_ciclo_vida ?? "",
     a.usuarios?.email ?? "",
   ]);
+  toast.loading("Gerando arquivo XLSX…", { id: tid });
   const fname = `ativos_${new Date().toISOString().slice(0, 10)}.xlsx`;
-  downloadXLSX(fname, COLUMNS as unknown as string[], rows);
+  await downloadXLSX(fname, COLUMNS as unknown as string[], rows);
   void logAction("EXPORT", "ativos", { formato: "xlsx", total: rows.length, arquivo: fname });
-  toast.success(`${rows.length} ativo(s) exportado(s).`);
+  toast.success(`${rows.length} ativo(s) exportado(s).`, { id: tid });
 }
+
 
 export function downloadTemplate() {
   const exemplo = [
