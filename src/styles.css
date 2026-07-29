@@ -243,11 +243,34 @@
     font-feature-settings: "tnum";
   }
 
-  /* Refined focus ring */
+  /* Focus ring global — sempre visível, alto contraste, acessível */
   :focus-visible {
     outline: 2px solid var(--color-ring);
     outline-offset: 2px;
     border-radius: var(--radius-sm);
+    box-shadow: 0 0 0 4px oklch(from var(--color-ring) l c h / 0.2);
+  }
+
+  /* Skip-link e leitores de tela */
+  .sr-only-focusable:focus {
+    position: fixed;
+    top: 0.5rem;
+    left: 0.5rem;
+    z-index: 100;
+    padding: 0.5rem 0.75rem;
+    background: var(--color-background);
+    color: var(--color-foreground);
+    border: 2px solid var(--color-ring);
+    border-radius: var(--radius-md);
+  }
+
+  /* Alvos de toque mínimos em mobile (WCAG 2.5.5) */
+  @media (pointer: coarse) {
+    button:not([data-slot]):not([data-sidebar]),
+    [role="button"],
+    a[role="button"] {
+      min-height: 40px;
+    }
   }
 
   /* Premium scrollbar */
