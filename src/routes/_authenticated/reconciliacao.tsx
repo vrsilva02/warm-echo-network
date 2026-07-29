@@ -14,7 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Upload, CheckCircle2, AlertCircle, Link2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
-import { downloadCSV } from "@/lib/export";
+import { downloadXLSX } from "@/lib/export";
 
 export const Route = createFileRoute("/_authenticated/reconciliacao")({
   component: Page,
@@ -224,8 +224,8 @@ function Page() {
   }
 
   function exportar() {
-    downloadCSV(
-      `inventario-${new Date().toISOString().slice(0, 10)}.csv`,
+    downloadXLSX(
+      `inventario-${new Date().toISOString().slice(0, 10)}.xlsx`,
       ["Origem", "Hostname", "Produto bruto", "Produto catálogo", "Última comunicação", "Reconciliado"],
       (rows ?? []).map((r) => [
         r.origem,
@@ -284,7 +284,7 @@ function Page() {
                 Reconciliar pendentes
               </Button>
               <Button size="sm" variant="outline" onClick={exportar}>
-                <Upload className="h-4 w-4 rotate-180" /> Exportar CSV
+                <Upload className="h-4 w-4 rotate-180" /> Exportar XLSX
               </Button>
             </div>
           </CardContent>

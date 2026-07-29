@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Combobox } from "@/components/combobox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { downloadCSV } from "@/lib/export";
+import { downloadXLSX } from "@/lib/export";
 import { Download, FileBarChart } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/relatorios-os")({
@@ -19,7 +19,7 @@ export const Route = createFileRoute("/_authenticated/relatorios-os")({
   head: () => ({
     meta: [
       { title: "Relatórios de OS — GestoraIT" },
-      { name: "description", content: "Filtre ordens de serviço por período, ativo, técnico e status e exporte em CSV." },
+      { name: "description", content: "Filtre ordens de serviço por período, ativo, técnico e status e exporte em XLSX." },
       { property: "og:title", content: "Relatórios de OS — GestoraIT" },
       { property: "og:description", content: "Análise de OS com filtros e exportação." },
     ],
@@ -117,7 +117,7 @@ function Page() {
         r.descricao_defeito,
       ];
     });
-    downloadCSV(`ordens-servico_${de}_${ate}.csv`, cols, body);
+    downloadXLSX(`ordens-servico_${de}_${ate}.xlsx`, cols, body);
   }
 
   const ativoOpts = (ativos ?? []).map((a) => ({ value: a.id, label: a.hostname }));
@@ -128,7 +128,7 @@ function Page() {
       <PageHeader
         title="Relatórios de OS"
         description="Ordens de serviço por período, ativo, técnico e status."
-        actions={<Button onClick={exportar} disabled={!rows?.length}><Download className="h-4 w-4 mr-2" />Exportar CSV</Button>}
+        actions={<Button onClick={exportar} disabled={!rows?.length}><Download className="h-4 w-4 mr-2" />Exportar XLSX</Button>}
       />
 
       <Card className="mb-4">

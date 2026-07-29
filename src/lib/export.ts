@@ -1,5 +1,31 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import * as XLSX from "xlsx";
+
+/**
+ * Exporta uma tabela em formato XLSX (Excel). Formato padrão de exportação
+ * e de template de importação do sistema.
+ */
+export function downloadXLSX(
+  filename: string,
+  columns: string[],
+  rows: (string | number | null | undefined)[][],
+  sheetName = "Dados",
+) {
+  const name = filename.replace(/\.(csv|xlsx?)$/i, "") + ".xlsx";
+  const data = [columns, ...rows.map((r) => r.map((c) => (c == null ? "" : c)))];
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  ws["!cols"] = columns.map((c, i) => {
+    const width = Math.max(
+      String(c).length,
+      ...rows.map((r) => String(r[i] ?? "").length),
+    );
+    return { wch: Math.min(Math.max(width + 2, 10), 50) };
+  });
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, sheetName.slice(0, 31));
+  XLSX.writeFile(wb, name);
+}
 
 export function downloadCSV(filename: string, columns: string[], rows: (string | number | null | undefined)[][]) {
   const esc = (v: any) => {

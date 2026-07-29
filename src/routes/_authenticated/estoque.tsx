@@ -16,7 +16,7 @@ import { Combobox } from "@/components/combobox";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
 import { Boxes, PackagePlus, AlertTriangle, Download } from "lucide-react";
-import { downloadCSV } from "@/lib/export";
+import { downloadXLSX } from "@/lib/export";
 
 export const Route = createFileRoute("/_authenticated/estoque")({
   component: Page,
@@ -80,7 +80,7 @@ function Page() {
       r.custo_unitario ?? "",
       r.custo_unitario ? (Number(r.custo_unitario) * r.quantidade_sugerida).toFixed(2) : "",
     ]);
-    downloadCSV(`lista-compras-${new Date().toISOString().slice(0, 10)}.csv`, cols, rows);
+    downloadXLSX(`lista-compras-${new Date().toISOString().slice(0, 10)}.xlsx`, cols, rows);
   }
 
   return (
@@ -140,7 +140,7 @@ function Page() {
               {reposicao?.length ?? 0} peça(s) em ponto de reposição. Quantidade sugerida = dobro do estoque mínimo menos o saldo atual.
             </p>
             <Button size="sm" variant="outline" onClick={exportarLista} disabled={!reposicao?.length}>
-              <Download className="h-4 w-4 mr-1" /> Gerar lista de compra (CSV)
+              <Download className="h-4 w-4 mr-1" /> Gerar lista de compra (XLSX)
             </Button>
           </div>
           <Card>

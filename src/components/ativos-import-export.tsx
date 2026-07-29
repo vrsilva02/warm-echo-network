@@ -10,7 +10,7 @@ import {
 import { Download, Upload, FileSpreadsheet, ChevronDown, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { downloadCSV } from "@/lib/export";
+import { downloadXLSX } from "@/lib/export";
 import { logAction } from "@/lib/audit";
 import { friendlyError } from "@/lib/errors";
 import { BulkImportDialog, BulkMetric } from "@/components/bulk-import-dialog";
@@ -62,9 +62,9 @@ export async function exportAtivos() {
     a.status_ciclo_vida ?? "",
     a.usuarios?.email ?? "",
   ]);
-  const fname = `ativos_${new Date().toISOString().slice(0, 10)}.csv`;
-  downloadCSV(fname, COLUMNS as unknown as string[], rows);
-  void logAction("EXPORT", "ativos", { formato: "csv", total: rows.length, arquivo: fname });
+  const fname = `ativos_${new Date().toISOString().slice(0, 10)}.xlsx`;
+  downloadXLSX(fname, COLUMNS as unknown as string[], rows);
+  void logAction("EXPORT", "ativos", { formato: "xlsx", total: rows.length, arquivo: fname });
   toast.success(`${rows.length} ativo(s) exportado(s).`);
 }
 
@@ -79,7 +79,7 @@ export function downloadTemplate() {
     "colaborador@empresa.com",
   ];
   const vazia = COLUMNS.map(() => "");
-  downloadCSV("template_ativos.csv", COLUMNS as unknown as string[], [exemplo, vazia]);
+  downloadXLSX("template_ativos.xlsx", COLUMNS as unknown as string[], [exemplo, vazia]);
   toast.success("Template baixado. Preencha e reimporte (CSV ou XLSX).");
 }
 
@@ -205,7 +205,7 @@ export function AtivosImportExport({ canWrite, onImported }: { canWrite: boolean
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-64">
           <DropdownMenuItem onClick={() => void exportAtivos()}>
-            <Download className="h-4 w-4" /> Exportar CSV
+            <Download className="h-4 w-4" /> Exportar XLSX
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => downloadTemplate()}>
             <FileSpreadsheet className="h-4 w-4" /> Baixar template
@@ -224,7 +224,7 @@ export function AtivosImportExport({ canWrite, onImported }: { canWrite: boolean
                   </>
                 ) : (
                   <>
-                    <Upload className="h-4 w-4" /> Importar CSV / XLSX…
+                    <Upload className="h-4 w-4" /> Importar XLSX / CSV…
                   </>
                 )}
               </DropdownMenuItem>
