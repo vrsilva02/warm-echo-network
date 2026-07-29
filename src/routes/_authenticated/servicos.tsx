@@ -37,12 +37,6 @@ type Row = {
 const CRIT = ["baixa", "media", "alta", "critica"];
 const initial = { nome: "", criticidade: "media", responsavel_id: null as string | null };
 
-export function criticidadeTone(c: string | null | undefined): StatusTone {
-  if (c === "critica") return "critical";
-  if (c === "alta") return "warn";
-  if (c === "media") return "info";
-  return "neutral";
-}
 
 function Page() {
   const { canWrite } = useAuth();

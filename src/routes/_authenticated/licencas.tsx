@@ -59,12 +59,6 @@ type ProdutoAgg = ElpRow & {
 
 type StatusFiltro = "todos" | "ativa" | "inativa" | "vencida";
 
-/** True quando o produto usa chave por dispositivo (OEM/Retail) e cada alocação precisa da sua própria chave. */
-export function isChaveIndividualRequired(p: { modelo_licenciamento?: string | null; tipo_licenciamento?: string | null } | null | undefined): boolean {
-  if (!p) return false;
-  const s = `${p.modelo_licenciamento ?? ""} ${p.tipo_licenciamento ?? ""}`.toLowerCase();
-  return /(^|\W)(oem|retail)(\W|$)/.test(s);
-}
 
 function statusLicenca(p: ProdutoAgg): StatusFiltro {
   const hoje = new Date().toISOString().slice(0, 10);

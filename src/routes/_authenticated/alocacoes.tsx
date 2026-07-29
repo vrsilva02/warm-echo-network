@@ -19,7 +19,7 @@ import { useAuth } from "@/lib/auth";
 import { logAction } from "@/lib/audit";
 import { useConfirm } from "@/components/confirm-dialog";
 import { MaskedKey } from "@/components/masked-key";
-import { isChaveIndividualRequired } from "@/routes/_authenticated/licencas";
+import { isChaveIndividualRequired } from "@/lib/licencas";
 import { chaveIndividualEmUso } from "@/lib/licencas";
 
 export const Route = createFileRoute("/_authenticated/alocacoes")({
