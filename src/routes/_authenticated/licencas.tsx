@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 // (Dialog imported below)
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useMemo, useState, lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,7 +27,11 @@ import { logAction } from "@/lib/audit";
 import { encerrarAlocacao, encerrarAlocacoes, criarAlocacao, isChaveIndividualRequired } from "@/lib/licencas";
 import { friendlyError } from "@/lib/errors";
 import { MaskedKey } from "@/components/masked-key";
-import { LicencasImportExport } from "@/components/licencas-import-export";
+
+const LicencasImportExport = lazy(() =>
+  import("@/components/licencas-import-export").then((m) => ({ default: m.LicencasImportExport })),
+);
+
 
 export const Route = createFileRoute("/_authenticated/licencas")({
   component: Page,
@@ -145,6 +149,7 @@ function Page() {
         description="Visão por categoria e SKU, atribuições ativas e histórico."
         actions={
           <div className="flex items-center gap-2">
+            <Suspense fallback={null}>
             <LicencasImportExport
               canWrite={canWrite}
               onImported={() => {
@@ -152,6 +157,7 @@ function Page() {
                 qc.invalidateQueries({ queryKey: ["dashboard"] });
               }}
             />
+            </Suspense>
 
             {canWrite && (
               <Button size="sm" onClick={() => { setEditingLicId(null); setDefaultCategoria(tab === "todas" ? null : tab); setNewLicOpen(true); }}>
