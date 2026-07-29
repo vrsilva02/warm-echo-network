@@ -95,6 +95,7 @@ export type Database = {
       }
       ativos: {
         Row: {
+          categoria: string | null
           centro_custo_id: string | null
           created_at: string | null
           data_aquisicao: string | null
@@ -116,6 +117,7 @@ export type Database = {
           vida_util_meses: number | null
         }
         Insert: {
+          categoria?: string | null
           centro_custo_id?: string | null
           created_at?: string | null
           data_aquisicao?: string | null
@@ -137,6 +139,7 @@ export type Database = {
           vida_util_meses?: number | null
         }
         Update: {
+          categoria?: string | null
           centro_custo_id?: string | null
           created_at?: string | null
           data_aquisicao?: string | null
