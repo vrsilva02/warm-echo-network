@@ -94,7 +94,7 @@ function Page() {
         title="Relatórios"
         description="Construa relatórios com filtros combináveis. Salve como recorrente para envio mensal."
       />
-      <div className="grid gap-4 lg:grid-cols-[280px,1fr]">
+      <div className="grid gap-4 lg:grid-cols-[minmax(240px,280px)_minmax(0,1fr)]">
         <ShortcutsPanel current={tipo} onPick={(t) => { setTipo(t); setFilters({}); }} />
         <div className="space-y-4 min-w-0">
           <FiltersCard tipo={tipo} filters={filters} onChange={setFilters} />
