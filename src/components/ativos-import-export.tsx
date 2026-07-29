@@ -43,7 +43,7 @@ export async function exportAtivos() {
   const tid = toast.loading("Preparando exportação…");
   const { data, error } = await fetchAll<any>(
     "ativos",
-    "hostname, tipo, marca, modelo, numero_patrimonio, numero_serie, setor, status_ciclo_vida, usuarios(email)",
+    "hostname, tipo, categoria, marca, modelo, numero_patrimonio, numero_serie, setor, status_ciclo_vida, usuarios(email)",
     (q) => q.order("hostname"),
     { onProgress: (n) => toast.loading(`Baixando dados… ${n} registro(s)`, { id: tid }) },
   );
@@ -54,6 +54,7 @@ export async function exportAtivos() {
   const rows = (data ?? []).map((a: any) => [
     a.hostname ?? "",
     a.tipo ?? "",
+    a.categoria ?? "",
     a.marca ?? "",
     a.modelo ?? "",
     a.numero_patrimonio ?? "",
@@ -74,6 +75,7 @@ export function downloadTemplate() {
   const exemplo = [
     "NB-0001",
     "Notebook",
+    "Computadores",
     "Dell",
     "Latitude 5440",
     "PAT-000123",
@@ -163,6 +165,7 @@ async function importarLinhas(
     const payload = {
       hostname,
       tipo,
+      categoria: nz(r.categoria),
       marca: nz(r.marca),
       modelo: nz(r.modelo),
       numero_patrimonio: nz(r.numero_patrimonio),
@@ -297,7 +300,7 @@ export function AtivosImportExport({ canWrite, onImported }: { canWrite: boolean
         title="Importar ativos"
         description="Envie um arquivo CSV ou XLSX seguindo o template. Ativos existentes (mesmo hostname) são atualizados; novos são criados. O responsável é vinculado quando o e-mail já existe em Usuários."
         requiredColumns={COLUMNS}
-        previewColumns={["hostname", "tipo", "marca", "modelo", "numero_patrimonio", "status_ciclo_vida"]}
+        previewColumns={["hostname", "tipo", "categoria", "marca", "modelo", "status_ciclo_vida"]}
         renderPreviewCell={(r, c) =>
           c === "numero_patrimonio" ? <span className="font-mono">{r[c]}</span> : r[c]
         }

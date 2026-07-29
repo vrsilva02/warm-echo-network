@@ -39,6 +39,7 @@ type Ativo = {
   id: string;
   hostname: string;
   tipo: string;
+  categoria: string | null;
   marca: string | null;
   modelo: string | null;
   numero_serie: string | null;
@@ -57,6 +58,7 @@ const TIPOS = ["Notebook", "Desktop", "Servidor", "VDI", "Outro"];
 const initial = {
   hostname: "",
   tipo: "Notebook",
+  categoria: "",
   marca: "",
   modelo: "",
   numero_serie: "",
@@ -117,6 +119,7 @@ function AtivosPage() {
     setForm({
       hostname: r.hostname,
       tipo: r.tipo,
+      categoria: r.categoria ?? "",
       marca: r.marca ?? "",
       modelo: r.modelo ?? "",
       numero_serie: r.numero_serie ?? "",
@@ -133,6 +136,7 @@ function AtivosPage() {
     const payload = {
       hostname: form.hostname.trim(),
       tipo: form.tipo,
+      categoria: form.categoria.trim() || null,
       marca: form.marca.trim() || null,
       modelo: form.modelo.trim() || null,
       numero_serie: form.numero_serie || null,
@@ -240,6 +244,11 @@ function AtivosPage() {
       id: "tipo", header: "Tipo",
       accessor: (r) => r.tipo, sortValue: (r) => r.tipo,
       searchValue: (r) => r.tipo, exportValue: (r) => r.tipo,
+    },
+    {
+      id: "categoria", header: "Categoria",
+      accessor: (r) => r.categoria ?? "—", sortValue: (r) => r.categoria ?? "",
+      searchValue: (r) => r.categoria, exportValue: (r) => r.categoria,
     },
     {
       id: "marca", header: "Marca",
@@ -371,6 +380,14 @@ function AtivosPage() {
             <Label>Nº série</Label>
             <Input value={form.numero_serie} onChange={(e) => setForm({ ...form, numero_serie: e.target.value })} />
           </div>
+        </div>
+        <div>
+          <Label>Categoria</Label>
+          <Input
+            value={form.categoria}
+            onChange={(e) => setForm({ ...form, categoria: e.target.value })}
+            placeholder="Ex.: Computadores, Rede, Impressoras"
+          />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
