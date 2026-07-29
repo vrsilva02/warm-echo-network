@@ -39,6 +39,8 @@ type Ativo = {
   id: string;
   hostname: string;
   tipo: string;
+  marca: string | null;
+  modelo: string | null;
   numero_serie: string | null;
   numero_patrimonio: string | null;
   setor: string | null;
@@ -55,6 +57,8 @@ const TIPOS = ["Notebook", "Desktop", "Servidor", "VDI", "Outro"];
 const initial = {
   hostname: "",
   tipo: "Notebook",
+  marca: "",
+  modelo: "",
   numero_serie: "",
   numero_patrimonio: "",
   setor: "",
@@ -113,6 +117,8 @@ function AtivosPage() {
     setForm({
       hostname: r.hostname,
       tipo: r.tipo,
+      marca: r.marca ?? "",
+      modelo: r.modelo ?? "",
       numero_serie: r.numero_serie ?? "",
       numero_patrimonio: r.numero_patrimonio ?? "",
       setor: r.setor ?? "",
@@ -127,6 +133,8 @@ function AtivosPage() {
     const payload = {
       hostname: form.hostname.trim(),
       tipo: form.tipo,
+      marca: form.marca.trim() || null,
+      modelo: form.modelo.trim() || null,
       numero_serie: form.numero_serie || null,
       numero_patrimonio: form.numero_patrimonio.trim() || null,
       setor: form.setor || null,
@@ -232,6 +240,16 @@ function AtivosPage() {
       id: "tipo", header: "Tipo",
       accessor: (r) => r.tipo, sortValue: (r) => r.tipo,
       searchValue: (r) => r.tipo, exportValue: (r) => r.tipo,
+    },
+    {
+      id: "marca", header: "Marca",
+      accessor: (r) => r.marca ?? "—", sortValue: (r) => r.marca ?? "",
+      searchValue: (r) => r.marca, exportValue: (r) => r.marca,
+    },
+    {
+      id: "modelo", header: "Modelo",
+      accessor: (r) => r.modelo ?? "—", sortValue: (r) => r.modelo ?? "",
+      searchValue: (r) => r.modelo, exportValue: (r) => r.modelo,
     },
     {
       id: "serie", header: "Nº Série", defaultHidden: true,
@@ -352,6 +370,16 @@ function AtivosPage() {
           <div>
             <Label>Nº série</Label>
             <Input value={form.numero_serie} onChange={(e) => setForm({ ...form, numero_serie: e.target.value })} />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <Label>Marca</Label>
+            <Input value={form.marca} onChange={(e) => setForm({ ...form, marca: e.target.value })} placeholder="Ex.: Dell" />
+          </div>
+          <div>
+            <Label>Modelo</Label>
+            <Input value={form.modelo} onChange={(e) => setForm({ ...form, modelo: e.target.value })} placeholder="Ex.: Latitude 5440" />
           </div>
         </div>
         <div>

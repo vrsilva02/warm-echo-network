@@ -102,6 +102,8 @@ export type Database = {
           data_ultima_transicao: string | null
           hostname: string
           id: string
+          marca: string | null
+          modelo: string | null
           numero_patrimonio: string | null
           numero_serie: string | null
           setor: string | null
@@ -121,6 +123,8 @@ export type Database = {
           data_ultima_transicao?: string | null
           hostname: string
           id?: string
+          marca?: string | null
+          modelo?: string | null
           numero_patrimonio?: string | null
           numero_serie?: string | null
           setor?: string | null
@@ -140,6 +144,8 @@ export type Database = {
           data_ultima_transicao?: string | null
           hostname?: string
           id?: string
+          marca?: string | null
+          modelo?: string | null
           numero_patrimonio?: string | null
           numero_serie?: string | null
           setor?: string | null

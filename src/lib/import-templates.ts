@@ -7,12 +7,15 @@
 export const ATIVOS_COLUMNS = [
   "hostname",
   "tipo",
+  "marca",
+  "modelo",
   "numero_patrimonio",
   "numero_serie",
   "setor",
   "status_ciclo_vida",
   "responsavel_email",
 ] as const;
+
 
 export const LICENCAS_COLUMNS = [
   "fabricante",
