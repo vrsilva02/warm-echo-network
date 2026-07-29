@@ -83,7 +83,6 @@ function useDashboardData() {
   });
 }
 
-const CHART_COLORS = ["hsl(215 85% 55%)", "hsl(148 65% 45%)", "hsl(35 90% 55%)", "hsl(270 60% 55%)", "hsl(0 70% 55%)"];
 
 function statusStyle(s: string) {
   if (s === "ok") return { label: "OK", cls: "bg-[color:var(--success)]/15 text-[color:var(--success)] border-[color:var(--success)]/30" };
