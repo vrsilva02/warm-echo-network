@@ -278,12 +278,18 @@ export function AdvancedTable<T>({
                 {visibleColumns.map((c) => {
                   const sortState = prefs.sort?.id === c.id ? prefs.sort.dir : null;
                   const sortable = !!c.sortValue;
+                  const ariaSort = sortState === "asc" ? "ascending" : sortState === "desc" ? "descending" : sortable ? "none" : undefined;
                   return (
-                    <TableHead key={c.id} className={c.numeric ? "text-right" : undefined}>
+                    <TableHead key={c.id} className={c.numeric ? "text-right" : undefined} aria-sort={ariaSort}>
                       {sortable ? (
-                        <button className="inline-flex items-center gap-1 hover:text-foreground" onClick={() => toggleSort(c.id)}>
+                        <button
+                          type="button"
+                          className="inline-flex items-center gap-1 rounded-sm px-1 -mx-1 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          onClick={() => toggleSort(c.id)}
+                          aria-label={`Ordenar por ${c.header}${sortState === "asc" ? " (crescente)" : sortState === "desc" ? " (decrescente)" : ""}`}
+                        >
                           {c.header}
-                          {sortState === "asc" ? <ArrowUp className="h-3 w-3" /> : sortState === "desc" ? <ArrowDown className="h-3 w-3" /> : <ArrowUpDown className="h-3 w-3 opacity-40" />}
+                          {sortState === "asc" ? <ArrowUp className="h-3 w-3" aria-hidden /> : sortState === "desc" ? <ArrowDown className="h-3 w-3" aria-hidden /> : <ArrowUpDown className="h-3 w-3 opacity-40" aria-hidden />}
                         </button>
                       ) : c.header}
                     </TableHead>
