@@ -14,15 +14,20 @@ function xlsxFile(name: string, columns: readonly string[], rows: (string | numb
   });
 }
 
-const ATIVO_EXEMPLO = [
-  "NB-0001",
-  "Notebook",
-  "PAT-000123",
-  "SN123456789",
-  "Financeiro",
-  "em_uso",
-  "colaborador@empresa.com",
-];
+/** Monta a linha na ordem exata das colunas do template, tolerando novas colunas. */
+function ativoRow(values: Record<string, string>) {
+  return ATIVOS_COLUMNS.map((c) => values[c] ?? "");
+}
+
+const ATIVO_EXEMPLO = ativoRow({
+  hostname: "NB-0001",
+  tipo: "Notebook",
+  numero_patrimonio: "PAT-000123",
+  numero_serie: "SN123456789",
+  setor: "Financeiro",
+  status_ciclo_vida: "em_uso",
+  responsavel_email: "colaborador@empresa.com",
+});
 
 describe("parseTabularFile com template XLSX", () => {
   it("lê o template de ativos preservando cabeçalhos e valores", async () => {
@@ -74,8 +79,8 @@ describe("parseTabularFile com template XLSX", () => {
 
   it("faz round-trip: export -> arquivo -> import preserva os dados", async () => {
     const dados = [
-      ["NB-0001", "Notebook", "PAT-1", "SN1", "TI", "em_uso", "a@e.com"],
-      ["NB-0002", "Desktop", "PAT-2", "SN2", "RH", "em_estoque", "b@e.com"],
+      ativoRow({ hostname: "NB-0001", tipo: "Notebook", numero_patrimonio: "PAT-1", numero_serie: "SN1", setor: "TI", status_ciclo_vida: "em_uso", responsavel_email: "a@e.com" }),
+      ativoRow({ hostname: "NB-0002", tipo: "Desktop", numero_patrimonio: "PAT-2", numero_serie: "SN2", setor: "RH", status_ciclo_vida: "em_estoque", responsavel_email: "b@e.com" }),
     ];
     const file = xlsxFile("ativos_export.xlsx", ATIVOS_COLUMNS, dados);
     const { rows } = await parseTabularFile(file);
