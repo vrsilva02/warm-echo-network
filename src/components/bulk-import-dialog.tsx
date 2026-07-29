@@ -107,6 +107,18 @@ export function BulkImportDialog<Row extends Record<string, string>, Report>(
       ? Math.max(3, Math.round((job.processed / job.total) * 100))
       : 0;
 
+  // Estimativa simples de tempo restante com base na taxa média observada.
+  const eta =
+    running && job && job.processed > 0 && job.processed < job.total
+      ? Math.max(
+          1,
+          Math.round(
+            ((Date.now() - job.startedAt) / job.processed) * (job.total - job.processed) / 1000,
+          ),
+        )
+      : null;
+
+
   return (
     <Dialog open={props.open} onOpenChange={(v) => { if (!v) fechar(); }}>
       <DialogContent className="max-w-2xl">
