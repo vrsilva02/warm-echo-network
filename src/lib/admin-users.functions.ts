@@ -61,8 +61,8 @@ export const inviteUser = createServerFn({ method: "POST" })
     // nunca a partir de um host enviado pelo cliente.
     let redirectTo: string | undefined;
     if (data.redirectTo) {
-      const { getWebRequest } = await import("@tanstack/react-start/server");
-      const origin = new URL(getWebRequest().url).origin;
+      const { getRequestUrl } = await import("@tanstack/react-start/server");
+      const origin = getRequestUrl().origin;
       redirectTo = `${origin}${data.redirectTo}`;
     }
 
