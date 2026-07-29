@@ -7,6 +7,7 @@
 export const ATIVOS_COLUMNS = [
   "hostname",
   "tipo",
+  "categoria",
   "marca",
   "modelo",
   "numero_patrimonio",

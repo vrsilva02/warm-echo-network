@@ -43,7 +43,7 @@ export async function exportAtivos() {
   const tid = toast.loading("Preparando exportação…");
   const { data, error } = await fetchAll<any>(
     "ativos",
-    "hostname, tipo, marca, modelo, numero_patrimonio, numero_serie, setor, status_ciclo_vida, usuarios(email)",
+    "hostname, tipo, categoria, marca, modelo, numero_patrimonio, numero_serie, setor, status_ciclo_vida, usuarios(email)",
     (q) => q.order("hostname"),
     { onProgress: (n) => toast.loading(`Baixando dados… ${n} registro(s)`, { id: tid }) },
   );
@@ -54,6 +54,7 @@ export async function exportAtivos() {
   const rows = (data ?? []).map((a: any) => [
     a.hostname ?? "",
     a.tipo ?? "",
+    a.categoria ?? "",
     a.marca ?? "",
     a.modelo ?? "",
     a.numero_patrimonio ?? "",
