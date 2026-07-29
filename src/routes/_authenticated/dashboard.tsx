@@ -335,8 +335,8 @@ function KpiCard({ title, value, icon, hint }: { title: string; value: number | 
   return (
     <Card className="elevate">
       <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
-        <CardTitle className="eyebrow flex min-w-0 flex-1 items-center gap-1.5 pt-0.5 text-[0.6875rem]">
-          <span className="truncate">{title}</span>
+        <CardTitle className="eyebrow flex min-w-0 flex-1 items-start gap-1.5 pt-0.5 text-[0.6875rem] leading-[1.35]">
+          <span className="min-w-0">{title}</span>
           {hint && (
             <UITooltip>
               <TooltipTrigger asChild>
