@@ -2,7 +2,11 @@
  * Utilitários de exportação. As bibliotecas pesadas (xlsx, jspdf) são
  * carregadas sob demanda via import dinâmico para não pesar no bundle
  * inicial — elas só chegam ao navegador quando o usuário exporta algo.
+ * A geração do XLSX acontece em um Web Worker (ver xlsx-builder).
  */
+import { buildXLSXBlob } from "./xlsx-builder";
+
+export { exportXLSXInBackground } from "./export-background";
 
 export async function downloadXLSX(
   filename: string,
@@ -10,21 +14,16 @@ export async function downloadXLSX(
   rows: (string | number | null | undefined)[][],
   sheetName = "Dados",
 ) {
-  const XLSX = await import("xlsx");
   const name = filename.replace(/\.(csv|xlsx?)$/i, "") + ".xlsx";
-  const data = [columns, ...rows.map((r) => r.map((c) => (c == null ? "" : c)))];
-  const ws = XLSX.utils.aoa_to_sheet(data);
-  ws["!cols"] = columns.map((c, i) => {
-    const width = Math.max(
-      String(c).length,
-      ...rows.map((r) => String(r[i] ?? "").length),
-    );
-    return { wch: Math.min(Math.max(width + 2, 10), 50) };
-  });
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, sheetName.slice(0, 31));
-  XLSX.writeFile(wb, name);
+  const blob = await buildXLSXBlob(columns, rows, sheetName);
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = name;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
 }
+
 
 export function downloadCSV(filename: string, columns: string[], rows: (string | number | null | undefined)[][]) {
   const esc = (v: any) => {

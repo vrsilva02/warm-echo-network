@@ -7,7 +7,7 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLab
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Search, Columns3, Download, ArrowUp, ArrowDown, ArrowUpDown, X, ChevronUp, ChevronDown } from "lucide-react";
 import { TableSkeleton } from "@/components/skeletons";
-import { downloadXLSX } from "@/lib/export";
+import { exportXLSXInBackground } from "@/lib/export";
 import { logAction } from "@/lib/audit";
 
 export type Column<T> = {
@@ -173,7 +173,11 @@ export function AdvancedTable<T>({
       const v = c.exportValue ? c.exportValue(r) : c.searchValue ? c.searchValue(r) : "";
       return v ?? "";
     }));
-    downloadXLSX(`${exportFilename ?? storageKey}-${new Date().toISOString().slice(0, 10)}.xlsx`, header, body);
+    exportXLSXInBackground({
+      label: `Exportação · ${exportFilename ?? storageKey}`,
+      filename: `${exportFilename ?? storageKey}-${new Date().toISOString().slice(0, 10)}.xlsx`,
+      load: async () => ({ columns: header, rows: body }),
+    });
     void logAction("EXPORT", storageKey, {
       formato: "xlsx",
       total_registros: processed.length,

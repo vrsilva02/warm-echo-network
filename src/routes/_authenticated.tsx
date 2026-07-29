@@ -4,6 +4,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { CommandPalette, CommandPaletteTrigger } from "@/components/command-palette";
 import { NotificationsBell } from "@/components/notifications-bell";
+import { ExportJobsTray } from "@/components/export-jobs-tray";
 import { SessionTimeout } from "@/components/session-timeout";
 import { Loader2 } from "lucide-react";
 
@@ -34,6 +35,7 @@ function ProtectedLayout() {
               GestoraIT · Painel
             </div>
             <div className="flex-1" />
+            <ExportJobsTray />
             <NotificationsBell />
             <CommandPaletteTrigger />
           </header>
