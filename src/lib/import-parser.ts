@@ -1,5 +1,3 @@
-import Papa from "papaparse";
-import * as XLSX from "xlsx";
 
 export type ParsedTable = {
   headers: string[];
@@ -16,6 +14,7 @@ export async function parseTabularFile(file: File): Promise<ParsedTable> {
   const isExcel = name.endsWith(".xlsx") || name.endsWith(".xls");
 
   if (isExcel) {
+    const XLSX = await import("xlsx");
     const buf = await file.arrayBuffer();
     const wb = XLSX.read(buf, { type: "array" });
     const first = wb.SheetNames[0];
@@ -41,6 +40,7 @@ export async function parseTabularFile(file: File): Promise<ParsedTable> {
   }
 
   // CSV
+  const { default: Papa } = await import("papaparse");
   return new Promise((resolve, reject) => {
     Papa.parse<Record<string, string>>(file, {
       header: true,

@@ -1,17 +1,16 @@
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
-import * as XLSX from "xlsx";
-
 /**
- * Exporta uma tabela em formato XLSX (Excel). Formato padrão de exportação
- * e de template de importação do sistema.
+ * Utilitários de exportação. As bibliotecas pesadas (xlsx, jspdf) são
+ * carregadas sob demanda via import dinâmico para não pesar no bundle
+ * inicial — elas só chegam ao navegador quando o usuário exporta algo.
  */
-export function downloadXLSX(
+
+export async function downloadXLSX(
   filename: string,
   columns: string[],
   rows: (string | number | null | undefined)[][],
   sheetName = "Dados",
 ) {
+  const XLSX = await import("xlsx");
   const name = filename.replace(/\.(csv|xlsx?)$/i, "") + ".xlsx";
   const data = [columns, ...rows.map((r) => r.map((c) => (c == null ? "" : c)))];
   const ws = XLSX.utils.aoa_to_sheet(data);
@@ -42,13 +41,17 @@ export function downloadCSV(filename: string, columns: string[], rows: (string |
   URL.revokeObjectURL(url);
 }
 
-export function downloadPDF(opts: {
+export async function downloadPDF(opts: {
   filename: string;
   title: string;
   subtitle?: string;
   columns: string[];
   rows: (string | number | null | undefined)[][];
 }) {
+  const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
+    import("jspdf"),
+    import("jspdf-autotable"),
+  ]);
   const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
   doc.setFontSize(14);
   doc.text(opts.title, 40, 40);

@@ -145,7 +145,7 @@ function AuthPage() {
         </Card>
         <div className="mt-6 flex flex-col items-center gap-2 opacity-80">
           <span className="text-[10px] uppercase tracking-widest text-muted-foreground">Powered by</span>
-          <img src={mtrLogo.url} alt="MTR2.TECH" className="h-6 w-auto invert dark:invert-0" />
+          <img src={mtrLogo.url} alt="MTR2.TECH" width={120} height={24} loading="lazy" decoding="async" className="h-6 w-auto invert dark:invert-0" />
           <Link
             to="/privacidade"
             className="mt-2 text-[11px] text-muted-foreground hover:text-foreground underline underline-offset-2"

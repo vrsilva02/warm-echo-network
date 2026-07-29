@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import Papa from "papaparse";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -118,6 +117,7 @@ function Page() {
     const file = e.target.files?.[0];
     if (!file) return;
     setBusy(true);
+    const { default: Papa } = await import("papaparse");
     Papa.parse<Record<string, string>>(file, {
       header: true,
       skipEmptyLines: true,
