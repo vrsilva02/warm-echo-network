@@ -92,14 +92,14 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
-        <div className="flex items-center gap-2 px-2 py-2">
-          <div className="rounded-md bg-primary p-1.5 text-primary-foreground">
-            <ShieldCheck className="h-4 w-4" />
+        <div className="flex items-center gap-2 px-2 py-2 min-w-0">
+          <div className="rounded-md bg-primary p-1.5 text-primary-foreground shrink-0">
+            <ShieldCheck className="h-4 w-4" aria-hidden />
           </div>
           {!collapsed && (
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <div className="text-sm font-semibold truncate">GestoraIT</div>
-              <div className="text-[10px] text-muted-foreground truncate">Gestão de Licenças</div>
+              <div className="text-[10px] text-sidebar-foreground/70 truncate">Gestão de Licenças</div>
             </div>
           )}
         </div>
