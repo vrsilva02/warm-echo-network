@@ -93,7 +93,13 @@ type Report = {
   erros: { linha: number; motivo: string }[];
 };
 
-async function importarLinhas(rows: RawRow[], onProgress: (n: number) => void): Promise<Report> {
+const BATCH = 200;
+
+async function importarLinhas(
+  rows: RawRow[],
+  onProgress: (n: number) => void,
+  setPhase: (p: string) => void,
+): Promise<Report> {
   const rep: Report = {
     total: rows.length,
     inseridos: 0,
@@ -102,10 +108,11 @@ async function importarLinhas(rows: RawRow[], onProgress: (n: number) => void): 
     erros: [],
   };
 
+  setPhase("Carregando dados de referência…");
   // Cache de usuários e ativos existentes para reduzir round-trips.
   const [{ data: usuarios }, { data: existentes }] = await Promise.all([
-    supabase.from("usuarios").select("id, email").not("email", "is", null),
-    supabase.from("ativos").select("id, hostname"),
+    fetchAll<any>("usuarios", "id, email", (q) => q.not("email", "is", null)),
+    fetchAll<any>("ativos", "id, hostname"),
   ]);
   const userByEmail = new Map<string, string>(
     (usuarios ?? []).filter((u: any) => u.email).map((u: any) => [u.email.toLowerCase(), u.id]),
@@ -114,16 +121,21 @@ async function importarLinhas(rows: RawRow[], onProgress: (n: number) => void): 
     (existentes ?? []).map((a: any) => [a.hostname.toLowerCase(), a.id]),
   );
 
+  setPhase("Validando linhas…");
+  type Prepared = { linha: number; payload: Record<string, any>; id?: string };
+  const inserts: Prepared[] = [];
+  const updates: Prepared[] = [];
+  const vistos = new Set<string>();
+
   for (let i = 0; i < rows.length; i++) {
     const linha = i + 2;
     const r = rows[i];
 
-    for (const req of REQUIRED) {
-      if (!nz(r[req])) {
-        rep.erros.push({ linha, motivo: `Campo obrigatório vazio: ${req}` });
-      }
+    const faltando = REQUIRED.filter((req) => !nz(r[req]));
+    if (faltando.length > 0) {
+      rep.erros.push({ linha, motivo: `Campo obrigatório vazio: ${faltando.join(", ")}` });
+      continue;
     }
-    if (rep.erros.at(-1)?.linha === linha) { onProgress(i + 1); continue; }
 
     const hostname = nz(r.hostname)!;
     const tipo = nz(r.tipo)!;
@@ -133,7 +145,6 @@ async function importarLinhas(rows: RawRow[], onProgress: (n: number) => void): 
         linha,
         motivo: `status_ciclo_vida inválido: ${status}. Use: ${Array.from(STATUS_VALIDOS).join(", ")}`,
       });
-      onProgress(i + 1);
       continue;
     }
 
@@ -155,18 +166,57 @@ async function importarLinhas(rows: RawRow[], onProgress: (n: number) => void): 
       usuario_responsavel_id: responsavelId,
     };
 
-    const existenteId = ativoByHost.get(hostname.toLowerCase());
-    if (existenteId) {
-      const { error } = await supabase.from("ativos").update(payload).eq("id", existenteId);
-      if (error) { rep.erros.push({ linha, motivo: `Atualizar: ${friendlyError(error)}` }); onProgress(i + 1); continue; }
-      rep.atualizados++;
-    } else {
-      const { data, error } = await supabase.from("ativos").insert(payload).select("id").single();
-      if (error) { rep.erros.push({ linha, motivo: `Inserir: ${friendlyError(error)}` }); onProgress(i + 1); continue; }
-      ativoByHost.set(hostname.toLowerCase(), data!.id);
-      rep.inseridos++;
+    const key = hostname.toLowerCase();
+    if (vistos.has(key)) {
+      rep.erros.push({ linha, motivo: `hostname duplicado no arquivo: ${hostname}` });
+      continue;
     }
-    onProgress(i + 1);
+    vistos.add(key);
+
+    const existenteId = ativoByHost.get(key);
+    if (existenteId) updates.push({ linha, payload, id: existenteId });
+    else inserts.push({ linha, payload });
+  }
+
+  let feitos = rows.length - inserts.length - updates.length;
+  onProgress(feitos);
+
+  // Gravação em lotes — 1 requisição a cada BATCH linhas em vez de 1 por linha.
+  setPhase(`Inserindo ${inserts.length} novo(s) ativo(s)…`);
+  for (const lote of chunk(inserts, BATCH)) {
+    const { error } = await supabase.from("ativos").insert(lote.map((p) => p.payload));
+    if (error) {
+      // Fallback linha a linha apenas no lote com problema, para isolar o erro.
+      for (const p of lote) {
+        const { error: e2 } = await supabase.from("ativos").insert(p.payload);
+        if (e2) rep.erros.push({ linha: p.linha, motivo: `Inserir: ${friendlyError(e2)}` });
+        else rep.inseridos++;
+        onProgress(++feitos);
+      }
+      continue;
+    }
+    rep.inseridos += lote.length;
+    feitos += lote.length;
+    onProgress(feitos);
+  }
+
+  setPhase(`Atualizando ${updates.length} ativo(s) existente(s)…`);
+  for (const lote of chunk(updates, BATCH)) {
+    const { error } = await supabase
+      .from("ativos")
+      .upsert(lote.map((p) => ({ id: p.id, ...p.payload })), { onConflict: "id" });
+    if (error) {
+      for (const p of lote) {
+        const { error: e2 } = await supabase.from("ativos").update(p.payload).eq("id", p.id!);
+        if (e2) rep.erros.push({ linha: p.linha, motivo: `Atualizar: ${friendlyError(e2)}` });
+        else rep.atualizados++;
+        onProgress(++feitos);
+      }
+      continue;
+    }
+    rep.atualizados += lote.length;
+    feitos += lote.length;
+    onProgress(feitos);
   }
 
   void logAction("BULK_UPDATE", "ativos", {
@@ -179,6 +229,7 @@ async function importarLinhas(rows: RawRow[], onProgress: (n: number) => void): 
   });
   return rep;
 }
+
 
 /* ------------------------ Botão do cabeçalho ------------------------ */
 
