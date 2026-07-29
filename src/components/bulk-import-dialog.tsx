@@ -63,6 +63,10 @@ export function BulkImportDialog<Row extends Record<string, string>, Report>(
   async function onPick(f: File | null) {
     reset();
     if (!f) return;
+    if (!/\.xlsx$/i.test(f.name)) {
+      setParseErr("Formato inválido. Envie um arquivo .xlsx.");
+      return;
+    }
     setFile(f);
     setParsing(true);
     try {
