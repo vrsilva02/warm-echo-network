@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState, lazy, Suspense } from "react";
+import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useState, lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/page-header";
 import { AdvancedTable, type Column, type SavedView } from "@/components/advanced-table";
@@ -18,7 +18,6 @@ import { logAction } from "@/lib/audit";
 import { useConfirm } from "@/components/confirm-dialog";
 import { Combobox } from "@/components/combobox";
 import { ATIVO_TIPOS, ATIVO_CATEGORIAS, comValorAtual } from "@/lib/ativos-opcoes";
-import { fetchAll } from "@/lib/fetch-all";
 import { chunk } from "@/lib/bulk-import";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -59,6 +58,18 @@ type Ativo = {
 };
 
 const STATUS = ["solicitado", "estoque", "em_uso", "manutencao", "baixado"];
+
+function loadAtivosListState() {
+  const fallback = { page: 1, pageSize: 50, query: "", view: null as string | null, sort: null as { id: string; dir: "asc" | "desc" } | null };
+  try {
+    const raw = localStorage.getItem("tbl:ativos");
+    if (!raw) return fallback;
+    const saved = JSON.parse(raw) as { view?: string | null; sort?: { id: string; dir: "asc" | "desc" } | null };
+    return { ...fallback, view: saved.view ?? null, sort: saved.sort ?? null };
+  } catch {
+    return fallback;
+  }
+}
 
 /** Converte valores legados de status para os aceitos pelo banco. */
 function normalizeStatus(s: string | null | undefined): string {
@@ -105,22 +116,45 @@ function AtivosPage() {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(initial);
   const [originalStatus, setOriginalStatus] = useState<string | null>(null);
+  const [listState, setListState] = useState(loadAtivosListState);
 
-  const { data: rows, isLoading } = useQuery({
-    queryKey: ["ativos"],
+  const { data: ativosPage, isLoading } = useQuery({
+    queryKey: ["ativos", "page", listState],
     staleTime: 5 * 60_000,
     gcTime: 30 * 60_000,
+    placeholderData: keepPreviousData,
     queryFn: async () => {
-      const { data, error } = await fetchAll<Ativo>(
-        "ativos",
-        "*, usuarios(nome), centros_custo(nome), clientes(nome)",
-        (q) => q.order("hostname"),
-        { concurrency: 6 },
-      );
+      const from = (listState.page - 1) * listState.pageSize;
+      const to = from + listState.pageSize - 1;
+      let query = supabase
+        .from("ativos")
+        .select("id,hostname,tipo,categoria,marca,modelo,numero_serie,numero_patrimonio,setor,status_ciclo_vida,usuario_responsavel_id,centro_custo_id,cliente_id,usuarios(nome),centros_custo(nome),clientes(nome)", { count: "exact" });
+
+      const term = listState.query.trim().replace(/[%_,()]/g, " ");
+      if (term) {
+        query = query.or(`hostname.ilike.%${term}%,numero_patrimonio.ilike.%${term}%,numero_serie.ilike.%${term}%,tipo.ilike.%${term}%,categoria.ilike.%${term}%,marca.ilike.%${term}%,modelo.ilike.%${term}%,setor.ilike.%${term}%,status_ciclo_vida.ilike.%${term}%`);
+      }
+      if (listState.view === "em_uso") query = query.eq("status_ciclo_vida", "em_uso");
+      if (listState.view === "estoque") query = query.in("status_ciclo_vida", ["estoque", "em_estoque"]);
+      if (listState.view === "manutencao") query = query.in("status_ciclo_vida", ["manutencao", "em_manutencao"]);
+      if (listState.view === "sem_patrimonio") query = query.is("numero_patrimonio", null);
+      if (listState.view === "sem_tipo") query = query.is("tipo", null);
+      if (listState.view === "sem_categoria") query = query.is("categoria", null);
+
+      const sortColumns: Record<string, string> = {
+        hostname: "hostname", patrimonio: "numero_patrimonio", tipo: "tipo", categoria: "categoria",
+        marca: "marca", modelo: "modelo", setor: "setor", status: "status_ciclo_vida",
+      };
+      const sortColumn = listState.sort ? sortColumns[listState.sort.id] : "hostname";
+      const { data, error, count } = await query
+        .order(sortColumn ?? "hostname", { ascending: listState.sort?.dir !== "desc", nullsFirst: false })
+        .order("id", { ascending: true })
+        .range(from, to);
       if (error) throw error;
-      return data;
+      return { rows: (data ?? []) as Ativo[], total: count ?? 0 };
     },
   });
+  const rows = ativosPage?.rows;
 
 
   const { data: users } = useQuery({
@@ -135,7 +169,17 @@ function AtivosPage() {
     queryKey: ["clientes-lite"],
     queryFn: async () => (await supabase.from("clientes").select("id,nome").eq("ativo", true).order("nome")).data ?? [],
   });
-  const { set: edrSet } = useGapEdrSet();
+  const { set: edrSet } = useGapEdrSet(rows?.map((row) => row.id));
+
+  useEffect(() => {
+    const channel = supabase
+      .channel("ativos-list-live")
+      .on("postgres_changes", { event: "*", schema: "public", table: "ativos" }, () => {
+        void qc.invalidateQueries({ queryKey: ["ativos"] });
+      })
+      .subscribe();
+    return () => { void supabase.removeChannel(channel); };
+  }, [qc]);
 
   function openNew() {
     setEditing(null);
@@ -401,6 +445,16 @@ function AtivosPage() {
         storageKey="ativos"
         rows={rows}
         isLoading={isLoading}
+        serverPagination={{
+          total: ativosPage?.total ?? 0,
+          page: listState.page,
+          pageSize: listState.pageSize,
+          onPageChange: (page) => setListState((state) => ({ ...state, page })),
+          onPageSizeChange: (pageSize) => setListState((state) => ({ ...state, page: 1, pageSize })),
+          onSearchChange: (query) => setListState((state) => state.query === query ? state : ({ ...state, page: 1, query })),
+          onViewChange: (view) => setListState((state) => ({ ...state, page: 1, view })),
+          onSortChange: (sort) => setListState((state) => ({ ...state, page: 1, sort })),
+        }}
         columns={columns}
         getRowId={(r) => r.id}
         savedViews={views}
