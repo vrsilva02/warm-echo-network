@@ -104,6 +104,7 @@ function AtivosPage() {
   const [editing, setEditing] = useState<Ativo | null>(null);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(initial);
+  const [originalStatus, setOriginalStatus] = useState<string | null>(null);
 
   const { data: rows, isLoading } = useQuery({
     queryKey: ["ativos"],
@@ -134,11 +135,14 @@ function AtivosPage() {
 
   function openNew() {
     setEditing(null);
+    setOriginalStatus(null);
     setForm(initial);
     setOpen(true);
   }
   function openEdit(r: Ativo) {
+    const normalizedStatus = normalizeStatus(r.status_ciclo_vida);
     setEditing(r);
+    setOriginalStatus(r.status_ciclo_vida);
     setForm({
       hostname: r.hostname,
       tipo: r.tipo ?? null,
@@ -148,7 +152,7 @@ function AtivosPage() {
       numero_serie: r.numero_serie ?? "",
       numero_patrimonio: r.numero_patrimonio ?? "",
       setor: r.setor ?? "",
-      status_ciclo_vida: normalizeStatus(r.status_ciclo_vida),
+      status_ciclo_vida: normalizedStatus,
       usuario_responsavel_id: r.usuario_responsavel_id,
       centro_custo_id: r.centro_custo_id,
       cliente_id: r.cliente_id,
@@ -506,6 +510,16 @@ function AtivosPage() {
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>{STATUS.map((s) => <SelectItem key={s} value={s}>{s.replace("_", " ")}</SelectItem>)}</SelectContent>
             </Select>
+            {editing && originalStatus && originalStatus !== form.status_ciclo_vida && (
+              <div className="mt-2 rounded-md bg-[color:var(--warning)]/10 border border-[color:var(--warning)]/30 px-3 py-2 text-sm">
+                <p className="font-medium text-[color:var(--warning)]">Conversão de status legado</p>
+                <div className="mt-1 flex flex-wrap items-center gap-2 text-foreground/90">
+                  <span>Status anterior: <code className="rounded bg-muted px-1.5 py-0.5 text-xs">{originalStatus}</code></span>
+                  <span>→</span>
+                  <span>Status convertido: <code className="rounded bg-[color:var(--success)]/15 px-1.5 py-0.5 text-xs text-[color:var(--success)]">{form.status_ciclo_vida}</code></span>
+                </div>
+              </div>
+            )}
           </div>
         </div>
         <div className="grid grid-cols-2 gap-3">
