@@ -140,7 +140,9 @@ function AtivosPage() {
     setOpen(true);
   }
   function openEdit(r: Ativo) {
+    const normalizedStatus = normalizeStatus(r.status_ciclo_vida);
     setEditing(r);
+    setOriginalStatus(r.status_ciclo_vida);
     setForm({
       hostname: r.hostname,
       tipo: r.tipo ?? null,
@@ -150,7 +152,7 @@ function AtivosPage() {
       numero_serie: r.numero_serie ?? "",
       numero_patrimonio: r.numero_patrimonio ?? "",
       setor: r.setor ?? "",
-      status_ciclo_vida: normalizeStatus(r.status_ciclo_vida),
+      status_ciclo_vida: normalizedStatus,
       usuario_responsavel_id: r.usuario_responsavel_id,
       centro_custo_id: r.centro_custo_id,
       cliente_id: r.cliente_id,
