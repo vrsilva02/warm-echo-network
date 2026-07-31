@@ -323,13 +323,14 @@ export function AtivosImportExport({ canWrite, onImported }: { canWrite: boolean
         onOpenChange={setOpen}
         scope="ativos"
         title="Importar ativos"
-        description="Envie um arquivo XLSX seguindo o template. Somente hostname é obrigatório — Tipo e Categoria são opcionais e podem ficar em branco (serão gravados como vazios). Ativos existentes (mesmo hostname) são atualizados; novos são criados. O responsável é vinculado quando o e-mail já existe em Usuários."
+        description="Envie um arquivo XLSX seguindo o template. Somente hostname é obrigatório — Tipo, Categoria e Cliente são opcionais e podem ficar em branco. Ativos existentes (mesmo hostname) são atualizados; novos são criados. O responsável é vinculado quando o e-mail já existe em Usuários; o cliente é vinculado quando o nome já existe em Clientes."
         requiredColumns={COLUMNS}
-        previewColumns={["hostname", "tipo", "categoria", "marca", "modelo", "status_ciclo_vida"]}
+        previewColumns={["hostname", "tipo", "categoria", "marca", "modelo", "status_ciclo_vida", "cliente"]}
         renderPreviewCell={(r, c) =>
           c === "numero_patrimonio" ? <span className="font-mono">{r[c]}</span>
           : c === "tipo" && !(r[c] ?? "").trim() ? <span className="text-muted-foreground">Sem tipo</span>
           : c === "categoria" && !(r[c] ?? "").trim() ? <span className="text-muted-foreground">Sem categoria</span>
+          : c === "cliente" && !(r[c] ?? "").trim() ? <span className="text-muted-foreground">Sem cliente</span>
           : r[c]
         }
 
@@ -351,6 +352,11 @@ export function AtivosImportExport({ canWrite, onImported }: { canWrite: boolean
                 label="Responsáveis não encontrados"
                 value={r.responsaveisNaoEncontrados}
                 tone={r.responsaveisNaoEncontrados > 0 ? "warn" : undefined}
+              />
+              <BulkMetric
+                label="Clientes não encontrados"
+                value={r.clientesNaoEncontrados}
+                tone={r.clientesNaoEncontrados > 0 ? "warn" : undefined}
               />
               <BulkMetric label="Linhas com erro" value={r.erros.length} tone={r.erros.length > 0 ? "danger" : undefined} />
             </div>
