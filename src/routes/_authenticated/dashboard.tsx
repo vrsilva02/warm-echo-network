@@ -15,7 +15,7 @@ const TcoCentroBarChart = lazy(() => import("@/components/dashboard-charts").the
 function ChartFallback() {
   return <div className="h-full w-full animate-pulse rounded-md bg-muted/50" />;
 }
-import { AlertTriangle, CheckCircle2, XCircle, KeySquare, FileWarning, Snowflake, ShieldAlert, Coins, Settings2, Wrench, Package } from "lucide-react";
+import { AlertTriangle, CheckCircle2, XCircle, KeySquare, FileWarning, Snowflake, ShieldAlert, Coins, Settings2, Wrench, Package, Building2, Boxes } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Link } from "@tanstack/react-router";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -84,6 +84,77 @@ function useDashboardData() {
 }
 
 
+function useAtivosPorCliente() {
+  return useQuery({
+    queryKey: ["dashboard", "ativos-por-cliente"],
+    staleTime: 2 * 60 * 1000,
+    queryFn: async () => {
+      const [totalRes, clientesRes, semClienteRes] = await Promise.all([
+        supabase.from("ativos").select("id", { count: "exact", head: true }),
+        supabase.from("clientes").select("id,nome").order("nome"),
+        supabase.from("ativos").select("id", { count: "exact", head: true }).is("cliente_id", null),
+      ]);
+      const clientes = (clientesRes.data ?? []) as Array<{ id: string; nome: string }>;
+      const counts = await Promise.all(
+        clientes.map(async (c) => {
+          const { count } = await supabase
+            .from("ativos")
+            .select("id", { count: "exact", head: true })
+            .eq("cliente_id", c.id);
+          return { id: c.id, nome: c.nome, total: count ?? 0 };
+        }),
+      );
+      return {
+        total: totalRes.count ?? 0,
+        semCliente: semClienteRes.count ?? 0,
+        porCliente: counts.sort((a, b) => b.total - a.total),
+      };
+    },
+  });
+}
+
+function AtivosPorClienteCard() {
+  const { data, isLoading } = useAtivosPorCliente();
+  const total = data?.total ?? 0;
+  const linhas = [
+    ...(data?.porCliente ?? []),
+    ...((data?.semCliente ?? 0) > 0 ? [{ id: "__sem__", nome: "Sem cliente", total: data!.semCliente }] : []),
+  ];
+  return (
+    <Card className="lg:col-span-3">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm flex items-center gap-2">
+          <Building2 className="h-4 w-4 text-muted-foreground" /> Ativos por cliente
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <div className="py-6 text-center text-sm text-muted-foreground">Carregando…</div>
+        ) : linhas.length === 0 ? (
+          <div className="py-6 text-center text-sm text-muted-foreground">Nenhum ativo cadastrado.</div>
+        ) : (
+          <div className="space-y-2">
+            {linhas.map((c) => {
+              const pct = total > 0 ? Math.round((c.total / total) * 100) : 0;
+              return (
+                <div key={c.id} className="text-xs">
+                  <div className="mb-1 flex justify-between gap-2">
+                    <span className="truncate font-medium">{c.nome}</span>
+                    <span className="font-mono tabular-nums text-muted-foreground">{c.total} · {pct}%</span>
+                  </div>
+                  <div className="h-2 overflow-hidden rounded-full bg-muted">
+                    <div className="h-full bg-primary" style={{ width: `${pct}%` }} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 function statusStyle(s: string) {
   if (s === "ok") return { label: "OK", cls: "bg-[color:var(--success)]/15 text-[color:var(--success)] border-[color:var(--success)]/30" };
   if (s === "ocioso") return { label: "Ocioso", cls: "bg-[color:var(--warning)]/15 text-[color:var(--warning)] border-[color:var(--warning)]/30" };
@@ -92,6 +163,7 @@ function statusStyle(s: string) {
 
 function DashboardPage() {
   const { data, isLoading } = useDashboardData();
+  const { data: ativosCliente } = useAtivosPorCliente();
 
   const totais = { Windows: 0, Office: 0, EDR: 0 } as Record<string, number>;
   let compradas = 0;
@@ -118,6 +190,12 @@ function DashboardPage() {
   return (
     <>
       <PageHeader title="Dashboard" description="Posição efetiva de licenças, contratos e ativos em tempo real." />
+
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 lg:gap-5 mb-6">
+        <KpiCard title="Total de ativos" value={ativosCliente?.total ?? 0} icon={<Boxes className="h-4 w-4" />} hint="Quantidade total de ativos cadastrados no sistema." />
+        <AtivosPorClienteCard />
+      </div>
+
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5 mb-6">
         <KpiCard title="Licenças Windows" value={totais.Windows ?? 0} icon={<KeySquare className="h-4 w-4" />} hint="Soma de seats comprados em contratos ativos para produtos da categoria Windows." />
