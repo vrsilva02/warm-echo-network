@@ -163,6 +163,7 @@ function statusStyle(s: string) {
 
 function DashboardPage() {
   const { data, isLoading } = useDashboardData();
+  const { data: ativosCliente } = useAtivosPorCliente();
 
   const totais = { Windows: 0, Office: 0, EDR: 0 } as Record<string, number>;
   let compradas = 0;
