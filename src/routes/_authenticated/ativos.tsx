@@ -126,7 +126,7 @@ function AtivosPage() {
     setEditing(r);
     setForm({
       hostname: r.hostname,
-      tipo: r.tipo,
+      tipo: r.tipo ?? null,
       categoria: r.categoria ?? "",
       marca: r.marca ?? "",
       modelo: r.modelo ?? "",
@@ -144,7 +144,7 @@ function AtivosPage() {
   async function save() {
     const payload = {
       hostname: form.hostname.trim(),
-      tipo: form.tipo,
+      tipo: form.tipo?.trim() || null,
       categoria: form.categoria.trim() || null,
       marca: form.marca.trim() || null,
       modelo: form.modelo.trim() || null,
