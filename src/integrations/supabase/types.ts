@@ -97,6 +97,7 @@ export type Database = {
         Row: {
           categoria: string | null
           centro_custo_id: string | null
+          cliente_id: string | null
           created_at: string | null
           data_aquisicao: string | null
           data_fim_garantia: string | null
@@ -119,6 +120,7 @@ export type Database = {
         Insert: {
           categoria?: string | null
           centro_custo_id?: string | null
+          cliente_id?: string | null
           created_at?: string | null
           data_aquisicao?: string | null
           data_fim_garantia?: string | null
@@ -141,6 +143,7 @@ export type Database = {
         Update: {
           categoria?: string | null
           centro_custo_id?: string | null
+          cliente_id?: string | null
           created_at?: string | null
           data_aquisicao?: string | null
           data_fim_garantia?: string | null
@@ -166,6 +169,13 @@ export type Database = {
             columns: ["centro_custo_id"]
             isOneToOne: false
             referencedRelation: "centros_custo"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ativos_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
             referencedColumns: ["id"]
           },
           {
@@ -410,9 +420,52 @@ export type Database = {
         }
         Relationships: []
       }
+      clientes: {
+        Row: {
+          ativo: boolean
+          codigo: string | null
+          contato: string | null
+          created_at: string
+          documento: string | null
+          email: string | null
+          id: string
+          nome: string
+          observacao: string | null
+          telefone: string | null
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          codigo?: string | null
+          contato?: string | null
+          created_at?: string
+          documento?: string | null
+          email?: string | null
+          id?: string
+          nome: string
+          observacao?: string | null
+          telefone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          codigo?: string | null
+          contato?: string | null
+          created_at?: string
+          documento?: string | null
+          email?: string | null
+          id?: string
+          nome?: string
+          observacao?: string | null
+          telefone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       contratos: {
         Row: {
           centro_custo_id: string | null
+          cliente_id: string | null
           created_at: string | null
           data_fim: string | null
           data_inicio: string
@@ -426,6 +479,7 @@ export type Database = {
         }
         Insert: {
           centro_custo_id?: string | null
+          cliente_id?: string | null
           created_at?: string | null
           data_fim?: string | null
           data_inicio: string
@@ -439,6 +493,7 @@ export type Database = {
         }
         Update: {
           centro_custo_id?: string | null
+          cliente_id?: string | null
           created_at?: string | null
           data_fim?: string | null
           data_inicio?: string
@@ -456,6 +511,13 @@ export type Database = {
             columns: ["centro_custo_id"]
             isOneToOne: false
             referencedRelation: "centros_custo"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contratos_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
             referencedColumns: ["id"]
           },
           {
@@ -664,6 +726,7 @@ export type Database = {
       licencas: {
         Row: {
           chave_ativacao: string | null
+          cliente_id: string | null
           contrato_id: string | null
           created_at: string | null
           custo_unitario: number | null
@@ -680,6 +743,7 @@ export type Database = {
         }
         Insert: {
           chave_ativacao?: string | null
+          cliente_id?: string | null
           contrato_id?: string | null
           created_at?: string | null
           custo_unitario?: number | null
@@ -696,6 +760,7 @@ export type Database = {
         }
         Update: {
           chave_ativacao?: string | null
+          cliente_id?: string | null
           contrato_id?: string | null
           created_at?: string | null
           custo_unitario?: number | null
@@ -711,6 +776,13 @@ export type Database = {
           tipo_ativacao?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "licencas_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "licencas_contrato_id_fkey"
             columns: ["contrato_id"]
