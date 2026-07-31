@@ -937,6 +937,7 @@ function LicencaDialog({
   const [form, setForm] = useState<any>({
     produto_id: defaultProdutoId ?? "",
     contrato_id: null,
+    cliente_id: null,
     quantidade: 1,
     custo_unitario: "",
     data_expiracao: "",
@@ -957,6 +958,11 @@ function LicencaDialog({
   const { data: contratos } = useQuery({
     queryKey: ["contratos-lite"],
     queryFn: async () => (await supabase.from("contratos").select("id, fornecedor, numero_contrato").order("fornecedor")).data ?? [],
+    enabled: open,
+  });
+  const { data: clientes } = useQuery({
+    queryKey: ["clientes-lite"],
+    queryFn: async () => (await supabase.from("clientes").select("id, nome").eq("ativo", true).order("nome")).data ?? [],
     enabled: open,
   });
 
