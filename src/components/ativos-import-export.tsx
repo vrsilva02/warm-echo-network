@@ -87,12 +87,13 @@ export function downloadTemplate() {
     "Financeiro",
     "em_uso",
     "colaborador@empresa.com",
+    "MTR2.TECH",
   ];
   // Exemplo mínimo: apenas hostname — Tipo e Categoria são opcionais e ficam em branco.
   const exemploMinimo = COLUMNS.map((c) => (c === "hostname" ? "SEM-TIPO-0002" : ""));
   const vazia = COLUMNS.map(() => "");
   downloadXLSX("template_ativos.xlsx", COLUMNS as unknown as string[], [exemplo, exemploMinimo, vazia]);
-  toast.success("Template baixado. Apenas hostname é obrigatório; Tipo e Categoria podem ficar em branco.");
+  toast.success("Template baixado. Apenas hostname é obrigatório; Tipo, Categoria e Cliente podem ficar em branco.");
 }
 
 
@@ -103,6 +104,7 @@ type Report = {
   inseridos: number;
   atualizados: number;
   responsaveisNaoEncontrados: number;
+  clientesNaoEncontrados: number;
   erros: { linha: number; motivo: string }[];
 };
 
