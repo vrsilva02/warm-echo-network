@@ -57,7 +57,7 @@ type Ativo = {
   clientes?: { nome: string } | null;
 };
 
-const STATUS = ["em_estoque", "em_uso", "em_manutencao", "baixado"];
+const STATUS = ["solicitado", "estoque", "em_uso", "manutencao", "baixado"];
 
 
 const initial = {
