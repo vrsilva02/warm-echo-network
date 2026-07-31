@@ -155,6 +155,22 @@ export function AdvancedTable<T>({
     [processed, currentPage, effectivePageSize, serverPagination],
   );
 
+  // Virtualização: só entra em ação quando a página tem muitas linhas.
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const virtualize = pageRows.length > 80;
+  const rowVirtualizer = useVirtualizer({
+    count: pageRows.length,
+    getScrollElement: () => scrollRef.current,
+    estimateSize: () => 45,
+    overscan: 12,
+    enabled: virtualize,
+  });
+  const virtualItems = virtualize ? rowVirtualizer.getVirtualItems() : [];
+  const paddingTop = virtualItems.length > 0 ? virtualItems[0]!.start : 0;
+  const paddingBottom =
+    virtualItems.length > 0 ? rowVirtualizer.getTotalSize() - virtualItems[virtualItems.length - 1]!.end : 0;
+
+
   // Volta para a primeira página quando filtros/busca mudam.
   useEffect(() => {
     if (!serverPagination) setPage(1);
