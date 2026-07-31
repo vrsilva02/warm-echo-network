@@ -99,6 +99,7 @@ function Page() {
       valor_total: r.valor_total?.toString() ?? "",
       unidade_id: r.unidade_id,
       centro_custo_id: r.centro_custo_id,
+      cliente_id: r.cliente_id,
     });
     setOpen(true);
   }
@@ -113,6 +114,7 @@ function Page() {
       valor_total: form.valor_total ? Number(form.valor_total) : null,
       unidade_id: form.unidade_id,
       centro_custo_id: form.centro_custo_id,
+      cliente_id: form.cliente_id,
     };
     const { error } = editing
       ? await supabase.from("contratos").update(payload).eq("id", editing.id)
