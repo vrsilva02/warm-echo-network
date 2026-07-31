@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Pencil, Trash2, Laptop, ExternalLink } from "lucide-react";
+import { Pencil, Trash2, Laptop, ExternalLink, HelpCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
 import { logAction } from "@/lib/audit";
@@ -20,6 +20,7 @@ import { Combobox } from "@/components/combobox";
 import { ATIVO_TIPOS, ATIVO_CATEGORIAS, comValorAtual } from "@/lib/ativos-opcoes";
 import { fetchAll } from "@/lib/fetch-all";
 import { chunk } from "@/lib/bulk-import";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 import { EdrBadge, useGapEdrSet } from "@/components/edr-badge";
 import { Link } from "@tanstack/react-router";
@@ -475,7 +476,32 @@ function AtivosPage() {
             <Input value={form.setor} onChange={(e) => setForm({ ...form, setor: e.target.value })} />
           </div>
           <div>
-            <Label>Status</Label>
+            <div className="flex items-center gap-1.5">
+              <Label className="mb-0">Status</Label>
+              <TooltipProvider delayDuration={200}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button type="button" variant="ghost" size="icon" className="h-5 w-5 -ml-1 text-muted-foreground hover:text-foreground">
+                      <HelpCircle className="h-4 w-4" />
+                      <span className="sr-only">Sobre os valores de status</span>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="max-w-xs space-y-1.5">
+                    <p className="font-medium">Status aceitos pelo banco</p>
+                    <ul className="list-disc pl-4 space-y-0.5">
+                      <li><span className="font-mono">solicitado</span></li>
+                      <li><span className="font-mono">estoque</span></li>
+                      <li><span className="font-mono">em_uso</span></li>
+                      <li><span className="font-mono">manutencao</span></li>
+                      <li><span className="font-mono">baixado</span></li>
+                    </ul>
+                    <p className="text-muted-foreground pt-1 border-t border-primary-foreground/20">
+                      Rótulos legados <span className="font-mono">em_estoque</span> e <span className="font-mono">em_manutencao</span> são convertidos automaticamente para <span className="font-mono">estoque</span> e <span className="font-mono">manutencao</span>.
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
             <Select value={form.status_ciclo_vida} onValueChange={(v) => setForm({ ...form, status_ciclo_vida: v })}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>{STATUS.map((s) => <SelectItem key={s} value={s}>{s.replace("_", " ")}</SelectItem>)}</SelectContent>
