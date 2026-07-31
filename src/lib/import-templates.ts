@@ -15,6 +15,7 @@ export const ATIVOS_COLUMNS = [
   "setor",
   "status_ciclo_vida",
   "responsavel_email",
+  "cliente",
 ] as const;
 
 
