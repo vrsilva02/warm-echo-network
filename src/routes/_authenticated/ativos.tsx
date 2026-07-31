@@ -18,6 +18,8 @@ import { logAction } from "@/lib/audit";
 import { useConfirm } from "@/components/confirm-dialog";
 import { Combobox } from "@/components/combobox";
 import { ATIVO_TIPOS, ATIVO_CATEGORIAS, comValorAtual } from "@/lib/ativos-opcoes";
+import { useRealtimeInvalidate } from "@/hooks/use-realtime-invalidate";
+
 import { chunk } from "@/lib/bulk-import";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -171,15 +173,15 @@ function AtivosPage() {
   });
   const { set: edrSet } = useGapEdrSet(rows?.map((row) => row.id));
 
-  useEffect(() => {
-    const channel = supabase
-      .channel("ativos-list-live")
-      .on("postgres_changes", { event: "*", schema: "public", table: "ativos" }, () => {
-        void qc.invalidateQueries({ queryKey: ["ativos"] });
-      })
-      .subscribe();
-    return () => { void supabase.removeChannel(channel); };
-  }, [qc]);
+  useRealtimeInvalidate({
+    channel: "ativos-list-live",
+    table: "ativos",
+    queryKeys: [["ativos"]],
+    batchMs: 1200,
+    minIntervalMs: 5000,
+    enabled: !open, // não atualiza a lista enquanto o formulário está aberto
+  });
+
 
   function openNew() {
     setEditing(null);
