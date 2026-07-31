@@ -348,10 +348,34 @@ export function AdvancedTable<T>({
         )}
       </div>
 
-      <div className="text-xs text-muted-foreground">
-        {isLoading ? "Carregando…" : `${processed.length} de ${rows?.length ?? 0} registro(s)`}
-        {activeView && <> · filtro <strong>{activeView.label}</strong></>}
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="text-xs text-muted-foreground">
+          {isLoading
+            ? "Carregando…"
+            : `${processed.length === 0 ? 0 : (currentPage - 1) * pageSize + 1}–${Math.min(currentPage * pageSize, processed.length)} de ${processed.length} filtrado(s) · ${rows?.length ?? 0} no total`}
+          {activeView && <> · filtro <strong>{activeView.label}</strong></>}
+        </div>
+        {!isLoading && processed.length > 0 && (
+          <div className="flex items-center gap-2">
+            <select
+              className="h-8 rounded-md border bg-background px-2 text-xs"
+              value={pageSize}
+              onChange={(e) => setPageSize(Number(e.target.value))}
+              aria-label="Registros por página"
+            >
+              {[25, 50, 100, 200, 500].map((n) => (
+                <option key={n} value={n}>{n} / página</option>
+              ))}
+            </select>
+            <Button size="sm" variant="outline" disabled={currentPage <= 1} onClick={() => setPage(1)}>«</Button>
+            <Button size="sm" variant="outline" disabled={currentPage <= 1} onClick={() => setPage(currentPage - 1)}>Anterior</Button>
+            <span className="text-xs text-muted-foreground whitespace-nowrap">{currentPage} / {totalPages}</span>
+            <Button size="sm" variant="outline" disabled={currentPage >= totalPages} onClick={() => setPage(currentPage + 1)}>Próxima</Button>
+            <Button size="sm" variant="outline" disabled={currentPage >= totalPages} onClick={() => setPage(totalPages)}>»</Button>
+          </div>
+        )}
       </div>
+
     </div>
   );
 }
