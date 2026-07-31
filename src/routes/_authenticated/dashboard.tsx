@@ -15,7 +15,7 @@ const TcoCentroBarChart = lazy(() => import("@/components/dashboard-charts").the
 function ChartFallback() {
   return <div className="h-full w-full animate-pulse rounded-md bg-muted/50" />;
 }
-import { AlertTriangle, CheckCircle2, XCircle, KeySquare, FileWarning, Snowflake, ShieldAlert, Coins, Settings2, Wrench, Package } from "lucide-react";
+import { AlertTriangle, CheckCircle2, XCircle, KeySquare, FileWarning, Snowflake, ShieldAlert, Coins, Settings2, Wrench, Package, Building2, Boxes } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Link } from "@tanstack/react-router";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
