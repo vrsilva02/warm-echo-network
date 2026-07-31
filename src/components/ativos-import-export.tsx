@@ -45,7 +45,7 @@ export async function exportAtivos() {
   const tid = toast.loading("Preparando exportação…");
   const { data, error } = await fetchAll<any>(
     "ativos",
-    "hostname, tipo, categoria, marca, modelo, numero_patrimonio, numero_serie, setor, status_ciclo_vida, usuarios(email)",
+    "hostname, tipo, categoria, marca, modelo, numero_patrimonio, numero_serie, setor, status_ciclo_vida, usuarios(email), clientes(nome)",
     (q) => q.order("hostname"),
     { onProgress: (n) => toast.loading(`Baixando dados… ${n} registro(s)`, { id: tid }) },
   );
@@ -64,6 +64,7 @@ export async function exportAtivos() {
     a.setor ?? "",
     a.status_ciclo_vida ?? "",
     a.usuarios?.email ?? "",
+    a.clientes?.nome ?? "",
   ]);
   toast.loading("Gerando arquivo XLSX…", { id: tid });
   const fname = `ativos_${new Date().toISOString().slice(0, 10)}.xlsx`;
@@ -86,12 +87,13 @@ export function downloadTemplate() {
     "Financeiro",
     "em_uso",
     "colaborador@empresa.com",
+    "MTR2.TECH",
   ];
   // Exemplo mínimo: apenas hostname — Tipo e Categoria são opcionais e ficam em branco.
   const exemploMinimo = COLUMNS.map((c) => (c === "hostname" ? "SEM-TIPO-0002" : ""));
   const vazia = COLUMNS.map(() => "");
   downloadXLSX("template_ativos.xlsx", COLUMNS as unknown as string[], [exemplo, exemploMinimo, vazia]);
-  toast.success("Template baixado. Apenas hostname é obrigatório; Tipo e Categoria podem ficar em branco.");
+  toast.success("Template baixado. Apenas hostname é obrigatório; Tipo, Categoria e Cliente podem ficar em branco.");
 }
 
 
@@ -102,6 +104,7 @@ type Report = {
   inseridos: number;
   atualizados: number;
   responsaveisNaoEncontrados: number;
+  clientesNaoEncontrados: number;
   erros: { linha: number; motivo: string }[];
 };
 
@@ -117,17 +120,22 @@ async function importarLinhas(
     inseridos: 0,
     atualizados: 0,
     responsaveisNaoEncontrados: 0,
+    clientesNaoEncontrados: 0,
     erros: [],
   };
 
   setPhase("Carregando dados de referência…");
-  // Cache de usuários e ativos existentes para reduzir round-trips.
-  const [{ data: usuarios }, { data: existentes }] = await Promise.all([
+  // Cache de usuários, clientes e ativos existentes para reduzir round-trips.
+  const [{ data: usuarios }, { data: clientes }, { data: existentes }] = await Promise.all([
     fetchAll<any>("usuarios", "id, email", (q) => q.not("email", "is", null)),
+    fetchAll<any>("clientes", "id, nome", (q) => q.not("nome", "is", null)),
     fetchAll<any>("ativos", "id, hostname"),
   ]);
   const userByEmail = new Map<string, string>(
     (usuarios ?? []).filter((u: any) => u.email).map((u: any) => [u.email.toLowerCase(), u.id]),
+  );
+  const clienteByNome = new Map<string, string>(
+    (clientes ?? []).filter((c: any) => c.nome).map((c: any) => [c.nome.trim().toLowerCase(), c.id]),
   );
   const ativoByHost = new Map<string, string>(
     (existentes ?? []).map((a: any) => [a.hostname.toLowerCase(), a.id]),
@@ -169,6 +177,14 @@ async function importarLinhas(
       else rep.responsaveisNaoEncontrados++;
     }
 
+    let clienteId: string | null = null;
+    const clienteNome = nz(r.cliente);
+    if (clienteNome) {
+      const found = clienteByNome.get(clienteNome.toLowerCase());
+      if (found) clienteId = found;
+      else rep.clientesNaoEncontrados++;
+    }
+
     const payload = {
       hostname,
       tipo,
@@ -180,6 +196,7 @@ async function importarLinhas(
       setor: nz(r.setor),
       status_ciclo_vida: status,
       usuario_responsavel_id: responsavelId,
+      cliente_id: clienteId,
     };
 
     const key = hostname.toLowerCase();
@@ -241,6 +258,7 @@ async function importarLinhas(
     inseridos: rep.inseridos,
     atualizados: rep.atualizados,
     responsaveis_nao_encontrados: rep.responsaveisNaoEncontrados,
+    clientes_nao_encontrados: rep.clientesNaoEncontrados,
     erros: rep.erros.length,
   });
   return rep;
@@ -305,13 +323,14 @@ export function AtivosImportExport({ canWrite, onImported }: { canWrite: boolean
         onOpenChange={setOpen}
         scope="ativos"
         title="Importar ativos"
-        description="Envie um arquivo XLSX seguindo o template. Somente hostname é obrigatório — Tipo e Categoria são opcionais e podem ficar em branco (serão gravados como vazios). Ativos existentes (mesmo hostname) são atualizados; novos são criados. O responsável é vinculado quando o e-mail já existe em Usuários."
+        description="Envie um arquivo XLSX seguindo o template. Somente hostname é obrigatório — Tipo, Categoria e Cliente são opcionais e podem ficar em branco. Ativos existentes (mesmo hostname) são atualizados; novos são criados. O responsável é vinculado quando o e-mail já existe em Usuários; o cliente é vinculado quando o nome já existe em Clientes."
         requiredColumns={COLUMNS}
-        previewColumns={["hostname", "tipo", "categoria", "marca", "modelo", "status_ciclo_vida"]}
+        previewColumns={["hostname", "tipo", "categoria", "marca", "modelo", "status_ciclo_vida", "cliente"]}
         renderPreviewCell={(r, c) =>
           c === "numero_patrimonio" ? <span className="font-mono">{r[c]}</span>
           : c === "tipo" && !(r[c] ?? "").trim() ? <span className="text-muted-foreground">Sem tipo</span>
           : c === "categoria" && !(r[c] ?? "").trim() ? <span className="text-muted-foreground">Sem categoria</span>
+          : c === "cliente" && !(r[c] ?? "").trim() ? <span className="text-muted-foreground">Sem cliente</span>
           : r[c]
         }
 
@@ -333,6 +352,11 @@ export function AtivosImportExport({ canWrite, onImported }: { canWrite: boolean
                 label="Responsáveis não encontrados"
                 value={r.responsaveisNaoEncontrados}
                 tone={r.responsaveisNaoEncontrados > 0 ? "warn" : undefined}
+              />
+              <BulkMetric
+                label="Clientes não encontrados"
+                value={r.clientesNaoEncontrados}
+                tone={r.clientesNaoEncontrados > 0 ? "warn" : undefined}
               />
               <BulkMetric label="Linhas com erro" value={r.erros.length} tone={r.erros.length > 0 ? "danger" : undefined} />
             </div>
