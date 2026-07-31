@@ -135,6 +135,7 @@ function AtivosPage() {
 
   function openNew() {
     setEditing(null);
+    setOriginalStatus(null);
     setForm(initial);
     setOpen(true);
   }
