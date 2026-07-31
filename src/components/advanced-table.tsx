@@ -7,6 +7,7 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLab
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Search, Columns3, Download, ArrowUp, ArrowDown, ArrowUpDown, X, ChevronUp, ChevronDown } from "lucide-react";
 import { TableSkeleton } from "@/components/skeletons";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { exportXLSXInBackground } from "@/lib/export";
 import { logAction } from "@/lib/audit";
 
@@ -153,6 +154,22 @@ export function AdvancedTable<T>({
     () => serverPagination ? processed : processed.slice((currentPage - 1) * effectivePageSize, currentPage * effectivePageSize),
     [processed, currentPage, effectivePageSize, serverPagination],
   );
+
+  // Virtualização: só entra em ação quando a página tem muitas linhas.
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const virtualize = pageRows.length > 80;
+  const rowVirtualizer = useVirtualizer({
+    count: pageRows.length,
+    getScrollElement: () => scrollRef.current,
+    estimateSize: () => 45,
+    overscan: 12,
+    enabled: virtualize,
+  });
+  const virtualItems = virtualize ? rowVirtualizer.getVirtualItems() : [];
+  const paddingTop = virtualItems.length > 0 ? virtualItems[0]!.start : 0;
+  const paddingBottom =
+    virtualItems.length > 0 ? rowVirtualizer.getTotalSize() - virtualItems[virtualItems.length - 1]!.end : 0;
+
 
   // Volta para a primeira página quando filtros/busca mudam.
   useEffect(() => {
@@ -313,7 +330,10 @@ export function AdvancedTable<T>({
         </div>
       )}
 
-      <div className="rounded-md border overflow-x-auto bg-card">
+      <div
+        ref={scrollRef}
+        className={`rounded-md border overflow-x-auto bg-card ${virtualize ? "max-h-[70vh] overflow-y-auto" : ""}`}
+      >
         {isLoading ? (
           <div className="p-4"><TableSkeleton rows={6} cols={visibleColumns.length} /></div>
         ) : processed.length === 0 ? (
@@ -322,7 +342,7 @@ export function AdvancedTable<T>({
           </div>
         ) : (
           <Table>
-            <TableHeader>
+            <TableHeader className={virtualize ? "sticky top-0 z-10 bg-card" : undefined}>
               <TableRow>
                 {bulkActions && (
                   <TableHead className="w-10">
@@ -352,11 +372,20 @@ export function AdvancedTable<T>({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {pageRows.map((r) => {
+              {virtualize && paddingTop > 0 && (
+                <tr aria-hidden><td colSpan={visibleColumns.length + (bulkActions ? 1 : 0)} style={{ height: paddingTop }} /></tr>
+              )}
+              {(virtualize ? virtualItems.map((vi) => ({ row: pageRows[vi.index]!, vi })) : pageRows.map((row) => ({ row, vi: null }))).map(({ row: r, vi }) => {
                 const id = getRowId(r);
                 const isSelected = selected.has(id);
                 return (
-                  <TableRow key={id} data-state={isSelected ? "selected" : undefined} className={rowClassName?.(r)}>
+                  <TableRow
+                    key={id}
+                    data-index={vi ? vi.index : undefined}
+                    ref={vi ? rowVirtualizer.measureElement : undefined}
+                    data-state={isSelected ? "selected" : undefined}
+                    className={rowClassName?.(r)}
+                  >
                     {bulkActions && (
                       <TableCell className="w-10">
                         <Checkbox checked={isSelected} onCheckedChange={() => toggleRow(id)} aria-label="Selecionar linha" />
@@ -370,10 +399,14 @@ export function AdvancedTable<T>({
                   </TableRow>
                 );
               })}
+              {virtualize && paddingBottom > 0 && (
+                <tr aria-hidden><td colSpan={visibleColumns.length + (bulkActions ? 1 : 0)} style={{ height: paddingBottom }} /></tr>
+              )}
             </TableBody>
           </Table>
         )}
       </div>
+
 
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div className="text-xs text-muted-foreground">
