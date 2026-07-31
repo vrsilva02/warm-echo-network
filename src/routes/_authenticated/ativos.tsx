@@ -59,6 +59,14 @@ type Ativo = {
 
 const STATUS = ["solicitado", "estoque", "em_uso", "manutencao", "baixado"];
 
+/** Converte valores legados de status para os aceitos pelo banco. */
+function normalizeStatus(s: string | null | undefined): string {
+  const v = (s ?? "").trim();
+  if (v === "em_estoque") return "estoque";
+  if (v === "em_manutencao") return "manutencao";
+  return STATUS.includes(v) ? v : "estoque";
+}
+
 
 const initial = {
   hostname: "",
@@ -139,7 +147,7 @@ function AtivosPage() {
       numero_serie: r.numero_serie ?? "",
       numero_patrimonio: r.numero_patrimonio ?? "",
       setor: r.setor ?? "",
-      status_ciclo_vida: r.status_ciclo_vida,
+      status_ciclo_vida: normalizeStatus(r.status_ciclo_vida),
       usuario_responsavel_id: r.usuario_responsavel_id,
       centro_custo_id: r.centro_custo_id,
       cliente_id: r.cliente_id,
@@ -157,7 +165,7 @@ function AtivosPage() {
       numero_serie: form.numero_serie || null,
       numero_patrimonio: form.numero_patrimonio.trim() || null,
       setor: form.setor || null,
-      status_ciclo_vida: form.status_ciclo_vida,
+      status_ciclo_vida: normalizeStatus(form.status_ciclo_vida),
       usuario_responsavel_id: form.usuario_responsavel_id,
       centro_custo_id: form.centro_custo_id,
       cliente_id: form.cliente_id,
