@@ -386,10 +386,14 @@ function AtivosPage() {
         <div className="grid grid-cols-2 gap-3">
           <div>
             <Label>Tipo</Label>
-            <Select value={form.tipo} onValueChange={(v) => setForm({ ...form, tipo: v })}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>{TIPOS.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
-            </Select>
+            <Combobox
+              placeholder="Selecione o tipo"
+              searchPlaceholder="Buscar tipo…"
+              clearable={false}
+              value={form.tipo || null}
+              onChange={(v) => setForm({ ...form, tipo: v ?? "" })}
+              options={comValorAtual(ATIVO_TIPOS, form.tipo).map((t) => ({ value: t, label: t }))}
+            />
           </div>
           <div>
             <Label>Nº série</Label>
@@ -398,10 +402,12 @@ function AtivosPage() {
         </div>
         <div>
           <Label>Categoria</Label>
-          <Input
-            value={form.categoria}
-            onChange={(e) => setForm({ ...form, categoria: e.target.value })}
-            placeholder="Ex.: Computadores, Rede, Impressoras"
+          <Combobox
+            placeholder="Selecione a categoria"
+            searchPlaceholder="Buscar categoria…"
+            value={form.categoria || null}
+            onChange={(v) => setForm({ ...form, categoria: v ?? "" })}
+            options={comValorAtual(ATIVO_CATEGORIAS, form.categoria).map((c) => ({ value: c, label: c }))}
           />
         </div>
         <div className="grid grid-cols-2 gap-3">
