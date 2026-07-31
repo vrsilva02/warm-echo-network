@@ -78,7 +78,10 @@ const initial = {
 function statusBadge(s: string) {
   const map: Record<string, string> = {
     em_uso: "bg-[color:var(--success)]/15 text-[color:var(--success)] border-[color:var(--success)]/30",
+    estoque: "bg-primary/10 text-primary border-primary/30",
     em_estoque: "bg-primary/10 text-primary border-primary/30",
+    solicitado: "bg-muted text-muted-foreground",
+    manutencao: "bg-[color:var(--warning)]/15 text-[color:var(--warning)] border-[color:var(--warning)]/30",
     em_manutencao: "bg-[color:var(--warning)]/15 text-[color:var(--warning)] border-[color:var(--warning)]/30",
     baixado: "bg-muted text-muted-foreground",
   };
