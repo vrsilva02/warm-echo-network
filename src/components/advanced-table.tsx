@@ -325,7 +325,7 @@ export function AdvancedTable<T>({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {processed.map((r) => {
+              {pageRows.map((r) => {
                 const id = getRowId(r);
                 const isSelected = selected.has(id);
                 return (
