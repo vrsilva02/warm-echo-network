@@ -7,6 +7,7 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLab
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Search, Columns3, Download, ArrowUp, ArrowDown, ArrowUpDown, X, ChevronUp, ChevronDown } from "lucide-react";
 import { TableSkeleton } from "@/components/skeletons";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { exportXLSXInBackground } from "@/lib/export";
 import { logAction } from "@/lib/audit";
 
