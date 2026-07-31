@@ -392,7 +392,7 @@ function AtivosPage() {
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <Label>Tipo</Label>
+            <Label>Tipo <span className="text-muted-foreground font-normal">(opcional)</span></Label>
             <Combobox
               placeholder="Selecione o tipo"
               searchPlaceholder="Buscar tipo…"
@@ -408,10 +408,11 @@ function AtivosPage() {
           </div>
         </div>
         <div>
-          <Label>Categoria</Label>
+          <Label>Categoria <span className="text-muted-foreground font-normal">(opcional)</span></Label>
           <Combobox
             placeholder="Selecione a categoria"
             searchPlaceholder="Buscar categoria…"
+            clearable
             value={form.categoria || null}
             onChange={(v) => setForm({ ...form, categoria: v ?? "" })}
             options={comValorAtual(ATIVO_CATEGORIAS, form.categoria).map((c) => ({ value: c, label: c }))}
