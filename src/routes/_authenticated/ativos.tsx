@@ -18,6 +18,8 @@ import { logAction } from "@/lib/audit";
 import { useConfirm } from "@/components/confirm-dialog";
 import { Combobox } from "@/components/combobox";
 import { ATIVO_TIPOS, ATIVO_CATEGORIAS, comValorAtual } from "@/lib/ativos-opcoes";
+import { fetchAll } from "@/lib/fetch-all";
+import { chunk } from "@/lib/bulk-import";
 
 import { EdrBadge, useGapEdrSet } from "@/components/edr-badge";
 import { Link } from "@tanstack/react-router";
