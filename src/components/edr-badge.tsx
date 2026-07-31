@@ -4,20 +4,23 @@ import { ShieldAlert } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 /** Query central compartilhada: hosts sem cobertura EDR (Kaspersky). */
-export function useGapEdr() {
+export function useGapEdr(ativoIds?: string[]) {
   return useQuery({
-    queryKey: ["vw_gap_edr"],
+    queryKey: ["vw_gap_edr", ativoIds ?? "all"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("vw_gap_edr").select("ativo_id,hostname,setor,status_ciclo_vida");
+      let query = supabase.from("vw_gap_edr").select("ativo_id,hostname,setor,status_ciclo_vida");
+      if (ativoIds) query = query.in("ativo_id", ativoIds);
+      const { data, error } = await query;
       if (error) throw error;
       return (data ?? []) as Array<{ ativo_id: string; hostname: string | null; setor: string | null; status_ciclo_vida: string | null }>;
     },
+    enabled: !ativoIds || ativoIds.length > 0,
     staleTime: 60_000,
   });
 }
 
-export function useGapEdrSet() {
-  const q = useGapEdr();
+export function useGapEdrSet(ativoIds?: string[]) {
+  const q = useGapEdr(ativoIds);
   return { ...q, set: new Set((q.data ?? []).map((r) => r.ativo_id)) };
 }
 

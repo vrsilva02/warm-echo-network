@@ -44,6 +44,16 @@ type Props<T> = {
   exportFilename?: string;
   toolbarExtras?: ReactNode;
   rowClassName?: (row: T) => string | undefined;
+  serverPagination?: {
+    total: number;
+    page: number;
+    pageSize: number;
+    onPageChange: (page: number) => void;
+    onPageSizeChange: (pageSize: number) => void;
+    onSearchChange: (query: string) => void;
+    onViewChange: (view: string | null) => void;
+    onSortChange: (sort: Prefs["sort"]) => void;
+  };
 };
 
 type Prefs = {
@@ -67,7 +77,7 @@ function savePrefs(key: string, p: Prefs) {
 export function AdvancedTable<T>({
   storageKey, rows, isLoading, columns, getRowId,
   searchable = true, searchPlaceholder = "Buscar…",
-  savedViews, bulkActions, emptyState, exportFilename, toolbarExtras, rowClassName,
+  savedViews, bulkActions, emptyState, exportFilename, toolbarExtras, rowClassName, serverPagination,
 }: Props<T>) {
   const [prefs, setPrefs] = useState<Prefs>(() => loadPrefs(storageKey));
   const [query, setQuery] = useState("");
@@ -80,9 +90,12 @@ export function AdvancedTable<T>({
 
   // Debounce da busca: evita refiltrar milhares de linhas a cada tecla.
   useEffect(() => {
-    const t = setTimeout(() => setQuery(rawQuery), 200);
+    const t = setTimeout(() => {
+      setQuery(rawQuery);
+      serverPagination?.onSearchChange(rawQuery);
+    }, 200);
     return () => clearTimeout(t);
-  }, [rawQuery]);
+  }, [rawQuery, serverPagination]);
 
 
   const orderedColumns = useMemo(() => {
@@ -101,6 +114,7 @@ export function AdvancedTable<T>({
 
   const processed = useMemo(() => {
     let list = rows ?? [];
+    if (serverPagination) return list;
     if (activeView) list = activeView.filter(list);
     if (query.trim()) {
       const q = query.trim().toLowerCase();
@@ -127,17 +141,21 @@ export function AdvancedTable<T>({
       }
     }
     return list;
-  }, [rows, columns, query, prefs.sort, activeView]);
+  }, [rows, columns, query, prefs.sort, activeView, serverPagination]);
 
-  const totalPages = Math.max(1, Math.ceil(processed.length / pageSize));
-  const currentPage = Math.min(page, totalPages);
+  const effectivePageSize = serverPagination?.pageSize ?? pageSize;
+  const totalRows = serverPagination?.total ?? processed.length;
+  const totalPages = Math.max(1, Math.ceil(totalRows / effectivePageSize));
+  const currentPage = Math.min(serverPagination?.page ?? page, totalPages);
   const pageRows = useMemo(
-    () => processed.slice((currentPage - 1) * pageSize, currentPage * pageSize),
-    [processed, currentPage, pageSize],
+    () => serverPagination ? processed : processed.slice((currentPage - 1) * effectivePageSize, currentPage * effectivePageSize),
+    [processed, currentPage, effectivePageSize, serverPagination],
   );
 
   // Volta para a primeira página quando filtros/busca mudam.
-  useEffect(() => { setPage(1); }, [query, prefs.view, prefs.sort, pageSize]);
+  useEffect(() => {
+    if (!serverPagination) setPage(1);
+  }, [query, prefs.view, prefs.sort, pageSize, serverPagination]);
 
   const allSelected = processed.length > 0 && processed.every((r) => selected.has(getRowId(r)));
   const someSelected = processed.some((r) => selected.has(getRowId(r)));
@@ -177,13 +195,18 @@ export function AdvancedTable<T>({
   function toggleSort(id: string) {
     setPrefs((p) => {
       const cur = p.sort;
-      if (!cur || cur.id !== id) return { ...p, sort: { id, dir: "asc" } };
-      if (cur.dir === "asc") return { ...p, sort: { id, dir: "desc" } };
-      return { ...p, sort: null };
+      const sort = !cur || cur.id !== id
+        ? { id, dir: "asc" as const }
+        : cur.dir === "asc"
+          ? { id, dir: "desc" as const }
+          : null;
+      serverPagination?.onSortChange(sort);
+      return { ...p, sort };
     });
   }
   function pickView(id: string | null) {
     setPrefs((p) => ({ ...p, view: id }));
+    serverPagination?.onViewChange(id);
     clearSelection();
   }
 
@@ -352,26 +375,30 @@ export function AdvancedTable<T>({
         <div className="text-xs text-muted-foreground">
           {isLoading
             ? "Carregando…"
-            : `${processed.length === 0 ? 0 : (currentPage - 1) * pageSize + 1}–${Math.min(currentPage * pageSize, processed.length)} de ${processed.length} filtrado(s) · ${rows?.length ?? 0} no total`}
+            : `${totalRows === 0 ? 0 : (currentPage - 1) * effectivePageSize + 1}–${Math.min(currentPage * effectivePageSize, totalRows)} de ${totalRows} registro(s)`}
           {activeView && <> · filtro <strong>{activeView.label}</strong></>}
         </div>
         {!isLoading && processed.length > 0 && (
           <div className="flex items-center gap-2">
             <select
               className="h-8 rounded-md border bg-background px-2 text-xs"
-              value={pageSize}
-              onChange={(e) => setPageSize(Number(e.target.value))}
+              value={effectivePageSize}
+              onChange={(e) => {
+                const nextSize = Number(e.target.value);
+                if (serverPagination) serverPagination.onPageSizeChange(nextSize);
+                else setPageSize(nextSize);
+              }}
               aria-label="Registros por página"
             >
               {[25, 50, 100, 200, 500].map((n) => (
                 <option key={n} value={n}>{n} / página</option>
               ))}
             </select>
-            <Button size="sm" variant="outline" disabled={currentPage <= 1} onClick={() => setPage(1)}>«</Button>
-            <Button size="sm" variant="outline" disabled={currentPage <= 1} onClick={() => setPage(currentPage - 1)}>Anterior</Button>
+            <Button size="sm" variant="outline" disabled={currentPage <= 1} onClick={() => serverPagination ? serverPagination.onPageChange(1) : setPage(1)}>«</Button>
+            <Button size="sm" variant="outline" disabled={currentPage <= 1} onClick={() => serverPagination ? serverPagination.onPageChange(currentPage - 1) : setPage(currentPage - 1)}>Anterior</Button>
             <span className="text-xs text-muted-foreground whitespace-nowrap">{currentPage} / {totalPages}</span>
-            <Button size="sm" variant="outline" disabled={currentPage >= totalPages} onClick={() => setPage(currentPage + 1)}>Próxima</Button>
-            <Button size="sm" variant="outline" disabled={currentPage >= totalPages} onClick={() => setPage(totalPages)}>»</Button>
+            <Button size="sm" variant="outline" disabled={currentPage >= totalPages} onClick={() => serverPagination ? serverPagination.onPageChange(currentPage + 1) : setPage(currentPage + 1)}>Próxima</Button>
+            <Button size="sm" variant="outline" disabled={currentPage >= totalPages} onClick={() => serverPagination ? serverPagination.onPageChange(totalPages) : setPage(totalPages)}>»</Button>
           </div>
         )}
       </div>
