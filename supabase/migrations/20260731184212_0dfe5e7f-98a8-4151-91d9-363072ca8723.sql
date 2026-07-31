@@ -1,0 +1,1 @@
+ALTER TABLE public.ativos ALTER COLUMN tipo DROP NOT NULL;

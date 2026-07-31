@@ -39,7 +39,7 @@ export const Route = createFileRoute("/_authenticated/ativos")({
 type Ativo = {
   id: string;
   hostname: string;
-  tipo: string;
+  tipo: string | null;
   categoria: string | null;
   marca: string | null;
   modelo: string | null;
@@ -60,7 +60,7 @@ const STATUS = ["em_estoque", "em_uso", "em_manutencao", "baixado"];
 
 const initial = {
   hostname: "",
-  tipo: "NOTEBOOK",
+  tipo: null as string | null,
   categoria: "",
   marca: "",
   modelo: "",
@@ -126,7 +126,7 @@ function AtivosPage() {
     setEditing(r);
     setForm({
       hostname: r.hostname,
-      tipo: r.tipo,
+      tipo: r.tipo ?? null,
       categoria: r.categoria ?? "",
       marca: r.marca ?? "",
       modelo: r.modelo ?? "",
@@ -144,7 +144,7 @@ function AtivosPage() {
   async function save() {
     const payload = {
       hostname: form.hostname.trim(),
-      tipo: form.tipo,
+      tipo: form.tipo?.trim() || null,
       categoria: form.categoria.trim() || null,
       marca: form.marca.trim() || null,
       modelo: form.modelo.trim() || null,
@@ -390,9 +390,9 @@ function AtivosPage() {
             <Combobox
               placeholder="Selecione o tipo"
               searchPlaceholder="Buscar tipo…"
-              clearable={false}
-              value={form.tipo || null}
-              onChange={(v) => setForm({ ...form, tipo: v ?? "" })}
+              clearable
+              value={form.tipo}
+              onChange={(v) => setForm({ ...form, tipo: v })}
               options={comValorAtual(ATIVO_TIPOS, form.tipo).map((t) => ({ value: t, label: t }))}
             />
           </div>

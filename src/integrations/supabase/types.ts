@@ -110,7 +110,7 @@ export type Database = {
           numero_serie: string | null
           setor: string | null
           status_ciclo_vida: string
-          tipo: string
+          tipo: string | null
           unidade_id: string | null
           updated_at: string | null
           usuario_responsavel_id: string | null
@@ -133,7 +133,7 @@ export type Database = {
           numero_serie?: string | null
           setor?: string | null
           status_ciclo_vida?: string
-          tipo: string
+          tipo?: string | null
           unidade_id?: string | null
           updated_at?: string | null
           usuario_responsavel_id?: string | null
@@ -156,7 +156,7 @@ export type Database = {
           numero_serie?: string | null
           setor?: string | null
           status_ciclo_vida?: string
-          tipo?: string
+          tipo?: string | null
           unidade_id?: string | null
           updated_at?: string | null
           usuario_responsavel_id?: string | null
