@@ -48,8 +48,10 @@ type Ativo = {
   status_ciclo_vida: string;
   usuario_responsavel_id: string | null;
   centro_custo_id: string | null;
+  cliente_id: string | null;
   usuarios?: { nome: string } | null;
   centros_custo?: { nome: string } | null;
+  clientes?: { nome: string } | null;
 };
 
 const STATUS = ["em_estoque", "em_uso", "em_manutencao", "baixado"];
@@ -67,6 +69,7 @@ const initial = {
   status_ciclo_vida: "em_estoque",
   usuario_responsavel_id: null as string | null,
   centro_custo_id: null as string | null,
+  cliente_id: null as string | null,
 };
 
 function statusBadge(s: string) {
@@ -92,7 +95,7 @@ function AtivosPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("ativos")
-        .select("*, usuarios(nome), centros_custo(nome)")
+        .select("*, usuarios(nome), centros_custo(nome), clientes(nome)")
         .order("hostname");
       if (error) throw error;
       return data as unknown as Ativo[];
@@ -106,6 +109,10 @@ function AtivosPage() {
   const { data: centros } = useQuery({
     queryKey: ["centros_custo-lite"],
     queryFn: async () => (await supabase.from("centros_custo").select("id,nome").order("nome")).data ?? [],
+  });
+  const { data: clientes } = useQuery({
+    queryKey: ["clientes-lite"],
+    queryFn: async () => (await supabase.from("clientes").select("id,nome").eq("ativo", true).order("nome")).data ?? [],
   });
   const { set: edrSet } = useGapEdrSet();
 
