@@ -32,6 +32,13 @@ const AtivosImportExport = lazy(() =>
 
 export const Route = createFileRoute("/_authenticated/ativos")({
   component: AtivosPage,
+  // Dispara a busca da primeira página já no preload/navegação (antes do render),
+  // para a tela abrir com os dados prontos.
+  loader: ({ context }) => {
+    const state = loadAtivosListState();
+    void context.queryClient.prefetchQuery(ativosPageQuery(state));
+    void context.queryClient.prefetchQuery(ativosCountQuery(state));
+  },
   head: () => ({
     meta: [
       { title: "Ativos — GestoraIT" },
@@ -39,6 +46,7 @@ export const Route = createFileRoute("/_authenticated/ativos")({
     ],
   }),
 });
+
 
 type Ativo = {
   id: string;
@@ -72,6 +80,74 @@ function loadAtivosListState() {
     return fallback;
   }
 }
+
+type ListState = ReturnType<typeof loadAtivosListState>;
+
+const ATIVO_SELECT =
+  "id,hostname,tipo,categoria,marca,modelo,numero_serie,numero_patrimonio,setor,status_ciclo_vida,usuario_responsavel_id,centro_custo_id,cliente_id,usuarios(nome),centros_custo(nome),clientes(nome)";
+
+/** Aplica busca e visão salva na query do Supabase. */
+function applyAtivosFilters(query: any, s: ListState) {
+  const term = s.query.trim().replace(/[%_,()]/g, " ");
+  if (term) {
+    query = query.or(
+      `hostname.ilike.%${term}%,numero_patrimonio.ilike.%${term}%,numero_serie.ilike.%${term}%,tipo.ilike.%${term}%,categoria.ilike.%${term}%,marca.ilike.%${term}%,modelo.ilike.%${term}%,setor.ilike.%${term}%,status_ciclo_vida.ilike.%${term}%`,
+    );
+  }
+  if (s.view === "em_uso") query = query.eq("status_ciclo_vida", "em_uso");
+  if (s.view === "estoque") query = query.in("status_ciclo_vida", ["estoque", "em_estoque"]);
+  if (s.view === "manutencao") query = query.in("status_ciclo_vida", ["manutencao", "em_manutencao"]);
+  if (s.view === "sem_patrimonio") query = query.is("numero_patrimonio", null);
+  if (s.view === "sem_tipo") query = query.is("tipo", null);
+  if (s.view === "sem_categoria") query = query.is("categoria", null);
+  return query;
+}
+
+/** Página de linhas — sem COUNT, que é o que deixava o primeiro carregamento lento. */
+function ativosPageQuery(s: ListState) {
+  return {
+    queryKey: ["ativos", "page", s] as const,
+    staleTime: 5 * 60_000,
+    gcTime: 30 * 60_000,
+    queryFn: async () => {
+      const from = (s.page - 1) * s.pageSize;
+      const sortColumns: Record<string, string> = {
+        hostname: "hostname", patrimonio: "numero_patrimonio", tipo: "tipo", categoria: "categoria",
+        marca: "marca", modelo: "modelo", setor: "setor", status: "status_ciclo_vida",
+      };
+      const sortColumn = (s.sort ? sortColumns[s.sort.id] : "hostname") ?? "hostname";
+      const { data, error } = await applyAtivosFilters(
+        supabase.from("ativos").select(ATIVO_SELECT),
+        s,
+      )
+        .order(sortColumn, { ascending: s.sort?.dir !== "desc", nullsFirst: false })
+        .order("id", { ascending: true })
+        .range(from, from + s.pageSize - 1);
+      if (error) throw error;
+      return (data ?? []) as Ativo[];
+    },
+  };
+}
+
+/** COUNT em paralelo: não bloqueia a exibição das linhas. */
+function ativosCountQuery(s: ListState) {
+  const key = { query: s.query, view: s.view };
+  return {
+    queryKey: ["ativos", "count", key] as const,
+    staleTime: 5 * 60_000,
+    gcTime: 30 * 60_000,
+    queryFn: async () => {
+      const { count, error } = await applyAtivosFilters(
+        supabase.from("ativos").select("id", { count: "exact", head: true }),
+        s,
+      );
+      if (error) throw error;
+      return count ?? 0;
+    },
+  };
+}
+
+
 
 /** Converte valores legados de status para os aceitos pelo banco. */
 function normalizeStatus(s: string | null | undefined): string {
@@ -120,43 +196,15 @@ function AtivosPage() {
   const [originalStatus, setOriginalStatus] = useState<string | null>(null);
   const [listState, setListState] = useState(loadAtivosListState);
 
-  const { data: ativosPage, isLoading } = useQuery({
-    queryKey: ["ativos", "page", listState],
-    staleTime: 5 * 60_000,
-    gcTime: 30 * 60_000,
+  const { data: rows, isLoading } = useQuery({
+    ...ativosPageQuery(listState),
     placeholderData: keepPreviousData,
-    queryFn: async () => {
-      const from = (listState.page - 1) * listState.pageSize;
-      const to = from + listState.pageSize - 1;
-      let query = supabase
-        .from("ativos")
-        .select("id,hostname,tipo,categoria,marca,modelo,numero_serie,numero_patrimonio,setor,status_ciclo_vida,usuario_responsavel_id,centro_custo_id,cliente_id,usuarios(nome),centros_custo(nome),clientes(nome)", { count: "exact" });
-
-      const term = listState.query.trim().replace(/[%_,()]/g, " ");
-      if (term) {
-        query = query.or(`hostname.ilike.%${term}%,numero_patrimonio.ilike.%${term}%,numero_serie.ilike.%${term}%,tipo.ilike.%${term}%,categoria.ilike.%${term}%,marca.ilike.%${term}%,modelo.ilike.%${term}%,setor.ilike.%${term}%,status_ciclo_vida.ilike.%${term}%`);
-      }
-      if (listState.view === "em_uso") query = query.eq("status_ciclo_vida", "em_uso");
-      if (listState.view === "estoque") query = query.in("status_ciclo_vida", ["estoque", "em_estoque"]);
-      if (listState.view === "manutencao") query = query.in("status_ciclo_vida", ["manutencao", "em_manutencao"]);
-      if (listState.view === "sem_patrimonio") query = query.is("numero_patrimonio", null);
-      if (listState.view === "sem_tipo") query = query.is("tipo", null);
-      if (listState.view === "sem_categoria") query = query.is("categoria", null);
-
-      const sortColumns: Record<string, string> = {
-        hostname: "hostname", patrimonio: "numero_patrimonio", tipo: "tipo", categoria: "categoria",
-        marca: "marca", modelo: "modelo", setor: "setor", status: "status_ciclo_vida",
-      };
-      const sortColumn = listState.sort ? sortColumns[listState.sort.id] : "hostname";
-      const { data, error, count } = await query
-        .order(sortColumn ?? "hostname", { ascending: listState.sort?.dir !== "desc", nullsFirst: false })
-        .order("id", { ascending: true })
-        .range(from, to);
-      if (error) throw error;
-      return { rows: (data ?? []) as Ativo[], total: count ?? 0 };
-    },
   });
-  const rows = ativosPage?.rows;
+  const { data: totalCount } = useQuery({
+    ...ativosCountQuery(listState),
+    placeholderData: keepPreviousData,
+  });
+
 
 
   const { data: users } = useQuery({
@@ -448,7 +496,12 @@ function AtivosPage() {
         rows={rows}
         isLoading={isLoading}
         serverPagination={{
-          total: ativosPage?.total ?? 0,
+          total:
+            totalCount ??
+            (listState.page - 1) * listState.pageSize +
+              (rows?.length ?? 0) +
+              (rows?.length === listState.pageSize ? 1 : 0),
+
           page: listState.page,
           pageSize: listState.pageSize,
           onPageChange: (page) => setListState((state) => ({ ...state, page })),
