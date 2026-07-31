@@ -1,0 +1,1 @@
+ALTER TABLE public.ativos DROP CONSTRAINT IF EXISTS ativos_tipo_check;
