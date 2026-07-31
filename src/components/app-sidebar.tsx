@@ -12,6 +12,7 @@ import {
   BarChart3,
   LogOut,
   ShieldCheck,
+  Briefcase,
   Package,
   UserCog,
   ClipboardList,
@@ -42,6 +43,7 @@ import mtrLogo from "@/assets/mtr2-tech-logo.png.asset.json";
 const main = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Ativos", url: "/ativos", icon: Server },
+  { title: "Clientes", url: "/clientes", icon: Briefcase },
   { title: "Colaboradores", url: "/colaboradores", icon: Users },
   { title: "Catálogo", url: "/produtos", icon: Package },
   { title: "Contratos", url: "/contratos", icon: FileText },
