@@ -32,6 +32,7 @@ import { Route as AuthenticatedEstoqueRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedContratosRouteImport } from './routes/_authenticated/contratos'
 import { Route as AuthenticatedColaboradoresRouteImport } from './routes/_authenticated/colaboradores'
+import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticated/clientes'
 import { Route as AuthenticatedCentrosCustoRouteImport } from './routes/_authenticated/centros-custo'
 import { Route as AuthenticatedAuditoriaRouteImport } from './routes/_authenticated/auditoria'
 import { Route as AuthenticatedAtivosRouteImport } from './routes/_authenticated/ativos'
@@ -41,6 +42,7 @@ import { Route as AuthenticatedAcessosRouteImport } from './routes/_authenticate
 import { Route as Authenticated403RouteImport } from './routes/_authenticated/403'
 import { Route as AuthenticatedServicosIdRouteImport } from './routes/_authenticated/servicos_.$id'
 import { Route as AuthenticatedOrdensServicoIdRouteImport } from './routes/_authenticated/ordens-servico_.$id'
+import { Route as AuthenticatedClientesIdRouteImport } from './routes/_authenticated/clientes_.$id'
 import { Route as AuthenticatedAtivosIdRouteImport } from './routes/_authenticated/ativos_.$id'
 import { Route as AuthenticatedAuditoriaTabelaIdRouteImport } from './routes/_authenticated/auditoria_.$tabela.$id'
 
@@ -163,6 +165,11 @@ const AuthenticatedColaboradoresRoute =
     path: '/colaboradores',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedClientesRoute = AuthenticatedClientesRouteImport.update({
+  id: '/clientes',
+  path: '/clientes',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedCentrosCustoRoute =
   AuthenticatedCentrosCustoRouteImport.update({
     id: '/centros-custo',
@@ -210,6 +217,11 @@ const AuthenticatedOrdensServicoIdRoute =
     path: '/ordens-servico/$id',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedClientesIdRoute = AuthenticatedClientesIdRouteImport.update({
+  id: '/clientes_/$id',
+  path: '/clientes/$id',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedAtivosIdRoute = AuthenticatedAtivosIdRouteImport.update({
   id: '/ativos_/$id',
   path: '/ativos/$id',
@@ -238,6 +250,7 @@ export interface FileRoutesByFullPath {
   '/ativos': typeof AuthenticatedAtivosRoute
   '/auditoria': typeof AuthenticatedAuditoriaRoute
   '/centros-custo': typeof AuthenticatedCentrosCustoRoute
+  '/clientes': typeof AuthenticatedClientesRoute
   '/colaboradores': typeof AuthenticatedColaboradoresRoute
   '/contratos': typeof AuthenticatedContratosRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -253,6 +266,7 @@ export interface FileRoutesByFullPath {
   '/solicitacoes': typeof AuthenticatedSolicitacoesRoute
   '/unidades': typeof AuthenticatedUnidadesRoute
   '/ativos/$id': typeof AuthenticatedAtivosIdRoute
+  '/clientes/$id': typeof AuthenticatedClientesIdRoute
   '/ordens-servico/$id': typeof AuthenticatedOrdensServicoIdRoute
   '/servicos/$id': typeof AuthenticatedServicosIdRoute
   '/auditoria/$tabela/$id': typeof AuthenticatedAuditoriaTabelaIdRoute
@@ -273,6 +287,7 @@ export interface FileRoutesByTo {
   '/ativos': typeof AuthenticatedAtivosRoute
   '/auditoria': typeof AuthenticatedAuditoriaRoute
   '/centros-custo': typeof AuthenticatedCentrosCustoRoute
+  '/clientes': typeof AuthenticatedClientesRoute
   '/colaboradores': typeof AuthenticatedColaboradoresRoute
   '/contratos': typeof AuthenticatedContratosRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -288,6 +303,7 @@ export interface FileRoutesByTo {
   '/solicitacoes': typeof AuthenticatedSolicitacoesRoute
   '/unidades': typeof AuthenticatedUnidadesRoute
   '/ativos/$id': typeof AuthenticatedAtivosIdRoute
+  '/clientes/$id': typeof AuthenticatedClientesIdRoute
   '/ordens-servico/$id': typeof AuthenticatedOrdensServicoIdRoute
   '/servicos/$id': typeof AuthenticatedServicosIdRoute
   '/auditoria/$tabela/$id': typeof AuthenticatedAuditoriaTabelaIdRoute
@@ -310,6 +326,7 @@ export interface FileRoutesById {
   '/_authenticated/ativos': typeof AuthenticatedAtivosRoute
   '/_authenticated/auditoria': typeof AuthenticatedAuditoriaRoute
   '/_authenticated/centros-custo': typeof AuthenticatedCentrosCustoRoute
+  '/_authenticated/clientes': typeof AuthenticatedClientesRoute
   '/_authenticated/colaboradores': typeof AuthenticatedColaboradoresRoute
   '/_authenticated/contratos': typeof AuthenticatedContratosRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
@@ -325,6 +342,7 @@ export interface FileRoutesById {
   '/_authenticated/solicitacoes': typeof AuthenticatedSolicitacoesRoute
   '/_authenticated/unidades': typeof AuthenticatedUnidadesRoute
   '/_authenticated/ativos_/$id': typeof AuthenticatedAtivosIdRoute
+  '/_authenticated/clientes_/$id': typeof AuthenticatedClientesIdRoute
   '/_authenticated/ordens-servico_/$id': typeof AuthenticatedOrdensServicoIdRoute
   '/_authenticated/servicos_/$id': typeof AuthenticatedServicosIdRoute
   '/_authenticated/auditoria_/$tabela/$id': typeof AuthenticatedAuditoriaTabelaIdRoute
@@ -347,6 +365,7 @@ export interface FileRouteTypes {
     | '/ativos'
     | '/auditoria'
     | '/centros-custo'
+    | '/clientes'
     | '/colaboradores'
     | '/contratos'
     | '/dashboard'
@@ -362,6 +381,7 @@ export interface FileRouteTypes {
     | '/solicitacoes'
     | '/unidades'
     | '/ativos/$id'
+    | '/clientes/$id'
     | '/ordens-servico/$id'
     | '/servicos/$id'
     | '/auditoria/$tabela/$id'
@@ -382,6 +402,7 @@ export interface FileRouteTypes {
     | '/ativos'
     | '/auditoria'
     | '/centros-custo'
+    | '/clientes'
     | '/colaboradores'
     | '/contratos'
     | '/dashboard'
@@ -397,6 +418,7 @@ export interface FileRouteTypes {
     | '/solicitacoes'
     | '/unidades'
     | '/ativos/$id'
+    | '/clientes/$id'
     | '/ordens-servico/$id'
     | '/servicos/$id'
     | '/auditoria/$tabela/$id'
@@ -418,6 +440,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ativos'
     | '/_authenticated/auditoria'
     | '/_authenticated/centros-custo'
+    | '/_authenticated/clientes'
     | '/_authenticated/colaboradores'
     | '/_authenticated/contratos'
     | '/_authenticated/dashboard'
@@ -433,6 +456,7 @@ export interface FileRouteTypes {
     | '/_authenticated/solicitacoes'
     | '/_authenticated/unidades'
     | '/_authenticated/ativos_/$id'
+    | '/_authenticated/clientes_/$id'
     | '/_authenticated/ordens-servico_/$id'
     | '/_authenticated/servicos_/$id'
     | '/_authenticated/auditoria_/$tabela/$id'
@@ -613,6 +637,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedColaboradoresRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/clientes': {
+      id: '/_authenticated/clientes'
+      path: '/clientes'
+      fullPath: '/clientes'
+      preLoaderRoute: typeof AuthenticatedClientesRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/centros-custo': {
       id: '/_authenticated/centros-custo'
       path: '/centros-custo'
@@ -676,6 +707,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOrdensServicoIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/clientes_/$id': {
+      id: '/_authenticated/clientes_/$id'
+      path: '/clientes/$id'
+      fullPath: '/clientes/$id'
+      preLoaderRoute: typeof AuthenticatedClientesIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/ativos_/$id': {
       id: '/_authenticated/ativos_/$id'
       path: '/ativos/$id'
@@ -701,6 +739,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAtivosRoute: typeof AuthenticatedAtivosRoute
   AuthenticatedAuditoriaRoute: typeof AuthenticatedAuditoriaRoute
   AuthenticatedCentrosCustoRoute: typeof AuthenticatedCentrosCustoRoute
+  AuthenticatedClientesRoute: typeof AuthenticatedClientesRoute
   AuthenticatedColaboradoresRoute: typeof AuthenticatedColaboradoresRoute
   AuthenticatedContratosRoute: typeof AuthenticatedContratosRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
@@ -716,6 +755,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedSolicitacoesRoute: typeof AuthenticatedSolicitacoesRoute
   AuthenticatedUnidadesRoute: typeof AuthenticatedUnidadesRoute
   AuthenticatedAtivosIdRoute: typeof AuthenticatedAtivosIdRoute
+  AuthenticatedClientesIdRoute: typeof AuthenticatedClientesIdRoute
   AuthenticatedOrdensServicoIdRoute: typeof AuthenticatedOrdensServicoIdRoute
   AuthenticatedServicosIdRoute: typeof AuthenticatedServicosIdRoute
   AuthenticatedAuditoriaTabelaIdRoute: typeof AuthenticatedAuditoriaTabelaIdRoute
@@ -729,6 +769,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAtivosRoute: AuthenticatedAtivosRoute,
   AuthenticatedAuditoriaRoute: AuthenticatedAuditoriaRoute,
   AuthenticatedCentrosCustoRoute: AuthenticatedCentrosCustoRoute,
+  AuthenticatedClientesRoute: AuthenticatedClientesRoute,
   AuthenticatedColaboradoresRoute: AuthenticatedColaboradoresRoute,
   AuthenticatedContratosRoute: AuthenticatedContratosRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
@@ -744,6 +785,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedSolicitacoesRoute: AuthenticatedSolicitacoesRoute,
   AuthenticatedUnidadesRoute: AuthenticatedUnidadesRoute,
   AuthenticatedAtivosIdRoute: AuthenticatedAtivosIdRoute,
+  AuthenticatedClientesIdRoute: AuthenticatedClientesIdRoute,
   AuthenticatedOrdensServicoIdRoute: AuthenticatedOrdensServicoIdRoute,
   AuthenticatedServicosIdRoute: AuthenticatedServicosIdRoute,
   AuthenticatedAuditoriaTabelaIdRoute: AuthenticatedAuditoriaTabelaIdRoute,
@@ -767,13 +809,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
