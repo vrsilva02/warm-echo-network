@@ -227,12 +227,31 @@ function AtivosPage() {
     });
     if (!ok) return;
     const ids = rows.map((r) => r.id);
-    const { error } = await supabase.from("ativos").delete().in("id", ids);
-    if (error) return toast.error(error.message);
-    void logAction("BULK_DELETE", "ativos", { ids, total: ids.length });
-    toast.success("Excluídos");
-    clear();
+    const deleted: string[] = [];
+    const falhas: string[] = [];
+    for (const lote of chunk(ids, 100)) {
+      const { data, error } = await supabase.from("ativos").delete().in("id", lote).select("id");
+      if (error) {
+        falhas.push(error.message);
+        continue;
+      }
+      deleted.push(...(data ?? []).map((d: { id: string }) => d.id));
+    }
+    if (deleted.length > 0) {
+      void logAction("BULK_DELETE", "ativos", { ids: deleted, total: deleted.length });
+    }
     qc.invalidateQueries({ queryKey: ["ativos"] });
+    qc.invalidateQueries({ queryKey: ["dashboard"] });
+    const naoExcluidos = ids.length - deleted.length;
+    if (naoExcluidos > 0) {
+      toast.error(
+        `${deleted.length} de ${ids.length} excluído(s). ${naoExcluidos} não pôde(m) ser excluído(s)` +
+          (falhas.length ? `: ${falhas[0]}` : " — sem permissão ou registro já removido."),
+      );
+    } else {
+      toast.success(`${deleted.length} ativo(s) excluído(s)`);
+    }
+    clear();
   }
 
   const columns: Column<Ativo>[] = [
