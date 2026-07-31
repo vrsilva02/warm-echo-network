@@ -135,6 +135,7 @@ function AtivosPage() {
       status_ciclo_vida: r.status_ciclo_vida,
       usuario_responsavel_id: r.usuario_responsavel_id,
       centro_custo_id: r.centro_custo_id,
+      cliente_id: r.cliente_id,
     });
     setOpen(true);
   }
@@ -152,6 +153,7 @@ function AtivosPage() {
       status_ciclo_vida: form.status_ciclo_vida,
       usuario_responsavel_id: form.usuario_responsavel_id,
       centro_custo_id: form.centro_custo_id,
+      cliente_id: form.cliente_id,
     };
     const { error } = editing
       ? await supabase.from("ativos").update(payload).eq("id", editing.id)
