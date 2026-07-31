@@ -302,12 +302,16 @@ export function AtivosImportExport({ canWrite, onImported }: { canWrite: boolean
         onOpenChange={setOpen}
         scope="ativos"
         title="Importar ativos"
-        description="Envie um arquivo XLSX seguindo o template (inclui a coluna categoria). Ativos existentes (mesmo hostname) são atualizados; novos são criados. O responsável é vinculado quando o e-mail já existe em Usuários."
+        description="Envie um arquivo XLSX seguindo o template. Somente hostname é obrigatório — Tipo e Categoria são opcionais e podem ficar em branco (serão gravados como vazios). Ativos existentes (mesmo hostname) são atualizados; novos são criados. O responsável é vinculado quando o e-mail já existe em Usuários."
         requiredColumns={COLUMNS}
         previewColumns={["hostname", "tipo", "categoria", "marca", "modelo", "status_ciclo_vida"]}
         renderPreviewCell={(r, c) =>
-          c === "numero_patrimonio" ? <span className="font-mono">{r[c]}</span> : r[c]
+          c === "numero_patrimonio" ? <span className="font-mono">{r[c]}</span>
+          : c === "tipo" && !(r[c] ?? "").trim() ? <span className="text-muted-foreground">Sem tipo</span>
+          : c === "categoria" && !(r[c] ?? "").trim() ? <span className="text-muted-foreground">Sem categoria</span>
+          : r[c]
         }
+
         onTemplate={downloadTemplate}
         runImport={importarLinhas}
         successToast={(r) =>
