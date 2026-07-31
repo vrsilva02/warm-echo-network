@@ -71,9 +71,19 @@ export function AdvancedTable<T>({
 }: Props<T>) {
   const [prefs, setPrefs] = useState<Prefs>(() => loadPrefs(storageKey));
   const [query, setQuery] = useState("");
+  const [rawQuery, setRawQuery] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(50);
 
   useEffect(() => { savePrefs(storageKey, prefs); }, [storageKey, prefs]);
+
+  // Debounce da busca: evita refiltrar milhares de linhas a cada tecla.
+  useEffect(() => {
+    const t = setTimeout(() => setQuery(rawQuery), 200);
+    return () => clearTimeout(t);
+  }, [rawQuery]);
+
 
   const orderedColumns = useMemo(() => {
     const byId = new Map(columns.map((c) => [c.id, c]));
@@ -119,9 +129,20 @@ export function AdvancedTable<T>({
     return list;
   }, [rows, columns, query, prefs.sort, activeView]);
 
+  const totalPages = Math.max(1, Math.ceil(processed.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const pageRows = useMemo(
+    () => processed.slice((currentPage - 1) * pageSize, currentPage * pageSize),
+    [processed, currentPage, pageSize],
+  );
+
+  // Volta para a primeira página quando filtros/busca mudam.
+  useEffect(() => { setPage(1); }, [query, prefs.view, prefs.sort, pageSize]);
+
   const allSelected = processed.length > 0 && processed.every((r) => selected.has(getRowId(r)));
   const someSelected = processed.some((r) => selected.has(getRowId(r)));
   const selectedRows = useMemo(() => (rows ?? []).filter((r) => selected.has(getRowId(r))), [rows, selected, getRowId]);
+
 
   function toggleAll() {
     setSelected((prev) => {
@@ -198,7 +219,7 @@ export function AdvancedTable<T>({
           {searchable && (
             <div className="relative w-full sm:w-72">
               <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden />
-              <Input placeholder={searchPlaceholder} value={query} onChange={(e) => setQuery(e.target.value)} className="pl-8" aria-label={searchPlaceholder} />
+              <Input placeholder={searchPlaceholder} value={rawQuery} onChange={(e) => setRawQuery(e.target.value)} className="pl-8" aria-label={searchPlaceholder} />
             </div>
           )}
           {savedViews && savedViews.length > 0 && (
@@ -304,7 +325,7 @@ export function AdvancedTable<T>({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {processed.map((r) => {
+              {pageRows.map((r) => {
                 const id = getRowId(r);
                 const isSelected = selected.has(id);
                 return (
@@ -327,10 +348,34 @@ export function AdvancedTable<T>({
         )}
       </div>
 
-      <div className="text-xs text-muted-foreground">
-        {isLoading ? "Carregando…" : `${processed.length} de ${rows?.length ?? 0} registro(s)`}
-        {activeView && <> · filtro <strong>{activeView.label}</strong></>}
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="text-xs text-muted-foreground">
+          {isLoading
+            ? "Carregando…"
+            : `${processed.length === 0 ? 0 : (currentPage - 1) * pageSize + 1}–${Math.min(currentPage * pageSize, processed.length)} de ${processed.length} filtrado(s) · ${rows?.length ?? 0} no total`}
+          {activeView && <> · filtro <strong>{activeView.label}</strong></>}
+        </div>
+        {!isLoading && processed.length > 0 && (
+          <div className="flex items-center gap-2">
+            <select
+              className="h-8 rounded-md border bg-background px-2 text-xs"
+              value={pageSize}
+              onChange={(e) => setPageSize(Number(e.target.value))}
+              aria-label="Registros por página"
+            >
+              {[25, 50, 100, 200, 500].map((n) => (
+                <option key={n} value={n}>{n} / página</option>
+              ))}
+            </select>
+            <Button size="sm" variant="outline" disabled={currentPage <= 1} onClick={() => setPage(1)}>«</Button>
+            <Button size="sm" variant="outline" disabled={currentPage <= 1} onClick={() => setPage(currentPage - 1)}>Anterior</Button>
+            <span className="text-xs text-muted-foreground whitespace-nowrap">{currentPage} / {totalPages}</span>
+            <Button size="sm" variant="outline" disabled={currentPage >= totalPages} onClick={() => setPage(currentPage + 1)}>Próxima</Button>
+            <Button size="sm" variant="outline" disabled={currentPage >= totalPages} onClick={() => setPage(totalPages)}>»</Button>
+          </div>
+        )}
       </div>
+
     </div>
   );
 }
