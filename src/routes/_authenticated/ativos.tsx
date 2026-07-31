@@ -280,6 +280,12 @@ function AtivosPage() {
       searchValue: (r) => r.setor, exportValue: (r) => r.setor,
     },
     {
+      id: "cliente", header: "Cliente",
+      accessor: (r) => r.clientes?.nome ?? "—",
+      sortValue: (r) => r.clientes?.nome ?? "",
+      searchValue: (r) => r.clientes?.nome, exportValue: (r) => r.clientes?.nome,
+    },
+    {
       id: "centro", header: "Centro de custo", defaultHidden: true,
       accessor: (r) => r.centros_custo?.nome ?? "—",
       sortValue: (r) => r.centros_custo?.nome ?? "",
@@ -450,6 +456,16 @@ function AtivosPage() {
               options={(centros ?? []).map((c: any) => ({ value: c.id, label: c.nome }))}
             />
           </div>
+        </div>
+        <div>
+          <Label>Cliente</Label>
+          <Combobox
+            placeholder="Nenhum"
+            searchPlaceholder="Buscar cliente…"
+            value={form.cliente_id}
+            onChange={(v) => setForm({ ...form, cliente_id: v })}
+            options={(clientes ?? []).map((c: any) => ({ value: c.id, label: c.nome }))}
+          />
         </div>
       </CrudDialog>
     </>
