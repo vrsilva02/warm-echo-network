@@ -17,6 +17,7 @@ import { useAuth } from "@/lib/auth";
 import { logAction } from "@/lib/audit";
 import { useConfirm } from "@/components/confirm-dialog";
 import { Combobox } from "@/components/combobox";
+import { ATIVO_TIPOS, ATIVO_CATEGORIAS, comValorAtual } from "@/lib/ativos-opcoes";
 
 import { EdrBadge, useGapEdrSet } from "@/components/edr-badge";
 import { Link } from "@tanstack/react-router";
@@ -55,7 +56,7 @@ type Ativo = {
 };
 
 const STATUS = ["em_estoque", "em_uso", "em_manutencao", "baixado"];
-const TIPOS = ["Notebook", "Desktop", "Servidor", "VDI", "Outro"];
+
 
 const initial = {
   hostname: "",
