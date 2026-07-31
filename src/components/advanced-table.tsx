@@ -129,9 +129,20 @@ export function AdvancedTable<T>({
     return list;
   }, [rows, columns, query, prefs.sort, activeView]);
 
+  const totalPages = Math.max(1, Math.ceil(processed.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const pageRows = useMemo(
+    () => processed.slice((currentPage - 1) * pageSize, currentPage * pageSize),
+    [processed, currentPage, pageSize],
+  );
+
+  // Volta para a primeira página quando filtros/busca mudam.
+  useEffect(() => { setPage(1); }, [query, prefs.view, prefs.sort, pageSize]);
+
   const allSelected = processed.length > 0 && processed.every((r) => selected.has(getRowId(r)));
   const someSelected = processed.some((r) => selected.has(getRowId(r)));
   const selectedRows = useMemo(() => (rows ?? []).filter((r) => selected.has(getRowId(r))), [rows, selected, getRowId]);
+
 
   function toggleAll() {
     setSelected((prev) => {
