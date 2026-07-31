@@ -153,10 +153,11 @@ function Page() {
       />
       <ListToolbar query={q} onQueryChange={setQ} />
       <DataTable
-        columns={["Fornecedor", "Nº", "Tipo", "Início", "Fim", "Seats", "Valor", "Vencimento", "Ações"]}
+        columns={["Fornecedor", "Cliente", "Nº", "Tipo", "Início", "Fim", "Seats", "Valor", "Vencimento", "Ações"]}
         empty={isLoading ? "Carregando…" : "Nenhum contrato."}
         rows={filtered.map((r) => [
           <span key="f" className="font-medium">{r.fornecedor}</span>,
+          r.clientes?.nome ?? "—",
           r.numero_contrato ?? "—",
           r.tipo_contrato ?? "—",
           r.data_inicio,
@@ -215,6 +216,16 @@ function Page() {
             value={form.centro_custo_id}
             onChange={(v) => setForm({ ...form, centro_custo_id: v })}
             options={(centros ?? []).map((c: any) => ({ value: c.id, label: c.nome }))}
+          />
+        </div>
+        <div>
+          <Label>Cliente</Label>
+          <Combobox
+            placeholder="Nenhum"
+            searchPlaceholder="Buscar cliente…"
+            value={form.cliente_id}
+            onChange={(v) => setForm({ ...form, cliente_id: v })}
+            options={(clientes ?? []).map((c: any) => ({ value: c.id, label: c.nome }))}
           />
         </div>
       </CrudDialog>
