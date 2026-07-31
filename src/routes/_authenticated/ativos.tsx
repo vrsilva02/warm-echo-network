@@ -108,16 +108,20 @@ function AtivosPage() {
 
   const { data: rows, isLoading } = useQuery({
     queryKey: ["ativos"],
+    staleTime: 5 * 60_000,
+    gcTime: 30 * 60_000,
     queryFn: async () => {
       const { data, error } = await fetchAll<Ativo>(
         "ativos",
         "*, usuarios(nome), centros_custo(nome), clientes(nome)",
         (q) => q.order("hostname"),
+        { concurrency: 6 },
       );
       if (error) throw error;
       return data;
     },
   });
+
 
   const { data: users } = useQuery({
     queryKey: ["usuarios-lite"],
