@@ -171,15 +171,15 @@ function AtivosPage() {
   });
   const { set: edrSet } = useGapEdrSet(rows?.map((row) => row.id));
 
-  useEffect(() => {
-    const channel = supabase
-      .channel("ativos-list-live")
-      .on("postgres_changes", { event: "*", schema: "public", table: "ativos" }, () => {
-        void qc.invalidateQueries({ queryKey: ["ativos"] });
-      })
-      .subscribe();
-    return () => { void supabase.removeChannel(channel); };
-  }, [qc]);
+  useRealtimeInvalidate({
+    channel: "ativos-list-live",
+    table: "ativos",
+    queryKeys: [["ativos"]],
+    batchMs: 1200,
+    minIntervalMs: 5000,
+    enabled: !open, // não atualiza a lista enquanto o formulário está aberto
+  });
+
 
   function openNew() {
     setEditing(null);
