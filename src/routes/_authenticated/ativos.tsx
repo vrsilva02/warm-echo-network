@@ -252,14 +252,17 @@ function AtivosPage() {
     },
     {
       id: "tipo", header: "Tipo",
-      accessor: (r) => r.tipo, sortValue: (r) => r.tipo,
-      searchValue: (r) => r.tipo, exportValue: (r) => r.tipo,
+      accessor: (r) => r.tipo ?? <span className="text-muted-foreground">Sem tipo</span>,
+      sortValue: (r) => r.tipo ?? "",
+      searchValue: (r) => r.tipo ?? "Sem tipo", exportValue: (r) => r.tipo,
     },
     {
       id: "categoria", header: "Categoria",
-      accessor: (r) => r.categoria ?? "—", sortValue: (r) => r.categoria ?? "",
-      searchValue: (r) => r.categoria, exportValue: (r) => r.categoria,
+      accessor: (r) => r.categoria ?? <span className="text-muted-foreground">Sem categoria</span>,
+      sortValue: (r) => r.categoria ?? "",
+      searchValue: (r) => r.categoria ?? "Sem categoria", exportValue: (r) => r.categoria,
     },
+
     {
       id: "marca", header: "Marca",
       accessor: (r) => r.marca ?? "—", sortValue: (r) => r.marca ?? "",
