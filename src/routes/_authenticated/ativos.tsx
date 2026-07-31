@@ -390,9 +390,9 @@ function AtivosPage() {
             <Combobox
               placeholder="Selecione o tipo"
               searchPlaceholder="Buscar tipo…"
-              clearable={false}
-              value={form.tipo || null}
-              onChange={(v) => setForm({ ...form, tipo: v ?? "" })}
+              clearable
+              value={form.tipo}
+              onChange={(v) => setForm({ ...form, tipo: v })}
               options={comValorAtual(ATIVO_TIPOS, form.tipo).map((t) => ({ value: t, label: t }))}
             />
           </div>
