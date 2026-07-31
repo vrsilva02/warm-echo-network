@@ -29,7 +29,7 @@ const COLUMNS = ATIVOS_COLUMNS;
 type Col = (typeof COLUMNS)[number];
 type RawRow = Partial<Record<Col, string>> & Record<string, string>;
 
-const REQUIRED: Col[] = ["hostname", "tipo"];
+const REQUIRED: Col[] = ["hostname"];
 const STATUS_VALIDOS = new Set(["em_estoque", "em_uso", "em_manutencao", "baixado", "solicitado"]);
 
 function nz(v: string | undefined): string | null {
@@ -144,7 +144,7 @@ async function importarLinhas(
     }
 
     const hostname = nz(r.hostname)!;
-    const tipo = nz(r.tipo)!;
+    const tipo = nz(r.tipo);
     const status = nz(r.status_ciclo_vida) ?? "em_estoque";
     if (!STATUS_VALIDOS.has(status)) {
       rep.erros.push({
