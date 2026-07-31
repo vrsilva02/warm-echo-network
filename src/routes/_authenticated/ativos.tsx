@@ -57,7 +57,7 @@ type Ativo = {
   clientes?: { nome: string } | null;
 };
 
-const STATUS = ["em_estoque", "em_uso", "em_manutencao", "baixado"];
+const STATUS = ["solicitado", "estoque", "em_uso", "manutencao", "baixado"];
 
 
 const initial = {
@@ -69,7 +69,7 @@ const initial = {
   numero_serie: "",
   numero_patrimonio: "",
   setor: "",
-  status_ciclo_vida: "em_estoque",
+  status_ciclo_vida: "estoque",
   usuario_responsavel_id: null as string | null,
   centro_custo_id: null as string | null,
   cliente_id: null as string | null,
@@ -78,7 +78,10 @@ const initial = {
 function statusBadge(s: string) {
   const map: Record<string, string> = {
     em_uso: "bg-[color:var(--success)]/15 text-[color:var(--success)] border-[color:var(--success)]/30",
+    estoque: "bg-primary/10 text-primary border-primary/30",
     em_estoque: "bg-primary/10 text-primary border-primary/30",
+    solicitado: "bg-muted text-muted-foreground",
+    manutencao: "bg-[color:var(--warning)]/15 text-[color:var(--warning)] border-[color:var(--warning)]/30",
     em_manutencao: "bg-[color:var(--warning)]/15 text-[color:var(--warning)] border-[color:var(--warning)]/30",
     baixado: "bg-muted text-muted-foreground",
   };
@@ -349,8 +352,8 @@ function AtivosPage() {
 
   const views: SavedView<Ativo>[] = [
     { id: "em_uso", label: "Em uso", filter: (rs) => rs.filter((r) => r.status_ciclo_vida === "em_uso") },
-    { id: "estoque", label: "Em estoque", filter: (rs) => rs.filter((r) => r.status_ciclo_vida === "em_estoque") },
-    { id: "manutencao", label: "Manutenção", filter: (rs) => rs.filter((r) => r.status_ciclo_vida === "em_manutencao") },
+    { id: "estoque", label: "Em estoque", filter: (rs) => rs.filter((r) => r.status_ciclo_vida === "estoque" || r.status_ciclo_vida === "em_estoque") },
+    { id: "manutencao", label: "Manutenção", filter: (rs) => rs.filter((r) => r.status_ciclo_vida === "manutencao" || r.status_ciclo_vida === "em_manutencao") },
     { id: "sem_patrimonio", label: "Sem patrimônio", filter: (rs) => rs.filter((r) => !r.numero_patrimonio) },
     { id: "sem_tipo", label: "Sem tipo", filter: (rs) => rs.filter((r) => !r.tipo?.trim()) },
     { id: "sem_categoria", label: "Sem categoria", filter: (rs) => rs.filter((r) => !r.categoria?.trim()) },

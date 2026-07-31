@@ -30,7 +30,9 @@ type Col = (typeof COLUMNS)[number];
 type RawRow = Partial<Record<Col, string>> & Record<string, string>;
 
 const REQUIRED: Col[] = ["hostname"];
-const STATUS_VALIDOS = new Set(["em_estoque", "em_uso", "em_manutencao", "baixado", "solicitado"]);
+const STATUS_VALIDOS = new Set(["estoque", "em_uso", "manutencao", "baixado", "solicitado"]);
+/** Aceita rótulos antigos usados em planilhas anteriores. */
+const STATUS_ALIAS: Record<string, string> = { em_estoque: "estoque", em_manutencao: "manutencao" };
 
 function nz(v: string | undefined): string | null {
   const s = (v ?? "").trim();
@@ -149,7 +151,8 @@ async function importarLinhas(
 
     const hostname = nz(r.hostname)!;
     const tipo = nz(r.tipo);
-    const status = nz(r.status_ciclo_vida) ?? "em_estoque";
+    const statusBruto = nz(r.status_ciclo_vida) ?? "estoque";
+    const status = STATUS_ALIAS[statusBruto] ?? statusBruto;
     if (!STATUS_VALIDOS.has(status)) {
       rep.erros.push({
         linha,
