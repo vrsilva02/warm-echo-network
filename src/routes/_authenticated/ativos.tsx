@@ -39,7 +39,7 @@ export const Route = createFileRoute("/_authenticated/ativos")({
 type Ativo = {
   id: string;
   hostname: string;
-  tipo: string;
+  tipo: string | null;
   categoria: string | null;
   marca: string | null;
   modelo: string | null;
@@ -60,7 +60,7 @@ const STATUS = ["em_estoque", "em_uso", "em_manutencao", "baixado"];
 
 const initial = {
   hostname: "",
-  tipo: "NOTEBOOK",
+  tipo: null as string | null,
   categoria: "",
   marca: "",
   modelo: "",
