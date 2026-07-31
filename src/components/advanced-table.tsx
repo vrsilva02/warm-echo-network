@@ -268,9 +268,11 @@ export function AdvancedTable<T>({
         </div>
         <div className="flex items-center gap-2">
           {toolbarExtras}
-          <Button size="sm" variant="outline" onClick={exportVisible} className="gap-1">
-            <Download className="h-4 w-4" /> XLSX
-          </Button>
+          {!serverPagination && (
+            <Button size="sm" variant="outline" onClick={exportVisible} className="gap-1">
+              <Download className="h-4 w-4" /> XLSX
+            </Button>
+          )}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button size="sm" variant="outline" className="gap-1"><Columns3 className="h-4 w-4" /> Colunas</Button>
