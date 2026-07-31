@@ -252,14 +252,17 @@ function AtivosPage() {
     },
     {
       id: "tipo", header: "Tipo",
-      accessor: (r) => r.tipo, sortValue: (r) => r.tipo,
-      searchValue: (r) => r.tipo, exportValue: (r) => r.tipo,
+      accessor: (r) => r.tipo ?? <span className="text-muted-foreground">Sem tipo</span>,
+      sortValue: (r) => r.tipo ?? "",
+      searchValue: (r) => r.tipo ?? "Sem tipo", exportValue: (r) => r.tipo,
     },
     {
       id: "categoria", header: "Categoria",
-      accessor: (r) => r.categoria ?? "—", sortValue: (r) => r.categoria ?? "",
-      searchValue: (r) => r.categoria, exportValue: (r) => r.categoria,
+      accessor: (r) => r.categoria ?? <span className="text-muted-foreground">Sem categoria</span>,
+      sortValue: (r) => r.categoria ?? "",
+      searchValue: (r) => r.categoria ?? "Sem categoria", exportValue: (r) => r.categoria,
     },
+
     {
       id: "marca", header: "Marca",
       accessor: (r) => r.marca ?? "—", sortValue: (r) => r.marca ?? "",
@@ -327,7 +330,10 @@ function AtivosPage() {
     { id: "estoque", label: "Em estoque", filter: (rs) => rs.filter((r) => r.status_ciclo_vida === "em_estoque") },
     { id: "manutencao", label: "Manutenção", filter: (rs) => rs.filter((r) => r.status_ciclo_vida === "em_manutencao") },
     { id: "sem_patrimonio", label: "Sem patrimônio", filter: (rs) => rs.filter((r) => !r.numero_patrimonio) },
+    { id: "sem_tipo", label: "Sem tipo", filter: (rs) => rs.filter((r) => !r.tipo?.trim()) },
+    { id: "sem_categoria", label: "Sem categoria", filter: (rs) => rs.filter((r) => !r.categoria?.trim()) },
   ];
+
 
   return (
     <>
@@ -386,7 +392,7 @@ function AtivosPage() {
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <Label>Tipo</Label>
+            <Label>Tipo <span className="text-muted-foreground font-normal">(opcional)</span></Label>
             <Combobox
               placeholder="Selecione o tipo"
               searchPlaceholder="Buscar tipo…"
@@ -402,10 +408,11 @@ function AtivosPage() {
           </div>
         </div>
         <div>
-          <Label>Categoria</Label>
+          <Label>Categoria <span className="text-muted-foreground font-normal">(opcional)</span></Label>
           <Combobox
             placeholder="Selecione a categoria"
             searchPlaceholder="Buscar categoria…"
+            clearable
             value={form.categoria || null}
             onChange={(v) => setForm({ ...form, categoria: v ?? "" })}
             options={comValorAtual(ATIVO_CATEGORIAS, form.categoria).map((c) => ({ value: c, label: c }))}

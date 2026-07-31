@@ -72,10 +72,11 @@ export async function exportAtivos() {
 
 
 export function downloadTemplate() {
+  // Exemplo completo (todas as colunas preenchidas)
   const exemplo = [
     "NB-0001",
-    "Notebook",
-    "Computadores",
+    "NOTEBOOK",
+    "Microcomputador TIPO I",
     "Dell",
     "Latitude 5440",
     "PAT-000123",
@@ -84,10 +85,13 @@ export function downloadTemplate() {
     "em_uso",
     "colaborador@empresa.com",
   ];
+  // Exemplo mínimo: apenas hostname — Tipo e Categoria são opcionais e ficam em branco.
+  const exemploMinimo = COLUMNS.map((c) => (c === "hostname" ? "SEM-TIPO-0002" : ""));
   const vazia = COLUMNS.map(() => "");
-  downloadXLSX("template_ativos.xlsx", COLUMNS as unknown as string[], [exemplo, vazia]);
-  toast.success("Template baixado. Preencha e reimporte em XLSX.");
+  downloadXLSX("template_ativos.xlsx", COLUMNS as unknown as string[], [exemplo, exemploMinimo, vazia]);
+  toast.success("Template baixado. Apenas hostname é obrigatório; Tipo e Categoria podem ficar em branco.");
 }
+
 
 /* ------------------------ Importar ------------------------ */
 
@@ -298,12 +302,16 @@ export function AtivosImportExport({ canWrite, onImported }: { canWrite: boolean
         onOpenChange={setOpen}
         scope="ativos"
         title="Importar ativos"
-        description="Envie um arquivo XLSX seguindo o template (inclui a coluna categoria). Ativos existentes (mesmo hostname) são atualizados; novos são criados. O responsável é vinculado quando o e-mail já existe em Usuários."
+        description="Envie um arquivo XLSX seguindo o template. Somente hostname é obrigatório — Tipo e Categoria são opcionais e podem ficar em branco (serão gravados como vazios). Ativos existentes (mesmo hostname) são atualizados; novos são criados. O responsável é vinculado quando o e-mail já existe em Usuários."
         requiredColumns={COLUMNS}
         previewColumns={["hostname", "tipo", "categoria", "marca", "modelo", "status_ciclo_vida"]}
         renderPreviewCell={(r, c) =>
-          c === "numero_patrimonio" ? <span className="font-mono">{r[c]}</span> : r[c]
+          c === "numero_patrimonio" ? <span className="font-mono">{r[c]}</span>
+          : c === "tipo" && !(r[c] ?? "").trim() ? <span className="text-muted-foreground">Sem tipo</span>
+          : c === "categoria" && !(r[c] ?? "").trim() ? <span className="text-muted-foreground">Sem categoria</span>
+          : r[c]
         }
+
         onTemplate={downloadTemplate}
         runImport={importarLinhas}
         successToast={(r) =>
