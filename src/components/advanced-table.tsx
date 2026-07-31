@@ -71,9 +71,19 @@ export function AdvancedTable<T>({
 }: Props<T>) {
   const [prefs, setPrefs] = useState<Prefs>(() => loadPrefs(storageKey));
   const [query, setQuery] = useState("");
+  const [rawQuery, setRawQuery] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(50);
 
   useEffect(() => { savePrefs(storageKey, prefs); }, [storageKey, prefs]);
+
+  // Debounce da busca: evita refiltrar milhares de linhas a cada tecla.
+  useEffect(() => {
+    const t = setTimeout(() => setQuery(rawQuery), 200);
+    return () => clearTimeout(t);
+  }, [rawQuery]);
+
 
   const orderedColumns = useMemo(() => {
     const byId = new Map(columns.map((c) => [c.id, c]));
