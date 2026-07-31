@@ -67,9 +67,9 @@ function Page() {
   const { data: rows, isLoading } = useQuery({
     queryKey: ["contratos"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("contratos").select("*").order("data_fim", { ascending: true, nullsFirst: false });
+      const { data, error } = await supabase.from("contratos").select("*, clientes(nome)").order("data_fim", { ascending: true, nullsFirst: false });
       if (error) throw error;
-      return data as Row[];
+      return data as unknown as Row[];
     },
   });
   const { data: unidades } = useQuery({
@@ -79,6 +79,10 @@ function Page() {
   const { data: centros } = useQuery({
     queryKey: ["centros_custo-lite"],
     queryFn: async () => (await supabase.from("centros_custo").select("id,nome").order("nome")).data ?? [],
+  });
+  const { data: clientes } = useQuery({
+    queryKey: ["clientes-lite"],
+    queryFn: async () => (await supabase.from("clientes").select("id,nome").eq("ativo", true).order("nome")).data ?? [],
   });
   const filtered = useFilteredList(rows, q, ["fornecedor", "numero_contrato", "tipo_contrato"]);
 
