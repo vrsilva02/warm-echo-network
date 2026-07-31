@@ -137,9 +137,9 @@ function AtivosPage() {
       if (listState.view === "em_uso") query = query.eq("status_ciclo_vida", "em_uso");
       if (listState.view === "estoque") query = query.in("status_ciclo_vida", ["estoque", "em_estoque"]);
       if (listState.view === "manutencao") query = query.in("status_ciclo_vida", ["manutencao", "em_manutencao"]);
-      if (listState.view === "sem_patrimonio") query = query.or("numero_patrimonio.is.null,numero_patrimonio.eq.");
-      if (listState.view === "sem_tipo") query = query.or("tipo.is.null,tipo.eq.");
-      if (listState.view === "sem_categoria") query = query.or("categoria.is.null,categoria.eq.");
+      if (listState.view === "sem_patrimonio") query = query.is("numero_patrimonio", null);
+      if (listState.view === "sem_tipo") query = query.is("tipo", null);
+      if (listState.view === "sem_categoria") query = query.is("categoria", null);
 
       const sortColumns: Record<string, string> = {
         hostname: "hostname", patrimonio: "numero_patrimonio", tipo: "tipo", categoria: "categoria",
