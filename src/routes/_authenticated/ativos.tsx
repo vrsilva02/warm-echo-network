@@ -69,7 +69,7 @@ const initial = {
   numero_serie: "",
   numero_patrimonio: "",
   setor: "",
-  status_ciclo_vida: "em_estoque",
+  status_ciclo_vida: "estoque",
   usuario_responsavel_id: null as string | null,
   centro_custo_id: null as string | null,
   cliente_id: null as string | null,
