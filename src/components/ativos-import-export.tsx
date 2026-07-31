@@ -120,17 +120,22 @@ async function importarLinhas(
     inseridos: 0,
     atualizados: 0,
     responsaveisNaoEncontrados: 0,
+    clientesNaoEncontrados: 0,
     erros: [],
   };
 
   setPhase("Carregando dados de referência…");
-  // Cache de usuários e ativos existentes para reduzir round-trips.
-  const [{ data: usuarios }, { data: existentes }] = await Promise.all([
+  // Cache de usuários, clientes e ativos existentes para reduzir round-trips.
+  const [{ data: usuarios }, { data: clientes }, { data: existentes }] = await Promise.all([
     fetchAll<any>("usuarios", "id, email", (q) => q.not("email", "is", null)),
+    fetchAll<any>("clientes", "id, nome", (q) => q.not("nome", "is", null)),
     fetchAll<any>("ativos", "id, hostname"),
   ]);
   const userByEmail = new Map<string, string>(
     (usuarios ?? []).filter((u: any) => u.email).map((u: any) => [u.email.toLowerCase(), u.id]),
+  );
+  const clienteByNome = new Map<string, string>(
+    (clientes ?? []).filter((c: any) => c.nome).map((c: any) => [c.nome.trim().toLowerCase(), c.id]),
   );
   const ativoByHost = new Map<string, string>(
     (existentes ?? []).map((a: any) => [a.hostname.toLowerCase(), a.id]),
@@ -172,6 +177,14 @@ async function importarLinhas(
       else rep.responsaveisNaoEncontrados++;
     }
 
+    let clienteId: string | null = null;
+    const clienteNome = nz(r.cliente);
+    if (clienteNome) {
+      const found = clienteByNome.get(clienteNome.toLowerCase());
+      if (found) clienteId = found;
+      else rep.clientesNaoEncontrados++;
+    }
+
     const payload = {
       hostname,
       tipo,
@@ -183,6 +196,7 @@ async function importarLinhas(
       setor: nz(r.setor),
       status_ciclo_vida: status,
       usuario_responsavel_id: responsavelId,
+      cliente_id: clienteId,
     };
 
     const key = hostname.toLowerCase();
@@ -244,6 +258,7 @@ async function importarLinhas(
     inseridos: rep.inseridos,
     atualizados: rep.atualizados,
     responsaveis_nao_encontrados: rep.responsaveisNaoEncontrados,
+    clientes_nao_encontrados: rep.clientesNaoEncontrados,
     erros: rep.erros.length,
   });
   return rep;
