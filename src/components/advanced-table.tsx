@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -85,6 +85,8 @@ export function AdvancedTable<T>({
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
+  const serverPaginationRef = useRef(serverPagination);
+  serverPaginationRef.current = serverPagination;
 
   useEffect(() => { savePrefs(storageKey, prefs); }, [storageKey, prefs]);
 
@@ -92,10 +94,10 @@ export function AdvancedTable<T>({
   useEffect(() => {
     const t = setTimeout(() => {
       setQuery(rawQuery);
-      serverPagination?.onSearchChange(rawQuery);
+      serverPaginationRef.current?.onSearchChange(rawQuery);
     }, 200);
     return () => clearTimeout(t);
-  }, [rawQuery, serverPagination]);
+  }, [rawQuery]);
 
 
   const orderedColumns = useMemo(() => {

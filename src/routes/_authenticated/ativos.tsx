@@ -59,6 +59,18 @@ type Ativo = {
 
 const STATUS = ["solicitado", "estoque", "em_uso", "manutencao", "baixado"];
 
+function loadAtivosListState() {
+  const fallback = { page: 1, pageSize: 50, query: "", view: null as string | null, sort: null as { id: string; dir: "asc" | "desc" } | null };
+  try {
+    const raw = localStorage.getItem("tbl:ativos");
+    if (!raw) return fallback;
+    const saved = JSON.parse(raw) as { view?: string | null; sort?: { id: string; dir: "asc" | "desc" } | null };
+    return { ...fallback, view: saved.view ?? null, sort: saved.sort ?? null };
+  } catch {
+    return fallback;
+  }
+}
+
 /** Converte valores legados de status para os aceitos pelo banco. */
 function normalizeStatus(s: string | null | undefined): string {
   const v = (s ?? "").trim();
@@ -104,13 +116,7 @@ function AtivosPage() {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(initial);
   const [originalStatus, setOriginalStatus] = useState<string | null>(null);
-  const [listState, setListState] = useState({
-    page: 1,
-    pageSize: 50,
-    query: "",
-    view: null as string | null,
-    sort: null as { id: string; dir: "asc" | "desc" } | null,
-  });
+  const [listState, setListState] = useState(loadAtivosListState);
 
   const { data: ativosPage, isLoading } = useQuery({
     queryKey: ["ativos", "page", listState],
@@ -131,9 +137,9 @@ function AtivosPage() {
       if (listState.view === "em_uso") query = query.eq("status_ciclo_vida", "em_uso");
       if (listState.view === "estoque") query = query.in("status_ciclo_vida", ["estoque", "em_estoque"]);
       if (listState.view === "manutencao") query = query.in("status_ciclo_vida", ["manutencao", "em_manutencao"]);
-      if (listState.view === "sem_patrimonio") query = query.is("numero_patrimonio", null);
-      if (listState.view === "sem_tipo") query = query.is("tipo", null);
-      if (listState.view === "sem_categoria") query = query.is("categoria", null);
+      if (listState.view === "sem_patrimonio") query = query.or("numero_patrimonio.is.null,numero_patrimonio.eq.");
+      if (listState.view === "sem_tipo") query = query.or("tipo.is.null,tipo.eq.");
+      if (listState.view === "sem_categoria") query = query.or("categoria.is.null,categoria.eq.");
 
       const sortColumns: Record<string, string> = {
         hostname: "hostname", patrimonio: "numero_patrimonio", tipo: "tipo", categoria: "categoria",
