@@ -60,7 +60,7 @@ const STATUS = ["em_estoque", "em_uso", "em_manutencao", "baixado"];
 
 const initial = {
   hostname: "",
-  tipo: "Notebook",
+  tipo: "NOTEBOOK",
   categoria: "",
   marca: "",
   modelo: "",
