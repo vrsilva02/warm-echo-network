@@ -38,10 +38,12 @@ type Row = {
   valor_total: number | null;
   unidade_id: string | null;
   centro_custo_id: string | null;
+  cliente_id: string | null;
+  clientes?: { nome: string } | null;
 };
 
 const TIPOS = ["EA", "MPSA", "Open Value", "NCE", "Perpetua", "SaaS", "Outro"];
-const initial = { fornecedor: "", numero_contrato: "", tipo_contrato: "SaaS", data_inicio: "", data_fim: "", quantidade_seats: 0, valor_total: "", unidade_id: null as string | null, centro_custo_id: null as string | null };
+const initial = { fornecedor: "", numero_contrato: "", tipo_contrato: "SaaS", data_inicio: "", data_fim: "", quantidade_seats: 0, valor_total: "", unidade_id: null as string | null, centro_custo_id: null as string | null, cliente_id: null as string | null };
 
 function urgencyBadge(dataFim: string | null) {
   if (!dataFim) return <Badge variant="outline">sem vencimento</Badge>;
