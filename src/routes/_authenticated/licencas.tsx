@@ -937,6 +937,7 @@ function LicencaDialog({
   const [form, setForm] = useState<any>({
     produto_id: defaultProdutoId ?? "",
     contrato_id: null,
+    cliente_id: null,
     quantidade: 1,
     custo_unitario: "",
     data_expiracao: "",
@@ -959,6 +960,11 @@ function LicencaDialog({
     queryFn: async () => (await supabase.from("contratos").select("id, fornecedor, numero_contrato").order("fornecedor")).data ?? [],
     enabled: open,
   });
+  const { data: clientes } = useQuery({
+    queryKey: ["clientes-lite"],
+    queryFn: async () => (await supabase.from("clientes").select("id, nome").eq("ativo", true).order("nome")).data ?? [],
+    enabled: open,
+  });
 
   // Carrega quando edita
   React.useEffect(() => {
@@ -968,6 +974,7 @@ function LicencaDialog({
         if (data) setForm({
           produto_id: data.produto_id ?? "",
           contrato_id: data.contrato_id,
+          cliente_id: data.cliente_id ?? null,
           quantidade: data.quantidade ?? 1,
           custo_unitario: data.custo_unitario?.toString() ?? "",
           data_expiracao: data.data_expiracao ?? "",
@@ -994,6 +1001,7 @@ function LicencaDialog({
     const payload: any = {
       produto_id: form.produto_id,
       contrato_id: form.contrato_id,
+      cliente_id: form.cliente_id,
       quantidade: Number(form.quantidade) || 1,
       chave_ativacao: form.chave_ativacao || null,
       data_expiracao: form.data_expiracao || null,
@@ -1047,6 +1055,16 @@ function LicencaDialog({
               value={form.contrato_id}
               onChange={(v) => setForm({ ...form, contrato_id: v })}
               options={(contratos ?? []).map((c: any) => ({ value: c.id, label: c.fornecedor, hint: c.numero_contrato ?? undefined }))}
+            />
+          </div>
+          <div>
+            <Label>Cliente</Label>
+            <Combobox
+              placeholder="Nenhum"
+              searchPlaceholder="Buscar cliente…"
+              value={form.cliente_id}
+              onChange={(v) => setForm({ ...form, cliente_id: v })}
+              options={(clientes ?? []).map((c: any) => ({ value: c.id, label: c.nome }))}
             />
           </div>
           <div className="grid grid-cols-2 gap-3">

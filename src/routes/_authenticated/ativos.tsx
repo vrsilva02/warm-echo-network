@@ -48,8 +48,10 @@ type Ativo = {
   status_ciclo_vida: string;
   usuario_responsavel_id: string | null;
   centro_custo_id: string | null;
+  cliente_id: string | null;
   usuarios?: { nome: string } | null;
   centros_custo?: { nome: string } | null;
+  clientes?: { nome: string } | null;
 };
 
 const STATUS = ["em_estoque", "em_uso", "em_manutencao", "baixado"];
@@ -67,6 +69,7 @@ const initial = {
   status_ciclo_vida: "em_estoque",
   usuario_responsavel_id: null as string | null,
   centro_custo_id: null as string | null,
+  cliente_id: null as string | null,
 };
 
 function statusBadge(s: string) {
@@ -92,7 +95,7 @@ function AtivosPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("ativos")
-        .select("*, usuarios(nome), centros_custo(nome)")
+        .select("*, usuarios(nome), centros_custo(nome), clientes(nome)")
         .order("hostname");
       if (error) throw error;
       return data as unknown as Ativo[];
@@ -106,6 +109,10 @@ function AtivosPage() {
   const { data: centros } = useQuery({
     queryKey: ["centros_custo-lite"],
     queryFn: async () => (await supabase.from("centros_custo").select("id,nome").order("nome")).data ?? [],
+  });
+  const { data: clientes } = useQuery({
+    queryKey: ["clientes-lite"],
+    queryFn: async () => (await supabase.from("clientes").select("id,nome").eq("ativo", true).order("nome")).data ?? [],
   });
   const { set: edrSet } = useGapEdrSet();
 
@@ -128,6 +135,7 @@ function AtivosPage() {
       status_ciclo_vida: r.status_ciclo_vida,
       usuario_responsavel_id: r.usuario_responsavel_id,
       centro_custo_id: r.centro_custo_id,
+      cliente_id: r.cliente_id,
     });
     setOpen(true);
   }
@@ -145,6 +153,7 @@ function AtivosPage() {
       status_ciclo_vida: form.status_ciclo_vida,
       usuario_responsavel_id: form.usuario_responsavel_id,
       centro_custo_id: form.centro_custo_id,
+      cliente_id: form.cliente_id,
     };
     const { error } = editing
       ? await supabase.from("ativos").update(payload).eq("id", editing.id)
@@ -269,6 +278,12 @@ function AtivosPage() {
       id: "setor", header: "Setor",
       accessor: (r) => r.setor ?? "—", sortValue: (r) => r.setor ?? "",
       searchValue: (r) => r.setor, exportValue: (r) => r.setor,
+    },
+    {
+      id: "cliente", header: "Cliente",
+      accessor: (r) => r.clientes?.nome ?? "—",
+      sortValue: (r) => r.clientes?.nome ?? "",
+      searchValue: (r) => r.clientes?.nome, exportValue: (r) => r.clientes?.nome,
     },
     {
       id: "centro", header: "Centro de custo", defaultHidden: true,
@@ -441,6 +456,16 @@ function AtivosPage() {
               options={(centros ?? []).map((c: any) => ({ value: c.id, label: c.nome }))}
             />
           </div>
+        </div>
+        <div>
+          <Label>Cliente</Label>
+          <Combobox
+            placeholder="Nenhum"
+            searchPlaceholder="Buscar cliente…"
+            value={form.cliente_id}
+            onChange={(v) => setForm({ ...form, cliente_id: v })}
+            options={(clientes ?? []).map((c: any) => ({ value: c.id, label: c.nome }))}
+          />
         </div>
       </CrudDialog>
     </>

@@ -38,10 +38,12 @@ type Row = {
   valor_total: number | null;
   unidade_id: string | null;
   centro_custo_id: string | null;
+  cliente_id: string | null;
+  clientes?: { nome: string } | null;
 };
 
 const TIPOS = ["EA", "MPSA", "Open Value", "NCE", "Perpetua", "SaaS", "Outro"];
-const initial = { fornecedor: "", numero_contrato: "", tipo_contrato: "SaaS", data_inicio: "", data_fim: "", quantidade_seats: 0, valor_total: "", unidade_id: null as string | null, centro_custo_id: null as string | null };
+const initial = { fornecedor: "", numero_contrato: "", tipo_contrato: "SaaS", data_inicio: "", data_fim: "", quantidade_seats: 0, valor_total: "", unidade_id: null as string | null, centro_custo_id: null as string | null, cliente_id: null as string | null };
 
 function urgencyBadge(dataFim: string | null) {
   if (!dataFim) return <Badge variant="outline">sem vencimento</Badge>;
@@ -65,9 +67,9 @@ function Page() {
   const { data: rows, isLoading } = useQuery({
     queryKey: ["contratos"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("contratos").select("*").order("data_fim", { ascending: true, nullsFirst: false });
+      const { data, error } = await supabase.from("contratos").select("*, clientes(nome)").order("data_fim", { ascending: true, nullsFirst: false });
       if (error) throw error;
-      return data as Row[];
+      return data as unknown as Row[];
     },
   });
   const { data: unidades } = useQuery({
@@ -77,6 +79,10 @@ function Page() {
   const { data: centros } = useQuery({
     queryKey: ["centros_custo-lite"],
     queryFn: async () => (await supabase.from("centros_custo").select("id,nome").order("nome")).data ?? [],
+  });
+  const { data: clientes } = useQuery({
+    queryKey: ["clientes-lite"],
+    queryFn: async () => (await supabase.from("clientes").select("id,nome").eq("ativo", true).order("nome")).data ?? [],
   });
   const filtered = useFilteredList(rows, q, ["fornecedor", "numero_contrato", "tipo_contrato"]);
 
@@ -93,6 +99,7 @@ function Page() {
       valor_total: r.valor_total?.toString() ?? "",
       unidade_id: r.unidade_id,
       centro_custo_id: r.centro_custo_id,
+      cliente_id: r.cliente_id,
     });
     setOpen(true);
   }
@@ -107,6 +114,7 @@ function Page() {
       valor_total: form.valor_total ? Number(form.valor_total) : null,
       unidade_id: form.unidade_id,
       centro_custo_id: form.centro_custo_id,
+      cliente_id: form.cliente_id,
     };
     const { error } = editing
       ? await supabase.from("contratos").update(payload).eq("id", editing.id)
@@ -145,10 +153,11 @@ function Page() {
       />
       <ListToolbar query={q} onQueryChange={setQ} />
       <DataTable
-        columns={["Fornecedor", "Nº", "Tipo", "Início", "Fim", "Seats", "Valor", "Vencimento", "Ações"]}
+        columns={["Fornecedor", "Cliente", "Nº", "Tipo", "Início", "Fim", "Seats", "Valor", "Vencimento", "Ações"]}
         empty={isLoading ? "Carregando…" : "Nenhum contrato."}
         rows={filtered.map((r) => [
           <span key="f" className="font-medium">{r.fornecedor}</span>,
+          r.clientes?.nome ?? "—",
           r.numero_contrato ?? "—",
           r.tipo_contrato ?? "—",
           r.data_inicio,
@@ -207,6 +216,16 @@ function Page() {
             value={form.centro_custo_id}
             onChange={(v) => setForm({ ...form, centro_custo_id: v })}
             options={(centros ?? []).map((c: any) => ({ value: c.id, label: c.nome }))}
+          />
+        </div>
+        <div>
+          <Label>Cliente</Label>
+          <Combobox
+            placeholder="Nenhum"
+            searchPlaceholder="Buscar cliente…"
+            value={form.cliente_id}
+            onChange={(v) => setForm({ ...form, cliente_id: v })}
+            options={(clientes ?? []).map((c: any) => ({ value: c.id, label: c.nome }))}
           />
         </div>
       </CrudDialog>
