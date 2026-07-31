@@ -219,7 +219,7 @@ export function AdvancedTable<T>({
           {searchable && (
             <div className="relative w-full sm:w-72">
               <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden />
-              <Input placeholder={searchPlaceholder} value={query} onChange={(e) => setQuery(e.target.value)} className="pl-8" aria-label={searchPlaceholder} />
+              <Input placeholder={searchPlaceholder} value={rawQuery} onChange={(e) => setRawQuery(e.target.value)} className="pl-8" aria-label={searchPlaceholder} />
             </div>
           )}
           {savedViews && savedViews.length > 0 && (
