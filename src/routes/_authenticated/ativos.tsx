@@ -94,12 +94,13 @@ function AtivosPage() {
   const { data: rows, isLoading } = useQuery({
     queryKey: ["ativos"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("ativos")
-        .select("*, usuarios(nome), centros_custo(nome), clientes(nome)")
-        .order("hostname");
+      const { data, error } = await fetchAll<Ativo>(
+        "ativos",
+        "*, usuarios(nome), centros_custo(nome), clientes(nome)",
+        (q) => q.order("hostname"),
+      );
       if (error) throw error;
-      return data as unknown as Ativo[];
+      return data;
     },
   });
 
