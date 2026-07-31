@@ -32,9 +32,9 @@ const TIPOS_REL = ["hospeda_vm", "conecta", "depende_de", "backup_de"];
 
 function ativoStatus(s: string | null) {
   if (s === "em_uso") return <StatusPill tone="ok">em uso</StatusPill>;
-  if (s === "em_manutencao") return <StatusPill tone="warn">manutenção</StatusPill>;
+  if (s === "manutencao" || s === "em_manutencao") return <StatusPill tone="warn">manutenção</StatusPill>;
   if (s === "baixado") return <StatusPill tone="critical">baixado</StatusPill>;
-  if (s === "em_estoque") return <StatusPill tone="info">estoque</StatusPill>;
+  if (s === "estoque" || s === "em_estoque") return <StatusPill tone="info">estoque</StatusPill>;
   return <StatusPill tone="neutral">{s ?? "—"}</StatusPill>;
 }
 
