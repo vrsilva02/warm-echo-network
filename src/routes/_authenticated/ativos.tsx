@@ -32,6 +32,13 @@ const AtivosImportExport = lazy(() =>
 
 export const Route = createFileRoute("/_authenticated/ativos")({
   component: AtivosPage,
+  // Dispara a busca da primeira página já no preload/navegação (antes do render),
+  // para a tela abrir com os dados prontos.
+  loader: ({ context }) => {
+    const state = loadAtivosListState();
+    void context.queryClient.prefetchQuery(ativosPageQuery(state));
+    void context.queryClient.prefetchQuery(ativosCountQuery(state));
+  },
   head: () => ({
     meta: [
       { title: "Ativos — GestoraIT" },
@@ -39,6 +46,7 @@ export const Route = createFileRoute("/_authenticated/ativos")({
     ],
   }),
 });
+
 
 type Ativo = {
   id: string;
