@@ -30,9 +30,9 @@ const TIPOS_DEP = ["hospeda", "suporta", "depende_de"];
 
 function statusBadge(s: string | null) {
   if (s === "em_uso") return <StatusPill tone="ok">em uso</StatusPill>;
-  if (s === "em_manutencao") return <StatusPill tone="warn">manutenção</StatusPill>;
+  if (s === "manutencao" || s === "em_manutencao") return <StatusPill tone="warn">manutenção</StatusPill>;
   if (s === "baixado") return <StatusPill tone="critical">baixado</StatusPill>;
-  if (s === "em_estoque") return <StatusPill tone="info">estoque</StatusPill>;
+  if (s === "estoque" || s === "em_estoque") return <StatusPill tone="info">estoque</StatusPill>;
   return <StatusPill tone="neutral">{s ?? "—"}</StatusPill>;
 }
 
@@ -67,7 +67,7 @@ function Page() {
   });
 
   const jaVinculados = new Set((vinculos ?? []).map((v: any) => v.ativos?.id));
-  const emRisco = (vinculos ?? []).filter((v: any) => v.ativos && (v.ativos.status_ciclo_vida === "em_manutencao" || v.ativos.status_ciclo_vida === "baixado"));
+  const emRisco = (vinculos ?? []).filter((v: any) => v.ativos && ((v.ativos.status_ciclo_vida === "manutencao" || v.ativos.status_ciclo_vida === "em_manutencao") || v.ativos.status_ciclo_vida === "baixado"));
 
   async function vincular() {
     if (!ativoId) return toast.error("Selecione o ativo");
@@ -121,8 +121,8 @@ function Page() {
             {(vinculos ?? []).length === 0 ? (
               <div className="p-6 text-sm text-muted-foreground text-center">Nenhum ativo vinculado.</div>
             ) : (vinculos ?? []).map((v: any) => {
-              const risco = v.ativos && (v.ativos.status_ciclo_vida === "em_manutencao" || v.ativos.status_ciclo_vida === "baixado");
-              const cls = v.ativos?.status_ciclo_vida === "baixado" ? "bg-destructive/5" : v.ativos?.status_ciclo_vida === "em_manutencao" ? "bg-[color:var(--warning)]/5" : "";
+              const risco = v.ativos && ((v.ativos.status_ciclo_vida === "manutencao" || v.ativos.status_ciclo_vida === "em_manutencao") || v.ativos.status_ciclo_vida === "baixado");
+              const cls = v.ativos?.status_ciclo_vida === "baixado" ? "bg-destructive/5" : (v.ativos?.status_ciclo_vida === "manutencao" || v.ativos?.status_ciclo_vida === "em_manutencao") ? "bg-[color:var(--warning)]/5" : "";
               return (
                 <div key={v.id} className={`flex items-center justify-between gap-3 px-4 py-2 ${cls}`}>
                   <div className="flex items-center gap-3 min-w-0">
