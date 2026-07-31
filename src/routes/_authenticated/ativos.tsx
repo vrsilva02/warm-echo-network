@@ -330,7 +330,10 @@ function AtivosPage() {
     { id: "estoque", label: "Em estoque", filter: (rs) => rs.filter((r) => r.status_ciclo_vida === "em_estoque") },
     { id: "manutencao", label: "Manutenção", filter: (rs) => rs.filter((r) => r.status_ciclo_vida === "em_manutencao") },
     { id: "sem_patrimonio", label: "Sem patrimônio", filter: (rs) => rs.filter((r) => !r.numero_patrimonio) },
+    { id: "sem_tipo", label: "Sem tipo", filter: (rs) => rs.filter((r) => !r.tipo?.trim()) },
+    { id: "sem_categoria", label: "Sem categoria", filter: (rs) => rs.filter((r) => !r.categoria?.trim()) },
   ];
+
 
   return (
     <>
