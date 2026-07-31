@@ -30,7 +30,9 @@ type Col = (typeof COLUMNS)[number];
 type RawRow = Partial<Record<Col, string>> & Record<string, string>;
 
 const REQUIRED: Col[] = ["hostname"];
-const STATUS_VALIDOS = new Set(["em_estoque", "em_uso", "em_manutencao", "baixado", "solicitado"]);
+const STATUS_VALIDOS = new Set(["estoque", "em_uso", "manutencao", "baixado", "solicitado"]);
+/** Aceita rótulos antigos usados em planilhas anteriores. */
+const STATUS_ALIAS: Record<string, string> = { em_estoque: "estoque", em_manutencao: "manutencao" };
 
 function nz(v: string | undefined): string | null {
   const s = (v ?? "").trim();
