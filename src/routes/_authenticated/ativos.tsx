@@ -496,7 +496,12 @@ function AtivosPage() {
         rows={rows}
         isLoading={isLoading}
         serverPagination={{
-          total: ativosPage?.total ?? 0,
+          total:
+            totalCount ??
+            (listState.page - 1) * listState.pageSize +
+              (rows?.length ?? 0) +
+              (rows?.length === listState.pageSize ? 1 : 0),
+
           page: listState.page,
           pageSize: listState.pageSize,
           onPageChange: (page) => setListState((state) => ({ ...state, page })),
