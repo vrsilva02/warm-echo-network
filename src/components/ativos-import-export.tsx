@@ -72,10 +72,11 @@ export async function exportAtivos() {
 
 
 export function downloadTemplate() {
+  // Exemplo completo (todas as colunas preenchidas)
   const exemplo = [
     "NB-0001",
-    "Notebook",
-    "Computadores",
+    "NOTEBOOK",
+    "Microcomputador TIPO I",
     "Dell",
     "Latitude 5440",
     "PAT-000123",
@@ -84,10 +85,13 @@ export function downloadTemplate() {
     "em_uso",
     "colaborador@empresa.com",
   ];
+  // Exemplo mínimo: apenas hostname — Tipo e Categoria são opcionais e ficam em branco.
+  const exemploMinimo = COLUMNS.map((c) => (c === "hostname" ? "SEM-TIPO-0002" : ""));
   const vazia = COLUMNS.map(() => "");
-  downloadXLSX("template_ativos.xlsx", COLUMNS as unknown as string[], [exemplo, vazia]);
-  toast.success("Template baixado. Preencha e reimporte em XLSX.");
+  downloadXLSX("template_ativos.xlsx", COLUMNS as unknown as string[], [exemplo, exemploMinimo, vazia]);
+  toast.success("Template baixado. Apenas hostname é obrigatório; Tipo e Categoria podem ficar em branco.");
 }
+
 
 /* ------------------------ Importar ------------------------ */
 
