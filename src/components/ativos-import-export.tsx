@@ -151,7 +151,8 @@ async function importarLinhas(
 
     const hostname = nz(r.hostname)!;
     const tipo = nz(r.tipo);
-    const status = nz(r.status_ciclo_vida) ?? "em_estoque";
+    const statusBruto = nz(r.status_ciclo_vida) ?? "estoque";
+    const status = STATUS_ALIAS[statusBruto] ?? statusBruto;
     if (!STATUS_VALIDOS.has(status)) {
       rep.erros.push({
         linha,
