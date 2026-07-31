@@ -190,6 +190,12 @@ function DashboardPage() {
     <>
       <PageHeader title="Dashboard" description="Posição efetiva de licenças, contratos e ativos em tempo real." />
 
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 lg:gap-5 mb-6">
+        <KpiCard title="Total de ativos" value={ativosCliente?.total ?? 0} icon={<Boxes className="h-4 w-4" />} hint="Quantidade total de ativos cadastrados no sistema." />
+        <AtivosPorClienteCard />
+      </div>
+
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5 mb-6">
         <KpiCard title="Licenças Windows" value={totais.Windows ?? 0} icon={<KeySquare className="h-4 w-4" />} hint="Soma de seats comprados em contratos ativos para produtos da categoria Windows." />
         <KpiCard title="Licenças Office" value={totais.Office ?? 0} icon={<KeySquare className="h-4 w-4" />} hint="Soma de seats comprados em contratos ativos para produtos da categoria Office." />
