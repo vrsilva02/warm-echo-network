@@ -81,6 +81,74 @@ function loadAtivosListState() {
   }
 }
 
+type ListState = ReturnType<typeof loadAtivosListState>;
+
+const ATIVO_SELECT =
+  "id,hostname,tipo,categoria,marca,modelo,numero_serie,numero_patrimonio,setor,status_ciclo_vida,usuario_responsavel_id,centro_custo_id,cliente_id,usuarios(nome),centros_custo(nome),clientes(nome)";
+
+/** Aplica busca e visão salva na query do Supabase. */
+function applyAtivosFilters(query: any, s: ListState) {
+  const term = s.query.trim().replace(/[%_,()]/g, " ");
+  if (term) {
+    query = query.or(
+      `hostname.ilike.%${term}%,numero_patrimonio.ilike.%${term}%,numero_serie.ilike.%${term}%,tipo.ilike.%${term}%,categoria.ilike.%${term}%,marca.ilike.%${term}%,modelo.ilike.%${term}%,setor.ilike.%${term}%,status_ciclo_vida.ilike.%${term}%`,
+    );
+  }
+  if (s.view === "em_uso") query = query.eq("status_ciclo_vida", "em_uso");
+  if (s.view === "estoque") query = query.in("status_ciclo_vida", ["estoque", "em_estoque"]);
+  if (s.view === "manutencao") query = query.in("status_ciclo_vida", ["manutencao", "em_manutencao"]);
+  if (s.view === "sem_patrimonio") query = query.is("numero_patrimonio", null);
+  if (s.view === "sem_tipo") query = query.is("tipo", null);
+  if (s.view === "sem_categoria") query = query.is("categoria", null);
+  return query;
+}
+
+/** Página de linhas — sem COUNT, que é o que deixava o primeiro carregamento lento. */
+function ativosPageQuery(s: ListState) {
+  return {
+    queryKey: ["ativos", "page", s] as const,
+    staleTime: 5 * 60_000,
+    gcTime: 30 * 60_000,
+    queryFn: async () => {
+      const from = (s.page - 1) * s.pageSize;
+      const sortColumns: Record<string, string> = {
+        hostname: "hostname", patrimonio: "numero_patrimonio", tipo: "tipo", categoria: "categoria",
+        marca: "marca", modelo: "modelo", setor: "setor", status: "status_ciclo_vida",
+      };
+      const sortColumn = (s.sort ? sortColumns[s.sort.id] : "hostname") ?? "hostname";
+      const { data, error } = await applyAtivosFilters(
+        supabase.from("ativos").select(ATIVO_SELECT),
+        s,
+      )
+        .order(sortColumn, { ascending: s.sort?.dir !== "desc", nullsFirst: false })
+        .order("id", { ascending: true })
+        .range(from, from + s.pageSize - 1);
+      if (error) throw error;
+      return (data ?? []) as Ativo[];
+    },
+  };
+}
+
+/** COUNT em paralelo: não bloqueia a exibição das linhas. */
+function ativosCountQuery(s: ListState) {
+  const key = { query: s.query, view: s.view };
+  return {
+    queryKey: ["ativos", "count", key] as const,
+    staleTime: 5 * 60_000,
+    gcTime: 30 * 60_000,
+    queryFn: async () => {
+      const { count, error } = await applyAtivosFilters(
+        supabase.from("ativos").select("id", { count: "exact", head: true }),
+        s,
+      );
+      if (error) throw error;
+      return count ?? 0;
+    },
+  };
+}
+
+
+
 /** Converte valores legados de status para os aceitos pelo banco. */
 function normalizeStatus(s: string | null | undefined): string {
   const v = (s ?? "").trim();
