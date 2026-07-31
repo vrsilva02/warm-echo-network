@@ -494,15 +494,17 @@ function AtivosPage() {
             />
           </div>
           <div>
-            <Label>Centro de custo</Label>
+            <Label>Centro de custo <span className="text-muted-foreground font-normal">(opcional)</span></Label>
             <Combobox
               placeholder="Nenhum"
               searchPlaceholder="Buscar centro…"
+              clearable
               value={form.centro_custo_id}
               onChange={(v) => setForm({ ...form, centro_custo_id: v })}
               options={(centros ?? []).map((c: any) => ({ value: c.id, label: c.nome }))}
             />
           </div>
+
         </div>
         <div>
           <Label>Cliente</Label>
