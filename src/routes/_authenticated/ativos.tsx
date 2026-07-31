@@ -104,6 +104,7 @@ function AtivosPage() {
   const [editing, setEditing] = useState<Ativo | null>(null);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(initial);
+  const [originalStatus, setOriginalStatus] = useState<string | null>(null);
 
   const { data: rows, isLoading } = useQuery({
     queryKey: ["ativos"],
