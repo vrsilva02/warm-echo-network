@@ -106,6 +106,5 @@ export const inviteUser = createServerFn({ method: "POST" })
 
     console.log(`[inviteUser] Convite finalizado com sucesso para ${data.email}`);
 
-
     return { ok: true, userId: newUserId, email: data.email };
   });
