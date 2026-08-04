@@ -6,6 +6,7 @@ import {
   Container,
   Head,
   Heading,
+  Hr,
   Html,
   Link,
   Preview,
@@ -23,27 +24,30 @@ export const InviteEmail = ({
   siteUrl,
   confirmationUrl,
 }: InviteEmailProps) => (
-  <Html lang="en" dir="ltr">
+  <Html lang="pt-BR" dir="ltr">
     <Head />
-    <Preview>You've been invited to join {siteName}</Preview>
+    <Preview>Você foi convidado para o {siteName}</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Heading style={h1}>You've been invited</Heading>
+        <Text style={brand}>{siteName}</Text>
+        <Heading style={h1}>Você foi convidado</Heading>
         <Text style={text}>
-          You've been invited to join{' '}
+          Você recebeu um convite para acessar o{' '}
           <Link href={siteUrl} style={link}>
             <strong>{siteName}</strong>
           </Link>
-          . Click the button below to accept the invitation and create your
-          account.
+          . Clique no botão abaixo para aceitar o convite e criar a sua senha de
+          acesso.
         </Text>
         <Button style={button} href={confirmationUrl}>
-          Accept Invitation
+          Aceitar convite
         </Button>
+        <Hr style={hr} />
         <Text style={footer}>
-          If you weren't expecting this invitation, you can safely ignore this
-          email.
+          Se você não esperava este convite, pode ignorar este e-mail com
+          segurança.
         </Text>
+        <Text style={footer}>Powered by MTR2.TECH</Text>
       </Container>
     </Body>
   </Html>
@@ -53,15 +57,23 @@ export default InviteEmail
 
 const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif' }
 const container = { padding: '20px 25px' }
+const brand = {
+  fontSize: '13px',
+  letterSpacing: '1px',
+  textTransform: 'uppercase' as const,
+  color: '#4338ca',
+  fontWeight: 'bold' as const,
+  margin: '0 0 16px',
+}
 const h1 = {
   fontSize: '22px',
   fontWeight: 'bold' as const,
-  color: '#000000',
+  color: '#0f172a',
   margin: '0 0 20px',
 }
 const text = {
   fontSize: '14px',
-  color: '#55575d',
+  color: '#475569',
   lineHeight: '1.5',
   margin: '0 0 25px',
 }
@@ -74,5 +86,5 @@ const button = {
   padding: '12px 20px',
   textDecoration: 'none',
 }
-const footer = { fontSize: '12px', color: '#94a3b8', margin: '30px 0 0' }
-export const brandFooter = 'GestoraIT — Powered by MTR2.TECH'
+const hr = { borderColor: '#e2e8f0', margin: '30px 0 16px' }
+const footer = { fontSize: '12px', color: '#94a3b8', margin: '0 0 6px' }

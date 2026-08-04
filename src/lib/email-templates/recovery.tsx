@@ -6,6 +6,7 @@ import {
   Container,
   Head,
   Heading,
+  Hr,
   Html,
   Preview,
   Text,
@@ -20,23 +21,26 @@ export const RecoveryEmail = ({
   siteName,
   confirmationUrl,
 }: RecoveryEmailProps) => (
-  <Html lang="en" dir="ltr">
+  <Html lang="pt-BR" dir="ltr">
     <Head />
-    <Preview>Reset your password for {siteName}</Preview>
+    <Preview>Redefinição de senha do {siteName}</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Heading style={h1}>Reset your password</Heading>
+        <Text style={brand}>{siteName}</Text>
+        <Heading style={h1}>Redefinir sua senha</Heading>
         <Text style={text}>
-          We received a request to reset your password for {siteName}. Click
-          the button below to choose a new password.
+          Recebemos uma solicitação para redefinir a senha da sua conta no{' '}
+          {siteName}. Clique no botão abaixo para escolher uma nova senha.
         </Text>
         <Button style={button} href={confirmationUrl}>
-          Reset Password
+          Redefinir senha
         </Button>
+        <Hr style={hr} />
         <Text style={footer}>
-          If you didn't request a password reset, you can safely ignore this
-          email. Your password will not be changed.
+          Se você não solicitou a redefinição, ignore este e-mail. Sua senha
+          permanecerá inalterada.
         </Text>
+        <Text style={footer}>Powered by MTR2.TECH</Text>
       </Container>
     </Body>
   </Html>
@@ -46,15 +50,23 @@ export default RecoveryEmail
 
 const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif' }
 const container = { padding: '20px 25px' }
+const brand = {
+  fontSize: '13px',
+  letterSpacing: '1px',
+  textTransform: 'uppercase' as const,
+  color: '#4338ca',
+  fontWeight: 'bold' as const,
+  margin: '0 0 16px',
+}
 const h1 = {
   fontSize: '22px',
   fontWeight: 'bold' as const,
-  color: '#000000',
+  color: '#0f172a',
   margin: '0 0 20px',
 }
 const text = {
   fontSize: '14px',
-  color: '#55575d',
+  color: '#475569',
   lineHeight: '1.5',
   margin: '0 0 25px',
 }
@@ -66,5 +78,5 @@ const button = {
   padding: '12px 20px',
   textDecoration: 'none',
 }
-const footer = { fontSize: '12px', color: '#94a3b8', margin: '30px 0 0' }
-export const brandFooter = 'GestoraIT — Powered by MTR2.TECH'
+const hr = { borderColor: '#e2e8f0', margin: '30px 0 16px' }
+const footer = { fontSize: '12px', color: '#94a3b8', margin: '0 0 6px' }
