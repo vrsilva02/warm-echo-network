@@ -104,6 +104,8 @@ export const inviteUser = createServerFn({ method: "POST" })
       await supabaseAdmin.from("profiles").update({ nome: data.nome }).eq("id", newUserId);
     }
 
+    console.log(`[inviteUser] Convite finalizado com sucesso para ${data.email}`);
+
 
     return { ok: true, userId: newUserId, email: data.email };
   });
