@@ -178,7 +178,7 @@ function AcessosPage() {
           email: invEmail.trim(),
           nome: invNome.trim() || undefined,
           roles: [...invRoles],
-          redirectTo: `${window.location.origin}/auth`,
+          redirectTo: "/auth",
         },
       });
       toast.success(`Convite enviado para ${invEmail}`);
