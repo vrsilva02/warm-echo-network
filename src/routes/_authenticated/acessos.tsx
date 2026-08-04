@@ -318,7 +318,7 @@ function AcessosPage() {
                 <span className="text-xs text-muted-foreground">{c.email}</span>
               </div>,
               <div key="r" className="flex flex-wrap gap-1">
-                {c.roles.map((role: AppRole) => roleBadge(role))}
+                {(c.roles as AppRole[]).map((role: AppRole) => roleBadge(role))}
               </div>,
               <div key="s">
                 {c.status === "enviado" && (
@@ -332,7 +332,7 @@ function AcessosPage() {
                   </Badge>
                 )}
                 {c.status === "falhou" && (
-                  <Badge variant="destructive" className="flex items-center gap-1" title={c.erro}>
+                  <Badge variant="destructive" className="flex items-center gap-1" title={c.erro ?? "Erro desconhecido"}>
                     <XCircle className="h-3 w-3" /> Falhou
                   </Badge>
                 )}
