@@ -18,6 +18,7 @@ import { Route as CadastroRouteImport } from './routes/cadastro'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AuthenticatedUnidadesRouteImport } from './routes/_authenticated/unidades'
 import { Route as AuthenticatedSolicitacoesRouteImport } from './routes/_authenticated/solicitacoes'
 import { Route as AuthenticatedServicosRouteImport } from './routes/_authenticated/servicos'
@@ -91,6 +92,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthCallbackRoute = AuthCallbackRouteImport.update({
+  id: '/callback',
+  path: '/callback',
+  getParentRoute: () => AuthRoute,
 } as any)
 const AuthenticatedUnidadesRoute = AuthenticatedUnidadesRouteImport.update({
   id: '/unidades',
@@ -248,7 +254,7 @@ const AuthenticatedAuditoriaTabelaIdRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/auth': typeof AuthRoute
+  '/auth': typeof AuthRouteWithChildren
   '/cadastro': typeof CadastroRoute
   '/privacidade': typeof PrivacidadeRoute
   '/register': typeof RegisterRoute
@@ -277,6 +283,7 @@ export interface FileRoutesByFullPath {
   '/servicos': typeof AuthenticatedServicosRoute
   '/solicitacoes': typeof AuthenticatedSolicitacoesRoute
   '/unidades': typeof AuthenticatedUnidadesRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/ativos/$id': typeof AuthenticatedAtivosIdRoute
   '/clientes/$id': typeof AuthenticatedClientesIdRoute
   '/ordens-servico/$id': typeof AuthenticatedOrdensServicoIdRoute
@@ -287,7 +294,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/auth': typeof AuthRoute
+  '/auth': typeof AuthRouteWithChildren
   '/cadastro': typeof CadastroRoute
   '/privacidade': typeof PrivacidadeRoute
   '/register': typeof RegisterRoute
@@ -316,6 +323,7 @@ export interface FileRoutesByTo {
   '/servicos': typeof AuthenticatedServicosRoute
   '/solicitacoes': typeof AuthenticatedSolicitacoesRoute
   '/unidades': typeof AuthenticatedUnidadesRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/ativos/$id': typeof AuthenticatedAtivosIdRoute
   '/clientes/$id': typeof AuthenticatedClientesIdRoute
   '/ordens-servico/$id': typeof AuthenticatedOrdensServicoIdRoute
@@ -328,7 +336,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
-  '/auth': typeof AuthRoute
+  '/auth': typeof AuthRouteWithChildren
   '/cadastro': typeof CadastroRoute
   '/privacidade': typeof PrivacidadeRoute
   '/register': typeof RegisterRoute
@@ -357,6 +365,7 @@ export interface FileRoutesById {
   '/_authenticated/servicos': typeof AuthenticatedServicosRoute
   '/_authenticated/solicitacoes': typeof AuthenticatedSolicitacoesRoute
   '/_authenticated/unidades': typeof AuthenticatedUnidadesRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/_authenticated/ativos_/$id': typeof AuthenticatedAtivosIdRoute
   '/_authenticated/clientes_/$id': typeof AuthenticatedClientesIdRoute
   '/_authenticated/ordens-servico_/$id': typeof AuthenticatedOrdensServicoIdRoute
@@ -398,6 +407,7 @@ export interface FileRouteTypes {
     | '/servicos'
     | '/solicitacoes'
     | '/unidades'
+    | '/auth/callback'
     | '/ativos/$id'
     | '/clientes/$id'
     | '/ordens-servico/$id'
@@ -437,6 +447,7 @@ export interface FileRouteTypes {
     | '/servicos'
     | '/solicitacoes'
     | '/unidades'
+    | '/auth/callback'
     | '/ativos/$id'
     | '/clientes/$id'
     | '/ordens-servico/$id'
@@ -477,6 +488,7 @@ export interface FileRouteTypes {
     | '/_authenticated/servicos'
     | '/_authenticated/solicitacoes'
     | '/_authenticated/unidades'
+    | '/auth/callback'
     | '/_authenticated/ativos_/$id'
     | '/_authenticated/clientes_/$id'
     | '/_authenticated/ordens-servico_/$id'
@@ -489,7 +501,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
-  AuthRoute: typeof AuthRoute
+  AuthRoute: typeof AuthRouteWithChildren
   CadastroRoute: typeof CadastroRoute
   PrivacidadeRoute: typeof PrivacidadeRoute
   RegisterRoute: typeof RegisterRoute
@@ -564,6 +576,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/auth/callback': {
+      id: '/auth/callback'
+      path: '/callback'
+      fullPath: '/auth/callback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
+      parentRoute: typeof AuthRoute
     }
     '/_authenticated/unidades': {
       id: '/_authenticated/unidades'
@@ -835,10 +854,20 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
   AuthenticatedRouteChildren,
 )
 
+interface AuthRouteChildren {
+  AuthCallbackRoute: typeof AuthCallbackRoute
+}
+
+const AuthRouteChildren: AuthRouteChildren = {
+  AuthCallbackRoute: AuthCallbackRoute,
+}
+
+const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
-  AuthRoute: AuthRoute,
+  AuthRoute: AuthRouteWithChildren,
   CadastroRoute: CadastroRoute,
   PrivacidadeRoute: PrivacidadeRoute,
   RegisterRoute: RegisterRoute,

@@ -3,8 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/auth/callback")({
   ssr: false,
-  loader: async ({ search }) => {
-    const next = (search as any).next || "/dashboard";
+  loader: async ({ location }) => {
+    const searchParams = new URLSearchParams(location.search);
+    const next = searchParams.get("next") || "/dashboard";
     
     // O Supabase processa o hash (#access_token=...) automaticamente se o client for carregado.
     // getSession() irá trocar o código ou validar o hash e persistir no localStorage.
