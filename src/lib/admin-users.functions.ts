@@ -82,7 +82,7 @@ export const inviteUser = createServerFn({ method: "POST" })
     console.log(`[inviteUser] Enviando convite via Supabase com redirectTo: ${redirectTo}`);
     const { data: invited, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(data.email, {
       data: data.nome ? { nome: data.nome } : undefined,
-      redirectTo,
+      redirectTo: redirectTo || 'https://gestorait.mtr2tech.com.br/auth',
     });
     
     if (error) {
