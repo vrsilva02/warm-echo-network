@@ -25,20 +25,20 @@ export const InviteEmail = ({
 }: InviteEmailProps) => (
   <Html lang="en" dir="ltr">
     <Head />
-    <Preview>You've been invited to join {siteName}</Preview>
+    <Preview>Você foi convidado para o GestoraIT</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Heading style={h1}>You've been invited</Heading>
+        <Heading style={h1}>Convite para acessar o GestoraIT</Heading>
         <Text style={text}>
-          You've been invited to join{' '}
+           Você foi convidado para acessar o{' '}
           <Link href={siteUrl} style={link}>
-            <strong>{siteName}</strong>
+            <strong>GestoraIT</strong>
           </Link>
-          . Click the button below to accept the invitation and create your
-          account.
+          . Clique no botão abaixo para aceitar o convite e definir sua senha de
+          acesso.
         </Text>
         <Button style={button} href={confirmationUrl}>
-          Accept Invitation
+          Aceitar Convite
         </Button>
         <Text style={footer}>
           If you weren't expecting this invitation, you can safely ignore this

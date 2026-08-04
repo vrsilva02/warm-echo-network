@@ -9,9 +9,9 @@ import { EmailChangeEmail } from '@/lib/email-templates/email-change'
 import { ReauthenticationEmail } from '@/lib/email-templates/reauthentication'
 
 // Configuration
-const SITE_NAME = "warm-echo-network"
+const SITE_NAME = "GestoraIT"
 const SENDER_DOMAIN = "notify.mtr2tech.com"
-const ROOT_DOMAIN = "mtr2tech.com"
+const ROOT_DOMAIN = "gestorait.mtr2tech.com.br"
 const FROM_DOMAIN = "notify.mtr2tech.com"
 const SITE_URL = `https://${ROOT_DOMAIN}`
 
@@ -19,12 +19,12 @@ const SITE_URL = `https://${ROOT_DOMAIN}`
 // owns only the email decisions: subjects, templates, and per-type props.
 const handler = createAuthEmailHandler({
   apiKey: process.env['LOVABLE_API_KEY']!,
-  from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
+  from: `GestoraIT <noreply@notify.mtr2tech.com>`,
   senderDomain: SENDER_DOMAIN,
   sendUrl: process.env['LOVABLE_SEND_URL'],
   emails: {
     signup: {
-      subject: 'Confirm your email',
+      subject: 'Confirme seu e-mail — GestoraIT',
       render: (data) =>
         React.createElement(SignupEmail, {
           siteName: SITE_NAME,
@@ -34,7 +34,7 @@ const handler = createAuthEmailHandler({
         }),
     },
     invite: {
-      subject: "You've been invited",
+      subject: "Convite para acessar o GestoraIT",
       render: (data) =>
         React.createElement(InviteEmail, {
           siteName: SITE_NAME,
@@ -43,7 +43,7 @@ const handler = createAuthEmailHandler({
         }),
     },
     magiclink: {
-      subject: 'Your login link',
+      subject: 'Seu link de acesso — GestoraIT',
       render: (data) =>
         React.createElement(MagicLinkEmail, {
           siteName: SITE_NAME,
@@ -51,7 +51,7 @@ const handler = createAuthEmailHandler({
         }),
     },
     recovery: {
-      subject: 'Reset your password',
+      subject: 'Redefinição de senha — GestoraIT',
       render: (data) =>
         React.createElement(RecoveryEmail, {
           siteName: SITE_NAME,
@@ -59,7 +59,7 @@ const handler = createAuthEmailHandler({
         }),
     },
     email_change: {
-      subject: 'Confirm your new email',
+      subject: 'Confirmação de alteração de e-mail — GestoraIT',
       render: (data) =>
         React.createElement(EmailChangeEmail, {
           siteName: SITE_NAME,
@@ -70,7 +70,7 @@ const handler = createAuthEmailHandler({
         }),
     },
     reauthentication: {
-      subject: 'Your verification code',
+      subject: 'Seu código de verificação — GestoraIT',
       render: (data) =>
         React.createElement(ReauthenticationEmail, { token: data.token ?? '' }),
     },
