@@ -67,12 +67,15 @@ export const inviteUser = createServerFn({ method: "POST" })
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    // Usa o redirectTo fornecido ou tenta pegar do ambiente se não for localhost
-    let redirectTo: string | undefined = data.redirectTo;
-    if (redirectTo) {
+    // O redirectTo deve ser uma URL absoluta válida para o ambiente
+    let redirectTo: string | undefined = undefined;
+    if (data.redirectTo) {
       const { getRequestUrl } = await import("@tanstack/react-start/server");
       const url = getRequestUrl();
-      const origin = url.origin.includes('localhost') ? 'https://gestorait.mtr2tech.com.br' : url.origin;
+      // Em produção/preview usamos o origin atual, em localhost forçamos o domínio customizado
+      const origin = url.origin.includes('localhost') 
+        ? 'https://gestorait.mtr2tech.com.br' 
+        : url.origin;
       redirectTo = `${origin}${data.redirectTo}`;
     }
 
