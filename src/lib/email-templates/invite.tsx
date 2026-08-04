@@ -41,8 +41,7 @@ export const InviteEmail = ({
           Aceitar Convite
         </Button>
         <Text style={footer}>
-          If you weren't expecting this invitation, you can safely ignore this
-          email.
+          Se você não esperava este convite, pode ignorar este e-mail com segurança.
         </Text>
       </Container>
     </Body>
