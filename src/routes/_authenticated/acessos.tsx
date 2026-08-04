@@ -338,7 +338,7 @@ function AcessosPage() {
                 )}
               </div>,
               <span key="da" className="text-xs text-muted-foreground">
-                {new Date(c.created_at).toLocaleString("pt-BR")}
+                {c.created_at ? new Date(c.created_at).toLocaleString("pt-BR") : "—"}
               </span>
             ])}
           />
