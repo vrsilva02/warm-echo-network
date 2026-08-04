@@ -19,12 +19,12 @@ const SITE_URL = `https://${ROOT_DOMAIN}`
 // owns only the email decisions: subjects, templates, and per-type props.
 const handler = createAuthEmailHandler({
   apiKey: process.env['LOVABLE_API_KEY']!,
-  from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
+  from: `GestoraIT <noreply@notify.mtr2tech.com>`,
   senderDomain: SENDER_DOMAIN,
   sendUrl: process.env['LOVABLE_SEND_URL'],
   emails: {
     signup: {
-      subject: 'Confirme seu e-mail - GestoraIT',
+      subject: 'Confirme seu e-mail — GestoraIT',
       render: (data) =>
         React.createElement(SignupEmail, {
           siteName: SITE_NAME,
@@ -34,7 +34,7 @@ const handler = createAuthEmailHandler({
         }),
     },
     invite: {
-      subject: 'Convite de acesso ao GestoraIT',
+      subject: "Convite para acessar o GestoraIT",
       render: (data) =>
         React.createElement(InviteEmail, {
           siteName: SITE_NAME,
@@ -43,7 +43,7 @@ const handler = createAuthEmailHandler({
         }),
     },
     magiclink: {
-      subject: 'Seu link de acesso - GestoraIT',
+      subject: 'Seu link de acesso — GestoraIT',
       render: (data) =>
         React.createElement(MagicLinkEmail, {
           siteName: SITE_NAME,
@@ -51,7 +51,7 @@ const handler = createAuthEmailHandler({
         }),
     },
     recovery: {
-      subject: 'Redefinição de senha - GestoraIT',
+      subject: 'Redefinição de senha — GestoraIT',
       render: (data) =>
         React.createElement(RecoveryEmail, {
           siteName: SITE_NAME,
@@ -59,7 +59,7 @@ const handler = createAuthEmailHandler({
         }),
     },
     email_change: {
-      subject: 'Confirme seu novo e-mail - GestoraIT',
+      subject: 'Confirmação de alteração de e-mail — GestoraIT',
       render: (data) =>
         React.createElement(EmailChangeEmail, {
           siteName: SITE_NAME,
@@ -70,7 +70,7 @@ const handler = createAuthEmailHandler({
         }),
     },
     reauthentication: {
-      subject: 'Seu código de verificação - GestoraIT',
+      subject: 'Seu código de verificação — GestoraIT',
       render: (data) =>
         React.createElement(ReauthenticationEmail, { token: data.token ?? '' }),
     },
