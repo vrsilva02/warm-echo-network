@@ -9,9 +9,9 @@ import { EmailChangeEmail } from '@/lib/email-templates/email-change'
 import { ReauthenticationEmail } from '@/lib/email-templates/reauthentication'
 
 // Configuration
-const SITE_NAME = "warm-echo-network"
+const SITE_NAME = "GestoraIT"
 const SENDER_DOMAIN = "notify.mtr2tech.com"
-const ROOT_DOMAIN = "mtr2tech.com"
+const ROOT_DOMAIN = "gestorait.mtr2tech.com.br"
 const FROM_DOMAIN = "notify.mtr2tech.com"
 const SITE_URL = `https://${ROOT_DOMAIN}`
 

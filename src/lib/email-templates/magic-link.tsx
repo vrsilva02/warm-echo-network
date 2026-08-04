@@ -58,11 +58,12 @@ const text = {
   margin: '0 0 25px',
 }
 const button = {
-  backgroundColor: '#000000',
+  backgroundColor: '#4338ca',
   color: '#ffffff',
   fontSize: '14px',
   borderRadius: '8px',
   padding: '12px 20px',
   textDecoration: 'none',
 }
-const footer = { fontSize: '12px', color: '#999999', margin: '30px 0 0' }
+const footer = { fontSize: '12px', color: '#94a3b8', margin: '30px 0 0' }
+export const brandFooter = 'GestoraIT — Powered by MTR2.TECH'
