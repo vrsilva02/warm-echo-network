@@ -69,13 +69,7 @@ export const inviteUser = createServerFn({ method: "POST" })
 
     // Forçamos o uso do domínio oficial em qualquer ambiente que não seja estritamente localhost
     const officialDomain = "https://gestorait.mtr2tech.com.br";
-    let redirectTo: string | undefined = undefined;
-
-    if (data.redirectTo) {
-      redirectTo = `${officialDomain}${data.redirectTo}`;
-    } else {
-      redirectTo = `${officialDomain}/auth`;
-    }
+    const redirectTo = `${officialDomain}/auth/callback?next=/auth`;
 
     console.log(`[inviteUser] Enviando convite via Supabase com redirectTo: ${redirectTo}`);
     const { data: invited, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(data.email, {
