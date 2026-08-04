@@ -67,38 +67,83 @@ export const inviteUser = createServerFn({ method: "POST" })
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    // Forçamos o uso do domínio oficial em qualquer ambiente que não seja estritamente localhost
-    const officialDomain = "https://gestorait.mtr2tech.com.br";
-    const redirectTo = `${officialDomain}/auth/callback?next=/auth`;
+    // Registra o início do convite
+    const { data: convite, error: cerr } = await supabaseAdmin
+      .from("convites")
+      .insert({
+        email: data.email,
+        nome: data.nome,
+        roles: data.roles,
+        status: "enfileirado",
+        enviado_por: context.userId,
+      })
+      .select("id")
+      .single();
 
-    console.log(`[inviteUser] Enviando convite via Supabase com redirectTo: ${redirectTo}`);
-    const { data: invited, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(data.email, {
-      data: data.nome ? { nome: data.nome } : undefined,
-      redirectTo: redirectTo,
-    });
-    
-    if (error) {
-      console.error("[inviteUser] Erro no convite do Supabase:", error);
-      throw new Error(error.message);
-    }
-    const newUserId = invited.user?.id;
-    if (!newUserId) throw new Error("Falha ao criar usuário convidado.");
-
-    // handle_new_user trigger cria profile + role default 'visitante'. Ajusta para as roles escolhidas.
-    const { error: derr } = await supabaseAdmin.from("user_roles").delete().eq("user_id", newUserId);
-    if (derr) throw new Error("Convite criado, mas falhou ao ajustar os perfis do usuário.");
-    const { error: ierr } = await supabaseAdmin
-      .from("user_roles")
-      .insert(data.roles.map((role) => ({ user_id: newUserId, role })));
-    if (ierr) throw new Error("Convite criado, mas falhou ao aplicar os perfis do usuário.");
-
-    if (data.nome) {
-      await supabaseAdmin.from("profiles").update({ nome: data.nome }).eq("id", newUserId);
+    if (cerr) {
+      console.error("[inviteUser] Erro ao registrar convite:", cerr);
+      // Não lançamos erro aqui para não travar o fluxo se apenas o log falhar, 
+      // mas seria ideal que funcionasse.
     }
 
-    console.log(`[inviteUser] Convite finalizado com sucesso para ${data.email}`);
+    try {
+      // Forçamos o uso do domínio oficial em qualquer ambiente que não seja estritamente localhost
+      const officialDomain = "https://gestorait.mtr2tech.com.br";
+      const redirectTo = `${officialDomain}/auth/callback?next=/auth`;
 
-    return { ok: true, userId: newUserId, email: data.email };
+      console.log(`[inviteUser] Enviando convite via Supabase com redirectTo: ${redirectTo}`);
+      const { data: invited, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(data.email, {
+        data: data.nome ? { nome: data.nome } : undefined,
+        redirectTo: redirectTo,
+      });
+      
+      if (error) {
+        if (convite) {
+          await supabaseAdmin
+            .from("convites")
+            .update({ status: "falhou", erro: error.message })
+            .eq("id", convite.id);
+        }
+        console.error("[inviteUser] Erro no convite do Supabase:", error);
+        throw new Error(error.message);
+      }
+
+      const newUserId = invited.user?.id;
+      if (!newUserId) throw new Error("Falha ao criar usuário convidado.");
+
+      // handle_new_user trigger cria profile + role default 'visitante'. Ajusta para as roles escolhidas.
+      const { error: derr } = await supabaseAdmin.from("user_roles").delete().eq("user_id", newUserId);
+      if (derr) throw new Error("Convite criado, mas falhou ao ajustar os perfis do usuário.");
+      
+      const { error: ierr } = await supabaseAdmin
+        .from("user_roles")
+        .insert(data.roles.map((role) => ({ user_id: newUserId, role })));
+      if (ierr) throw new Error("Convite criado, mas falhou ao aplicar os perfis do usuário.");
+
+      if (data.nome) {
+        await supabaseAdmin.from("profiles").update({ nome: data.nome }).eq("id", newUserId);
+      }
+
+      // Atualiza o status para enviado
+      if (convite) {
+        await supabaseAdmin
+          .from("convites")
+          .update({ status: "enviado", updated_at: new Date().toISOString() })
+          .eq("id", convite.id);
+      }
+
+      console.log(`[inviteUser] Convite finalizado com sucesso para ${data.email}`);
+      return { ok: true, userId: newUserId, email: data.email };
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Erro desconhecido";
+      if (convite) {
+        await supabaseAdmin
+          .from("convites")
+          .update({ status: "falhou", erro: msg })
+          .eq("id", convite.id);
+      }
+      throw e;
+    }
   });
 
 export const deleteUser = createServerFn({ method: "POST" })
