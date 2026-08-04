@@ -57,13 +57,13 @@ export const inviteUser = createServerFn({ method: "POST" })
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    // Reconstrói o destino do convite sempre a partir da origem desta requisição,
-    // nunca a partir de um host enviado pelo cliente.
-    let redirectTo: string | undefined;
-    if (data.redirectTo) {
+    // Usa o redirectTo fornecido ou tenta pegar do ambiente se não for localhost
+    let redirectTo: string | undefined = data.redirectTo;
+    if (redirectTo) {
       const { getRequestUrl } = await import("@tanstack/react-start/server");
-      const origin = getRequestUrl().origin;
-      redirectTo = `${origin}${data.redirectTo}`;
+      const url = getRequestUrl();
+      // Em produção/preview o origin é o correto. Localhost pode ser bloqueado pelo Supabase.
+      redirectTo = `${url.origin}${data.redirectTo}`;
     }
 
     const { data: invited, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(data.email, {
