@@ -173,7 +173,8 @@ function AcessosPage() {
     if (invRoles.size === 0) return toast.error("Selecione ao menos um perfil.");
     setInviting(true);
     try {
-      await invite({
+      console.log("[sendInvite] Iniciando envio de convite para:", invEmail);
+      const res = await invite({
         data: {
           email: invEmail.trim(),
           nome: invNome.trim() || undefined,
@@ -181,6 +182,7 @@ function AcessosPage() {
           redirectTo: "/auth",
         },
       });
+      console.log("[sendInvite] Resposta do convite:", res);
       toast.success(`Convite enviado para ${invEmail}`);
       setInviteOpen(false);
       setInvEmail("");
