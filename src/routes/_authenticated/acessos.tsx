@@ -17,11 +17,21 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ShieldAlert, KeyRound, UserPlus, History } from "lucide-react";
+import { ShieldAlert, KeyRound, UserPlus, History, Trash2, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth, roleLabel, type AppRole } from "@/lib/auth";
-import { inviteUser } from "@/lib/admin-users.functions";
+import { inviteUser, deleteUser } from "@/lib/admin-users.functions";
 import { RequireRole } from "@/components/require-role";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute("/_authenticated/acessos")({
   component: AcessosPage,
@@ -68,7 +78,10 @@ function AcessosPage() {
   const [invNome, setInvNome] = useState("");
   const [invRoles, setInvRoles] = useState<Set<AppRole>>(new Set(["visitante"]));
   const [inviting, setInviting] = useState(false);
+  const [deleting, setDeleting] = useState<UserRow | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const invite = useServerFn(inviteUser);
+  const remove = useServerFn(deleteUser);
 
   const { data: profiles, isLoading: lp } = useQuery({
     queryKey: ["acessos-profiles"],
@@ -195,6 +208,22 @@ function AcessosPage() {
     }
   }
 
+  async function confirmDelete() {
+    if (!deleting) return;
+    setIsDeleting(true);
+    try {
+      await remove({ data: deleting.id });
+      toast.success("Usuário excluído com sucesso");
+      setDeleting(null);
+      qc.invalidateQueries({ queryKey: ["acessos-profiles"] });
+      qc.invalidateQueries({ queryKey: ["acessos-roles"] });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Falha ao excluir usuário");
+    } finally {
+      setIsDeleting(false);
+    }
+  }
+
   if (!isAdmin) {
     return <RequireRole roles={["admin"]}>{null}</RequireRole>;
   }
@@ -240,9 +269,20 @@ function AcessosPage() {
               title="Enviar link de redefinição de senha"
               onClick={() => resetPassword(u.email)}
             >
-              <KeyRound className="h-4 w-4" />
-            </Button>
-          </div>,
+                <KeyRound className="h-4 w-4" />
+              </Button>
+              {u.id !== me?.id && (
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  title="Excluir usuário"
+                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                  onClick={() => setDeleting(u)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              )}
+            </div>,
         ])}
       />
 
@@ -333,6 +373,33 @@ function AcessosPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <AlertDialog open={!!deleting} onOpenChange={(o) => !o && setDeleting(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-destructive" />
+              Excluir Usuário
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir <strong>{deleting?.nome ?? deleting?.email}</strong>?
+              Esta ação é irreversível e removerá todos os acessos do usuário imediatamente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                confirmDelete();
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={isDeleting}
+            >
+              {isDeleting ? "Excluindo..." : "Sim, excluir usuário"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
