@@ -62,8 +62,8 @@ export const inviteUser = createServerFn({ method: "POST" })
     if (redirectTo) {
       const { getRequestUrl } = await import("@tanstack/react-start/server");
       const url = getRequestUrl();
-      // Em produção/preview o origin é o correto. Localhost pode ser bloqueado pelo Supabase.
-      redirectTo = `${url.origin}${data.redirectTo}`;
+      const origin = url.origin.includes('localhost') ? 'https://gestorait.mtr2tech.com.br' : url.origin;
+      redirectTo = `${origin}${data.redirectTo}`;
     }
 
     const { data: invited, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(data.email, {
