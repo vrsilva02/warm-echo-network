@@ -44,6 +44,8 @@ import { Route as AuthenticatedServicosIdRouteImport } from './routes/_authentic
 import { Route as AuthenticatedOrdensServicoIdRouteImport } from './routes/_authenticated/ordens-servico_.$id'
 import { Route as AuthenticatedClientesIdRouteImport } from './routes/_authenticated/clientes_.$id'
 import { Route as AuthenticatedAtivosIdRouteImport } from './routes/_authenticated/ativos_.$id'
+import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
+import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as AuthenticatedAuditoriaTabelaIdRouteImport } from './routes/_authenticated/auditoria_.$tabela.$id'
 
 const SignupRoute = SignupRouteImport.update({
@@ -227,6 +229,16 @@ const AuthenticatedAtivosIdRoute = AuthenticatedAtivosIdRouteImport.update({
   path: '/ativos/$id',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
+  id: '/lovable/email/auth/webhook',
+  path: '/lovable/email/auth/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
+  id: '/lovable/email/auth/preview',
+  path: '/lovable/email/auth/preview',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedAuditoriaTabelaIdRoute =
   AuthenticatedAuditoriaTabelaIdRouteImport.update({
     id: '/auditoria_/$tabela/$id',
@@ -270,6 +282,8 @@ export interface FileRoutesByFullPath {
   '/ordens-servico/$id': typeof AuthenticatedOrdensServicoIdRoute
   '/servicos/$id': typeof AuthenticatedServicosIdRoute
   '/auditoria/$tabela/$id': typeof AuthenticatedAuditoriaTabelaIdRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -307,6 +321,8 @@ export interface FileRoutesByTo {
   '/ordens-servico/$id': typeof AuthenticatedOrdensServicoIdRoute
   '/servicos/$id': typeof AuthenticatedServicosIdRoute
   '/auditoria/$tabela/$id': typeof AuthenticatedAuditoriaTabelaIdRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -346,6 +362,8 @@ export interface FileRoutesById {
   '/_authenticated/ordens-servico_/$id': typeof AuthenticatedOrdensServicoIdRoute
   '/_authenticated/servicos_/$id': typeof AuthenticatedServicosIdRoute
   '/_authenticated/auditoria_/$tabela/$id': typeof AuthenticatedAuditoriaTabelaIdRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -385,6 +403,8 @@ export interface FileRouteTypes {
     | '/ordens-servico/$id'
     | '/servicos/$id'
     | '/auditoria/$tabela/$id'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -422,6 +442,8 @@ export interface FileRouteTypes {
     | '/ordens-servico/$id'
     | '/servicos/$id'
     | '/auditoria/$tabela/$id'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
   id:
     | '__root__'
     | '/'
@@ -460,6 +482,8 @@ export interface FileRouteTypes {
     | '/_authenticated/ordens-servico_/$id'
     | '/_authenticated/servicos_/$id'
     | '/_authenticated/auditoria_/$tabela/$id'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -472,6 +496,8 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   SignUpRoute: typeof SignUpRoute
   SignupRoute: typeof SignupRoute
+  LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
+  LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -721,6 +747,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAtivosIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/lovable/email/auth/webhook': {
+      id: '/lovable/email/auth/webhook'
+      path: '/lovable/email/auth/webhook'
+      fullPath: '/lovable/email/auth/webhook'
+      preLoaderRoute: typeof LovableEmailAuthWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/auth/preview': {
+      id: '/lovable/email/auth/preview'
+      path: '/lovable/email/auth/preview'
+      fullPath: '/lovable/email/auth/preview'
+      preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/auditoria_/$tabela/$id': {
       id: '/_authenticated/auditoria_/$tabela/$id'
       path: '/auditoria/$tabela/$id'
@@ -805,17 +845,9 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   SignUpRoute: SignUpRoute,
   SignupRoute: SignupRoute,
+  LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
+  LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
