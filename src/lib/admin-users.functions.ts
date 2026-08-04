@@ -106,3 +106,34 @@ export const inviteUser = createServerFn({ method: "POST" })
 
     return { ok: true, userId: newUserId, email: data.email };
   });
+
+export const deleteUser = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((id: unknown) => {
+    if (typeof id !== "string" || !id) throw new Error("ID de usuário inválido");
+    return id;
+  })
+  .handler(async ({ data: userIdToDelete, context }) => {
+    const { data: isAdmin, error: rerr } = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
+
+    if (rerr || !isAdmin) {
+      throw new Error("Apenas administradores podem excluir usuários.");
+    }
+
+    if (userIdToDelete === context.userId) {
+      throw new Error("Você não pode excluir sua própria conta.");
+    }
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { error } = await supabaseAdmin.auth.admin.deleteUser(userIdToDelete);
+    if (error) {
+      console.error("[deleteUser] Erro ao excluir usuário:", error);
+      throw new Error(error.message);
+    }
+
+    return { ok: true };
+  });
