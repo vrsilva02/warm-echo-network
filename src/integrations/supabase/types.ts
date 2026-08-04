@@ -586,6 +586,42 @@ export type Database = {
           },
         ]
       }
+      convites: {
+        Row: {
+          created_at: string | null
+          email: string
+          enviado_por: string | null
+          erro: string | null
+          id: string
+          nome: string | null
+          roles: Database["public"]["Enums"]["app_role"][]
+          status: Database["public"]["Enums"]["status_convite"]
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          enviado_por?: string | null
+          erro?: string | null
+          id?: string
+          nome?: string | null
+          roles: Database["public"]["Enums"]["app_role"][]
+          status?: Database["public"]["Enums"]["status_convite"]
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          enviado_por?: string | null
+          erro?: string | null
+          id?: string
+          nome?: string | null
+          roles?: Database["public"]["Enums"]["app_role"][]
+          status?: Database["public"]["Enums"]["status_convite"]
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       estoque_movimentacoes: {
         Row: {
           created_at: string
@@ -1601,6 +1637,7 @@ export type Database = {
         | "concluida"
         | "cancelada"
       solicitacao_status: "pendente" | "aprovada" | "rejeitada" | "cancelada"
+      status_convite: "enfileirado" | "enviado" | "falhou"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1747,6 +1784,7 @@ export const Constants = {
         "cancelada",
       ],
       solicitacao_status: ["pendente", "aprovada", "rejeitada", "cancelada"],
+      status_convite: ["enfileirado", "enviado", "falhou"],
     },
   },
 } as const
