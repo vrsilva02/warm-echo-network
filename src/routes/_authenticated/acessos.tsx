@@ -176,7 +176,7 @@ function AcessosPage() {
   async function resetPassword(email: string | null) {
     if (!email) return toast.error("Usuário sem e-mail cadastrado.");
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth`,
+      redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
     });
     if (error) return toast.error(error.message);
     toast.success(`Link de redefinição enviado para ${email}`);
