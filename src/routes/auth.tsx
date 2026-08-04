@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Loader2, ShieldCheck, ArrowLeft } from "lucide-react";
+import { Loader2, ShieldCheck, ArrowLeft, Eye, EyeOff } from "lucide-react";
 import mtrLogo from "@/assets/mtr2-tech-logo.png.asset.json";
 import { emailSchema, passwordSchema } from "@/lib/sanitize";
 
@@ -30,6 +30,7 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   if (loading) {
     return (
@@ -111,7 +112,24 @@ function AuthPage() {
                       Esqueci minha senha
                     </button>
                   </div>
-                  <Input id="pw" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
+                  <div className="relative">
+                    <Input
+                      id="pw"
+                      type={showPassword ? "text" : "password"}
+                      required
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
                 </div>
                 <Button type="submit" className="w-full" disabled={busy}>
                   {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Entrar"}
