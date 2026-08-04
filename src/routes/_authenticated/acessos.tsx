@@ -17,7 +17,8 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ShieldAlert, KeyRound, UserPlus, History, Trash2, AlertTriangle } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ShieldAlert, KeyRound, UserPlus, History, Trash2, AlertTriangle, Mail, CheckCircle2, XCircle, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth, roleLabel, type AppRole } from "@/lib/auth";
 import { inviteUser, deleteUser } from "@/lib/admin-users.functions";
@@ -101,6 +102,18 @@ function AcessosPage() {
       const { data, error } = await supabase.from("user_roles").select("user_id,role");
       if (error) throw error;
       return data as UserRoleRow[];
+    },
+  });
+
+  const { data: convites, isLoading: lc } = useQuery({
+    queryKey: ["acessos-convites"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("convites")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
     },
   });
 
@@ -201,6 +214,7 @@ function AcessosPage() {
       setInvRoles(new Set(["visitante"]));
       qc.invalidateQueries({ queryKey: ["acessos-profiles"] });
       qc.invalidateQueries({ queryKey: ["acessos-roles"] });
+      qc.invalidateQueries({ queryKey: ["acessos-convites"] });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Falha ao enviar convite");
     } finally {
@@ -246,45 +260,90 @@ function AcessosPage() {
           </div>
         }
       />
-      <ListToolbar query={q} onQueryChange={setQ} />
-      <DataTable
-        columns={["Nome", "E-mail", "Perfis", "Cadastrado em", "Ações"]}
-        empty={lp || lr ? "Carregando…" : "Nenhum usuário."}
-        rows={filtered.map((u) => [
-          <span key="n" className="font-medium">
-            {u.nome ?? "—"} {u.id === me?.id && <span className="text-xs text-muted-foreground">(você)</span>}
-          </span>,
-          <span key="e" className="text-sm">{u.email ?? "—"}</span>,
-          <div key="r" className="flex flex-wrap gap-1">
-            {u.roles.length ? u.roles.map(roleBadge) : <span className="text-xs text-muted-foreground">Sem perfil</span>}
-          </div>,
-          <span key="c" className="text-xs text-muted-foreground">
-            {new Date(u.created_at).toLocaleDateString("pt-BR")}
-          </span>,
-          <div key="a" className="flex gap-1">
-            <Button size="sm" variant="outline" onClick={() => openEdit(u)}>Editar perfis</Button>
-            <Button
-              size="icon"
-              variant="ghost"
-              title="Enviar link de redefinição de senha"
-              onClick={() => resetPassword(u.email)}
-            >
-                <KeyRound className="h-4 w-4" />
-              </Button>
-              {u.id !== me?.id && (
+      <Tabs defaultValue="usuarios" className="mt-4">
+        <TabsList className="grid w-[400px] grid-cols-2">
+          <TabsTrigger value="usuarios">Usuários ativos</TabsTrigger>
+          <TabsTrigger value="convites">Convites enviados</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="usuarios" className="mt-4 space-y-4">
+          <ListToolbar query={q} onQueryChange={setQ} />
+          <DataTable
+            columns={["Nome", "E-mail", "Perfis", "Cadastrado em", "Ações"]}
+            empty={lp || lr ? "Carregando…" : "Nenhum usuário."}
+            rows={filtered.map((u) => [
+              <span key="n" className="font-medium">
+                {u.nome ?? "—"} {u.id === me?.id && <span className="text-xs text-muted-foreground">(você)</span>}
+              </span>,
+              <span key="e" className="text-sm">{u.email ?? "—"}</span>,
+              <div key="r" className="flex flex-wrap gap-1">
+                {u.roles.length ? u.roles.map(roleBadge) : <span className="text-xs text-muted-foreground">Sem perfil</span>}
+              </div>,
+              <span key="c" className="text-xs text-muted-foreground">
+                {new Date(u.created_at).toLocaleDateString("pt-BR")}
+              </span>,
+              <div key="a" className="flex gap-1">
+                <Button size="sm" variant="outline" onClick={() => openEdit(u)}>Editar perfis</Button>
                 <Button
                   size="icon"
                   variant="ghost"
-                  title="Excluir usuário"
-                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                  onClick={() => setDeleting(u)}
+                  title="Enviar link de redefinição de senha"
+                  onClick={() => resetPassword(u.email)}
                 >
-                  <Trash2 className="h-4 w-4" />
+                  <KeyRound className="h-4 w-4" />
                 </Button>
-              )}
-            </div>,
-        ])}
-      />
+                {u.id !== me?.id && (
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    title="Excluir usuário"
+                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                    onClick={() => setDeleting(u)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>,
+            ])}
+          />
+        </TabsContent>
+
+        <TabsContent value="convites" className="mt-4">
+          <DataTable
+            columns={["Destinatário", "Perfis", "Status", "Data"]}
+            empty={lc ? "Carregando…" : "Nenhum convite enviado."}
+            rows={(convites ?? []).map((c) => [
+              <div key="d" className="flex flex-col">
+                <span className="font-medium">{c.nome ?? "—"}</span>
+                <span className="text-xs text-muted-foreground">{c.email}</span>
+              </div>,
+              <div key="r" className="flex flex-wrap gap-1">
+                {(c.roles as AppRole[]).map((role: AppRole) => roleBadge(role))}
+              </div>,
+              <div key="s">
+                {c.status === "enviado" && (
+                  <Badge className="bg-[color:var(--success)]/15 text-[color:var(--success)] border-[color:var(--success)]/30">
+                    <CheckCircle2 className="mr-1 h-3 w-3" /> Enviado
+                  </Badge>
+                )}
+                {c.status === "enfileirado" && (
+                  <Badge variant="outline" className="bg-[color:var(--warning)]/15 text-[color:var(--warning)] border-[color:var(--warning)]/30">
+                    <Clock className="mr-1 h-3 w-3" /> Enfileirado
+                  </Badge>
+                )}
+                {c.status === "falhou" && (
+                  <Badge variant="destructive" className="flex items-center gap-1" title={c.erro ?? "Erro desconhecido"}>
+                    <XCircle className="h-3 w-3" /> Falhou
+                  </Badge>
+                )}
+              </div>,
+              <span key="da" className="text-xs text-muted-foreground">
+                {c.created_at ? new Date(c.created_at).toLocaleString("pt-BR") : "—"}
+              </span>
+            ])}
+          />
+        </TabsContent>
+      </Tabs>
 
       <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
         <DialogContent>
