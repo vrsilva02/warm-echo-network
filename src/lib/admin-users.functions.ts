@@ -48,12 +48,22 @@ export const inviteUser = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(validate)
   .handler(async ({ data, context }) => {
+    console.log(`[inviteUser] Invocado por ${context.userId} para o e-mail: ${data.email}`);
+    
     const { data: isAdmin, error: rerr } = await context.supabase.rpc("has_role", {
       _user_id: context.userId,
       _role: "admin",
     });
-    if (rerr) throw new Error("Não foi possível validar suas permissões.");
-    if (!isAdmin) throw new Error("Apenas administradores podem convidar usuários.");
+    
+    if (rerr) {
+      console.error("[inviteUser] Erro ao validar permissões:", rerr);
+      throw new Error("Não foi possível validar suas permissões.");
+    }
+    
+    if (!isAdmin) {
+      console.warn(`[inviteUser] Usuário ${context.userId} tentou convidar sem ser admin.`);
+      throw new Error("Apenas administradores podem convidar usuários.");
+    }
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
@@ -66,11 +76,16 @@ export const inviteUser = createServerFn({ method: "POST" })
       redirectTo = `${origin}${data.redirectTo}`;
     }
 
+    console.log(`[inviteUser] Enviando convite via Supabase com redirectTo: ${redirectTo}`);
     const { data: invited, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(data.email, {
       data: data.nome ? { nome: data.nome } : undefined,
       redirectTo,
     });
-    if (error) throw new Error(error.message);
+    
+    if (error) {
+      console.error("[inviteUser] Erro no convite do Supabase:", error);
+      throw new Error(error.message);
+    }
     const newUserId = invited.user?.id;
     if (!newUserId) throw new Error("Falha ao criar usuário convidado.");
 
