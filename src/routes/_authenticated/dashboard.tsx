@@ -50,7 +50,7 @@ type ElpRow = {
 function useDashboardData() {
   return useQuery({
     queryKey: ["dashboard"],
-    refetchInterval: 60 * 1000, // Atualização automática a cada 1 minuto
+    refetchInterval: 10 * 1000, // Atualização automática a cada 10 segundos para tempo real perceptível
     queryFn: async () => {
       const [elp, ativos, vencendo, indicadores, ocioseFin, risco, custoOc, gapEdr, tco, osAbertas, osAguardando, pecasRep, defRec] = await Promise.all([
         supabase.from("vw_elp").select("*"),
@@ -90,7 +90,8 @@ function useDashboardData() {
 function useAtivosPorCliente() {
   return useQuery({
     queryKey: ["dashboard", "ativos-por-cliente"],
-    staleTime: 2 * 60 * 1000,
+    staleTime: 5 * 1000,
+    refetchInterval: 10 * 1000,
     queryFn: async () => {
       const [totalRes, clientesRes, semClienteRes] = await Promise.all([
         supabase.from("ativos").select("id", { count: "exact", head: true }),
@@ -176,12 +177,22 @@ function DashboardPage() {
   useRealtimeInvalidate({
     channel: "dashboard-ativos-live",
     table: "ativos",
-    queryKeys: [["dashboard"]],
+    queryKeys: [["dashboard"], ["dashboard", "ativos-por-cliente"]],
   });
   useRealtimeInvalidate({
     channel: "dashboard-licencas-live",
     table: "licencas",
     queryKeys: [["dashboard"]],
+  });
+  useRealtimeInvalidate({
+    channel: "dashboard-contratos-live",
+    table: "contratos",
+    queryKeys: [["dashboard"]],
+  });
+  useRealtimeInvalidate({
+    channel: "dashboard-clientes-live",
+    table: "clientes",
+    queryKeys: [["dashboard", "ativos-por-cliente"]],
   });
 
   const totais = { Windows: 0, Office: 0, EDR: 0 } as Record<string, number>;
