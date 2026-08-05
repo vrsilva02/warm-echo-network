@@ -1,3 +1,6 @@
+/**
+ * Execute esta instrucao no projeto: ao receber o convite o usuário deverá cadastrar a sua senha.
+ */
 import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth";
 import { Loader2 } from "lucide-react";
