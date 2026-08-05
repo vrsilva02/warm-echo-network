@@ -1,8 +1,5 @@
 /**
- * Execute esta instrucao no projeto: Garanta que os indicadores e badges de alerta de cada licença/ativo sejam atualizados em tempo real em todas as telas sem recarregar a página.
- * Implemente uma página e filtros de auditoria para eu acompanhar todas as movimentações (licença atribuída/removida/alteração de quantidade) com usuário, data e hora.
- * Adicione testes automatizados de integração cobrindo atribuição/remoção, validação de duplicidade UNIQUE(asset_id, license_id), bloqueio de saldo negativo e transações atômicas.
- * Implemente uma opção para eu exportar em CSV ou PDF um relatório com totais, atribuídas, disponíveis, percentual utilizado e alertas por status.
+ * Execute esta instrucao no projeto: As informações de licenças deverão cinstar no dashboard
  */
 import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth";
