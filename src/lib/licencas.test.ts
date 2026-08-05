@@ -21,15 +21,16 @@ export async function testLicenseRules() {
   const { data: produto } = await supabase.from("produtos_catalogo").insert({
     nome_oficial: `TEST-PROD-${Date.now()}`,
     fabricante_id: fabricante?.id,
-    categoria: "Software"
+    categoria: "Software",
+    modelo_licenciamento: "por_dispositivo",
+    tipo_licenciamento: "perpetuo"
   }).select("id").single();
   
   if (!produto) throw new Error("Falha ao criar produto de teste");
   
   const { data: licenca } = await supabase.from("licencas").insert({
     produto_id: produto.id,
-    quantidade: 1,
-    status: "ativo"
+    quantidade: 1
   }).select("id").single();
   
   if (!licenca) throw new Error("Falha ao criar licença de teste");
