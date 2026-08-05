@@ -9,9 +9,15 @@ describe("Regras de Negócio de Licenças", () => {
   let ativoId: string;
 
   beforeAll(async () => {
-    // 1. Obter um fabricante existente
-    const { data: fabricante } = await supabase.from("fabricantes").select("id").limit(1).single();
-    if (!fabricante) throw new Error("Falha ao obter fabricante para testes");
+    // 1. Garantir um fabricante de teste
+    let { data: fabricante } = await supabase.from("fabricantes").select("id").limit(1).single();
+    
+    if (!fabricante) {
+      const { data: novoFab } = await supabase.from("fabricantes").insert({ nome: "Fabricante Teste Vitest" }).select("id").single();
+      fabricante = novoFab;
+    }
+    
+    if (!fabricante) throw new Error("Falha ao obter ou criar fabricante para testes");
     fabricanteId = fabricante.id;
 
     // 2. Criar um produto de teste
