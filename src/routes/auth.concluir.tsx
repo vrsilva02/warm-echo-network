@@ -147,7 +147,7 @@ function ConcluirCadastroPage() {
             <span className="text-2xl font-bold text-primary">GestoraIT</span>
           </div>
           <CardTitle className="text-xl">Bem-vindo!</CardTitle>
-          <CardDescription>Finalize seu cadastro para acessar o sistema.</CardDescription>
+          <CardDescription>Defina sua senha de acesso para concluir seu cadastro no sistema.</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleFinish} className="space-y-4">
