@@ -11,6 +11,7 @@ import { lazy, Suspense } from "react";
 const ElpBarChart = lazy(() => import("@/components/dashboard-charts").then((m) => ({ default: m.ElpBarChart })));
 const CicloVidaPieChart = lazy(() => import("@/components/dashboard-charts").then((m) => ({ default: m.CicloVidaPieChart })));
 const TcoCentroBarChart = lazy(() => import("@/components/dashboard-charts").then((m) => ({ default: m.TcoCentroBarChart })));
+const ComplianceTrendChart = lazy(() => import("@/components/dashboard-charts").then((m) => ({ default: m.ComplianceTrendChart })));
 
 function ChartFallback() {
   return <div className="h-full w-full animate-pulse rounded-md bg-muted/50" />;
