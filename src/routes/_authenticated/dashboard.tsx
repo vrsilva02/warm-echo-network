@@ -184,6 +184,12 @@ function DashboardPage() {
     table: "licencas",
     queryKeys: [["dashboard"]],
   });
+  // Adicionado para garantir atualização do card de Gap EDR ao mudar atribuições
+  useRealtimeInvalidate({
+    channel: "dashboard-alocacoes-gap-live",
+    table: "alocacoes",
+    queryKeys: [["dashboard"]],
+  });
   useRealtimeInvalidate({
     channel: "dashboard-contratos-live",
     table: "contratos",

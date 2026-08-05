@@ -1,3 +1,4 @@
+{/* Execute esta instrucao no projeto: em dashboard os Ativos sem cobertura EDR, não esta atualizando, este card deverá ser atualizado de acordo com as lcienças atribuidas. deverá */}
 import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth";
 import { Loader2 } from "lucide-react";
