@@ -120,23 +120,20 @@ function Page() {
     // Validação agora feita no backend via índice UNIQUE e lógica centralizada em criarAlocacao
     const r = await criarAlocacao({
       licenca_id: form.licenca_id,
-      ativo_id: form.ativo_id!, // Agora obrigatório conforme novos requisitos
+      ativo_id: form.ativo_id!, 
       usuario_id: form.usuario_id,
       observacao: form.observacao
     });
     
-    if (!r.ok) return toast.error(r.error || "Erro ao criar alocação");
-    const { error } = await supabase.from("alocacoes").insert({
-      licenca_id: form.licenca_id,
-      usuario_id: form.usuario_id,
-      ativo_id: form.ativo_id,
-      data_inicio: form.data_inicio,
-      data_fim: form.data_fim || null,
-      chave_individual: form.chave_individual.trim() || null,
-      observacao: form.observacao || null,
-    });
-    if (error) return toast.error(error.message);
+    if (!r.ok) {
+      if (r.error === "ALREADY_ALLOCATED") {
+        return toast.error("Este ativo já possui esta licença atribuída.");
+      }
+      return toast.error(r.error || "Erro ao criar alocação");
+    }
+
     toast.success("Alocação criada");
+    setOpen(false);
     qc.invalidateQueries({ queryKey: ["alocacoes"] });
     qc.invalidateQueries({ queryKey: ["dashboard"] });
   }
