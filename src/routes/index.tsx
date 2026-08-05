@@ -1,5 +1,5 @@
 /**
- * Execute esta instrucao no projeto: As informações de licenças deverão cinstar no dashboard
+ * Execute esta instrucao no projeto: Atue como um especilaista dev em programação de sistemas sendo dev.
  */
 import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth";
