@@ -1,4 +1,4 @@
-{/* Execute esta instrucao no projeto: Verificar se o card de Ativos sem cobertura EDR atualiza corretamente sempre que eu altero alocações e/ou licenças, inclusive em casos de encerramento e reatribuição.\n\nAdicionar estados de carregamento e mensagens de erro para o card de Ativos sem cobertura EDR quando a consulta ou o Postgres Changes não retornarem dados, para eu ter feedback claro. */}
+{/* Execute esta instrucao no projeto: no dashboard em Ativos sem cobertura EDR, vincular EDR, ao vincular o ativo ao EDR, deverá atualizar o dashboard de Ativos sem cobertura EDR automaticamente. */}
 import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth";
 import { Loader2 } from "lucide-react";

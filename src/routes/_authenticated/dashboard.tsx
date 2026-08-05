@@ -520,9 +520,14 @@ function GapEdrCard({ count, isLoading, isError }: { count: number; isLoading?: 
         <CardTitle className="text-xs text-muted-foreground flex items-center gap-1">
           <ShieldAlert className="h-3.5 w-3.5" /> Ativos sem cobertura EDR
         </CardTitle>
-        <Button asChild variant="ghost" size="sm" className="h-6 text-xs">
-          <Link to="/alertas" search={{ tipo: "edr" } as any}>Ver</Link>
-        </Button>
+        <div className="flex gap-1">
+          <Button asChild variant="ghost" size="sm" className="h-6 text-[10px] px-2">
+            <Link to="/alocacoes" search={{ categoria: "EDR" } as any}>Vincular EDR</Link>
+          </Button>
+          <Button asChild variant="ghost" size="sm" className="h-6 text-[10px] px-2">
+            <Link to="/alertas" search={{ tipo: "edr" } as any}>Ver</Link>
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
         {isLoading ? (
