@@ -216,9 +216,15 @@ function DashboardPage() {
 
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5 mb-6">
-        <KpiCard title="Licenças Windows" value={totais.Windows ?? 0} icon={<KeySquare className="h-4 w-4" />} hint="Soma de seats comprados em contratos ativos para produtos da categoria Windows." />
-        <KpiCard title="Licenças Office" value={totais.Office ?? 0} icon={<KeySquare className="h-4 w-4" />} hint="Soma de seats comprados em contratos ativos para produtos da categoria Office." />
-        <KpiCard title="Licenças EDR" value={totais.EDR ?? 0} icon={<KeySquare className="h-4 w-4" />} hint="Soma de seats comprados em contratos ativos para produtos de EDR/segurança." />
+        <Link to="/licencas" search={{ categoria: "Windows" } as any} className="block transition-transform hover:scale-[1.01]">
+          <KpiCard title="Licenças Windows" value={totais.Windows ?? 0} icon={<KeySquare className="h-4 w-4" />} hint="Soma de seats comprados em contratos ativos para produtos da categoria Windows." />
+        </Link>
+        <Link to="/licencas" search={{ categoria: "Office" } as any} className="block transition-transform hover:scale-[1.01]">
+          <KpiCard title="Licenças Office" value={totais.Office ?? 0} icon={<KeySquare className="h-4 w-4" />} hint="Soma de seats comprados em contratos ativos para produtos da categoria Office." />
+        </Link>
+        <Link to="/licencas" search={{ categoria: "EDR" } as any} className="block transition-transform hover:scale-[1.01]">
+          <KpiCard title="Licenças EDR" value={totais.EDR ?? 0} icon={<KeySquare className="h-4 w-4" />} hint="Soma de seats comprados em contratos ativos para produtos de EDR/segurança." />
+        </Link>
         <KpiCard
           title="Compliance geral"
           value={`${compliance}%`}
