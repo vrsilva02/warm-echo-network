@@ -90,7 +90,8 @@ function useDashboardData() {
 function useAtivosPorCliente() {
   return useQuery({
     queryKey: ["dashboard", "ativos-por-cliente"],
-    staleTime: 2 * 60 * 1000,
+    staleTime: 5 * 1000,
+    refetchInterval: 10 * 1000,
     queryFn: async () => {
       const [totalRes, clientesRes, semClienteRes] = await Promise.all([
         supabase.from("ativos").select("id", { count: "exact", head: true }),
