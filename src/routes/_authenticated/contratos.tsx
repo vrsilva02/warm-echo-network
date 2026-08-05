@@ -133,7 +133,7 @@ function Page() {
       impact: [
         { label: "Fornecedor", value: row.fornecedor },
         { label: "Contrato", value: row.numero_contrato ?? "—" },
-        { label: "Seats contratados", value: row.quantidade_seats },
+        { label: "Licenças Contratadas", value: row.quantidade_seats },
         { label: "Licenças vinculadas", value: count ?? 0, tone: (count ?? 0) > 0 ? "danger" : "default" },
       ],
       confirmLabel: "Excluir",

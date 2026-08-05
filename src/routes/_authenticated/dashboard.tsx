@@ -231,20 +231,20 @@ function DashboardPage() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5 mb-6">
         <Link to="/licencas" search={{ categoria: "Windows" } as any} className="block transition-transform hover:scale-[1.01]">
-          <KpiCard title="Licenças Windows" value={totais.Windows ?? 0} icon={<KeySquare className="h-4 w-4" />} hint="Soma de seats comprados em contratos ativos para produtos da categoria Windows." />
+          <KpiCard title="Licenças Windows" value={totais.Windows ?? 0} icon={<KeySquare className="h-4 w-4" />} hint="Soma de licenças contratadas em contratos ativos para produtos da categoria Windows." />
         </Link>
         <Link to="/licencas" search={{ categoria: "Office" } as any} className="block transition-transform hover:scale-[1.01]">
-          <KpiCard title="Licenças Office" value={totais.Office ?? 0} icon={<KeySquare className="h-4 w-4" />} hint="Soma de seats comprados em contratos ativos para produtos da categoria Office." />
+          <KpiCard title="Licenças Office" value={totais.Office ?? 0} icon={<KeySquare className="h-4 w-4" />} hint="Soma de licenças contratadas em contratos ativos para produtos da categoria Office." />
         </Link>
         <Link to="/licencas" search={{ categoria: "EDR" } as any} className="block transition-transform hover:scale-[1.01]">
-          <KpiCard title="Licenças EDR" value={totais.EDR ?? 0} icon={<KeySquare className="h-4 w-4" />} hint="Soma de seats comprados em contratos ativos para produtos de EDR/segurança." />
+          <KpiCard title="Licenças EDR" value={totais.EDR ?? 0} icon={<KeySquare className="h-4 w-4" />} hint="Soma de licenças contratadas em contratos ativos para produtos de EDR/segurança." />
         </Link>
         <Link to="/licencas" search={{ status: "todos" } as any} className="block transition-transform hover:scale-[1.01]">
           <KpiCard
             title="Compliance geral"
             value={`${compliance}%`}
             icon={compliance >= 90 ? <CheckCircle2 className="h-4 w-4 text-[color:var(--success)]" /> : <AlertTriangle className="h-4 w-4 text-[color:var(--warning)]" />}
-            hint="Percentual de seats dentro do direito contratado. Valores abaixo de 100% indicam alocações acima do comprado (over-deployment)."
+            hint="Percentual de licenças dentro do direito contratado. Valores abaixo de 100% indicam alocações acima do comprado (over-deployment)."
           />
         </Link>
       </div>
