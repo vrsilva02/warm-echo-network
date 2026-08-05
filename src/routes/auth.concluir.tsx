@@ -35,7 +35,12 @@ function ConcluirCadastroPage() {
 
   const { data: convite, isLoading, error } = useQuery({
     queryKey: ["convite", token],
-    queryFn: () => getConvite({ data: token! }),
+    queryFn: async () => {
+      console.log("[ConcluirCadastroPage] Buscando convite para o token:", token);
+      const res = await getConvite({ data: token! });
+      console.log("[ConcluirCadastroPage] Resposta do convite:", res);
+      return res;
+    },
     enabled: !!token,
     retry: false,
   });
