@@ -79,37 +79,24 @@ function Page() {
 
 
   const { data: produtos, isLoading } = useQuery({
-    queryKey: ["licencas-produtos-agg"],
+    queryKey: ["licencas-indicadores"],
     queryFn: async () => {
-      // vw_elp já traz totais por produto. Complemento com subtipo do catálogo
-      // e a menor data de expiração dos blocos de licença para derivar status.
-      const [{ data: elp, error: e1 }, { data: cat, error: e2 }, { data: lic, error: e3 }] = await Promise.all([
-        supabase.from("vw_elp").select("*"),
-        supabase.from("produtos_catalogo").select("id, subtipo, modelo_licenciamento, tipo_licenciamento"),
-        supabase.from("licencas").select("produto_id, data_expiracao"),
-      ]);
-      if (e1) throw e1;
-      if (e2) throw e2;
-      if (e3) throw e3;
-      const catByProd = new Map((cat ?? []).map((c: any) => [c.id, c]));
-      const expByProd = new Map<string, string | null>();
-      (lic ?? []).forEach((l: any) => {
-        if (!l.produto_id) return;
-        const cur = expByProd.get(l.produto_id);
-        const d = l.data_expiracao as string | null;
-        if (d && (!cur || d < cur)) expByProd.set(l.produto_id, d);
-        else if (!expByProd.has(l.produto_id)) expByProd.set(l.produto_id, cur ?? null);
-      });
-      return (elp ?? []).map((r: any) => {
-        const c: any = catByProd.get(r.produto_id) ?? {};
-        return {
-          ...r,
-          subtipo: c.subtipo ?? null,
-          modelo_licenciamento: c.modelo_licenciamento ?? null,
-          tipo_licenciamento: c.tipo_licenciamento ?? null,
-          proxima_expiracao: expByProd.get(r.produto_id) ?? null,
-        };
-      }) as ProdutoAgg[];
+      const { data, error } = await supabase
+        .from("vw_licencas_indicadores")
+        .select("*")
+        .order("nome");
+      if (error) throw error;
+      return data.map(r => ({
+        produto_id: r.licenca_id,
+        nome_oficial: r.nome,
+        fabricante: r.fabricante,
+        categoria: r.categoria,
+        subtipo: r.tipo_licenca,
+        licencas_compradas: r.total,
+        licencas_alocadas: r.atribuidas,
+        saldo: r.disponiveis,
+        proxima_expiracao: r.data_vencimento
+      })) as ProdutoAgg[];
     },
   });
 
@@ -268,13 +255,13 @@ function ProductCard({ row, onSelect }: { row: ProdutoAgg; onSelect: (id: string
   const usadas = row.licencas_alocadas ?? 0;
   const disponivel = total - usadas;
   const pct = total > 0 ? (usadas / total) * 100 : usadas > 0 ? 100 : 0;
-  const tone = pct > 100
+  const tone = pct > 90
     ? "bg-destructive/15 text-destructive border-destructive/30"
-    : pct >= 90
+    : pct > 70
       ? "bg-[color:var(--warning)]/15 text-[color:var(--warning)] border-[color:var(--warning)]/30"
       : "bg-[color:var(--success)]/15 text-[color:var(--success)] border-[color:var(--success)]/30";
-  const barCls = pct > 100 ? "bg-destructive" : pct >= 90 ? "bg-[color:var(--warning)]" : "bg-[color:var(--success)]";
-  const status = pct > 100 ? "déficit" : pct >= 90 ? "atenção" : "ok";
+  const barCls = pct > 90 ? "bg-destructive" : pct > 70 ? "bg-[color:var(--warning)]" : "bg-[color:var(--success)]";
+  const status = disponivel === 0 ? "Sem licenças" : pct > 90 ? "Crítico" : pct > 70 ? "Atenção" : "OK";
 
   async function saveRename() {
     const novo = nome.trim();
@@ -330,16 +317,21 @@ function ProductCard({ row, onSelect }: { row: ProdutoAgg; onSelect: (id: string
       confirmLabel: "Excluir definitivamente",
     });
     if (!ok) return;
-    const { error } = await supabase.from("produtos_catalogo").delete().eq("id", row.produto_id);
-    if (error) return toast.error(friendlyError(error, "Não foi possível excluir a licença."));
+    const { error } = await supabase.from("licencas").delete().eq("id", row.produto_id);
+    if (error) {
+      if (error.message.includes("possui ativos vinculados")) {
+        return toast.error("Esta licença possui ativos vinculados. Remova as alocações antes de excluir.");
+      }
+      return toast.error(friendlyError(error, "Não foi possível excluir a licença."));
+    }
     toast.success("Licença excluída");
     void logAction(
       "BULK_DELETE",
-      "produtos_catalogo",
-      { id: row.produto_id, nome: row.nome_oficial, seats_totais: seatsTotais, atribuicoes_ativas: atribuidas, blocos: blocos.length },
+      "licencas",
+      { id: row.produto_id, nome: row.nome_oficial, seats_totais: seatsTotais, atribuicoes_ativas: atribuidas },
       row.produto_id,
     );
-    qc.invalidateQueries({ queryKey: ["licencas-produtos-agg"] });
+    qc.invalidateQueries({ queryKey: ["licencas-indicadores"] });
     qc.invalidateQueries({ queryKey: ["dashboard"] });
   }
 

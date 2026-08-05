@@ -3,13 +3,16 @@ import { logAction } from "@/lib/audit";
 
 /**
  * Encerra uma alocação preservando histórico completo (seta data_fim = agora).
- * Nunca apaga o registro. Usado tanto na tela de Licenças quanto na ficha do Ativo.
+ * Nunca apaga o registro.
  */
 export async function encerrarAlocacao(
   alocacaoId: string,
   motivo?: string,
 ): Promise<{ ok: boolean; error?: string }> {
   const now = new Date().toISOString();
+  
+  // No backend, a trigger ou RLS cuidará da auditoria se necessário, 
+  // mas mantemos o logAction para consistência na UI.
   const { error } = await supabase
     .from("alocacoes")
     .update({
@@ -18,12 +21,15 @@ export async function encerrarAlocacao(
     })
     .eq("id", alocacaoId)
     .is("data_fim", null);
+    
   if (error) return { ok: false, error: error.message };
+  
   void logAction("BULK_UPDATE", "alocacoes", {
     operacao: "desvincular",
     id: alocacaoId,
     motivo: motivo ?? null,
   });
+  
   return { ok: true };
 }
 
@@ -38,103 +44,81 @@ export async function encerrarAlocacoes(
     .update({ data_fim: now })
     .in("id", ids)
     .is("data_fim", null);
+    
   if (error) return { ok: false, total: 0, error: error.message };
+  
   void logAction("BULK_UPDATE", "alocacoes", {
     operacao: "desvincular_massa",
     ids,
     total: ids.length,
     motivo: motivo ?? null,
   });
+  
   return { ok: true, total: ids.length };
 }
 
 /**
- * Verifica se uma chave individual já está vinculada a outro ativo em alocação ativa.
- * Retorna dados do conflito ou null quando livre.
- */
-export async function chaveIndividualEmUso(
-  chave: string,
-  opts?: { ignoreAlocacaoId?: string; ignoreAtivoId?: string | null },
-): Promise<{ alocacao_id: string; ativo_id: string | null; hostname: string | null } | null> {
-  const trimmed = chave.trim();
-  if (!trimmed) return null;
-  const { data, error } = await supabase
-    .from("alocacoes")
-    .select("id, ativo_id, ativos(hostname)")
-    .eq("chave_individual", trimmed)
-    .is("data_fim", null);
-  if (error || !data) return null;
-  const conflito = data.find(
-    (a: any) =>
-      a.id !== opts?.ignoreAlocacaoId &&
-      a.ativo_id &&
-      a.ativo_id !== (opts?.ignoreAtivoId ?? null),
-  ) as any;
-  if (!conflito) return null;
-  return {
-    alocacao_id: conflito.id,
-    ativo_id: conflito.ativo_id,
-    hostname: conflito.ativos?.hostname ?? null,
-  };
-}
-
-/**
- * Cria uma alocação. Se saldo < 0 após, o log de auditoria registra "deficit_gerado".
+ * Cria uma alocação com validações robustas.
  */
 export async function criarAlocacao(input: {
   licenca_id: string;
-  ativo_id?: string | null;
+  ativo_id: string;
   usuario_id?: string | null;
-  chave_individual?: string | null;
   observacao?: string | null;
-  saldoAntes: number;
-}): Promise<{ ok: boolean; error?: string; deficit: boolean }> {
-  if (input.chave_individual && input.chave_individual.trim()) {
-    const conflito = await chaveIndividualEmUso(input.chave_individual, {
-      ignoreAtivoId: input.ativo_id ?? null,
-    });
-    if (conflito) {
-      return {
-        ok: false,
-        deficit: false,
-        error: `Esta chave de licença já está em uso no ativo "${conflito.hostname ?? conflito.ativo_id}". Encerre a alocação anterior antes de reutilizá-la.`,
-      };
-    }
+}): Promise<{ ok: boolean; error?: string }> {
+  
+  // 1. Validar se o ativo já possui esta licença (Frontend check, backend has UNIQUE index)
+  const { data: existente, error: errExistente } = await supabase
+    .from("alocacoes")
+    .select("id")
+    .eq("ativo_id", input.ativo_id)
+    .eq("licenca_id", input.licenca_id)
+    .is("data_fim", null)
+    .maybeSingle();
+
+  if (errExistente) return { ok: false, error: "Erro ao validar duplicidade." };
+  if (existente) return { ok: false, error: "Este ativo já possui esta licença atribuída." };
+
+  // 2. Verificar disponibilidade
+  const { data: indicador, error: errInd } = await supabase
+    .from("vw_licencas_indicadores")
+    .select("disponiveis")
+    .eq("licenca_id", input.licenca_id)
+    .single();
+
+  if (errInd) return { ok: false, error: "Erro ao validar disponibilidade." };
+  if ((indicador?.disponiveis ?? 0) <= 0) {
+    return { ok: false, error: "Não existem licenças disponíveis." };
   }
+
+  // 3. Inserir alocação
   const { error, data } = await supabase
     .from("alocacoes")
     .insert({
       licenca_id: input.licenca_id,
-      ativo_id: input.ativo_id ?? null,
+      ativo_id: input.ativo_id,
       usuario_id: input.usuario_id ?? null,
-      chave_individual: input.chave_individual ?? null,
       observacao: input.observacao ?? null,
     })
     .select("id")
     .single();
-  if (error) return { ok: false, error: error.message, deficit: false };
-  const deficit = input.saldoAntes <= 0;
-  if (deficit) {
-    void logAction(
-      "BULK_UPDATE",
-      "alocacoes",
-      {
-        operacao: "vincular_com_deficit",
-        licenca_id: input.licenca_id,
-        ativo_id: input.ativo_id ?? null,
-        usuario_id: input.usuario_id ?? null,
-        saldo_antes: input.saldoAntes,
-        alocacao_id: data?.id,
-      },
-      data?.id ?? null,
-    );
-  }
-  return { ok: true, deficit };
-}
 
-/** True quando o produto usa chave por dispositivo (OEM/Retail) e cada alocação precisa da sua própria chave. */
-export function isChaveIndividualRequired(p: { modelo_licenciamento?: string | null; tipo_licenciamento?: string | null } | null | undefined): boolean {
-  if (!p) return false;
-  const s = `${p.modelo_licenciamento ?? ""} ${p.tipo_licenciamento ?? ""}`.toLowerCase();
-  return /(^|\W)(oem|retail)(\W|$)/.test(s);
+  if (error) {
+    if (error.code === "23505") return { ok: false, error: "Este ativo já possui esta licença atribuída." };
+    return { ok: false, error: error.message };
+  }
+
+  void logAction(
+    "BULK_UPDATE",
+    "alocacoes",
+    {
+      operacao: "vincular",
+      licenca_id: input.licenca_id,
+      ativo_id: input.ativo_id,
+      alocacao_id: data?.id,
+    },
+    data?.id ?? null
+  );
+
+  return { ok: true };
 }
