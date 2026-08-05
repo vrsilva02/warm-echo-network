@@ -1,5 +1,4 @@
 import * as React from 'react'
-
 import {
   Body,
   Button,
@@ -7,7 +6,6 @@ import {
   Head,
   Heading,
   Html,
-  Link,
   Preview,
   Text,
 } from '@react-email/components'
@@ -23,25 +21,20 @@ export const InviteEmail = ({
   siteUrl,
   confirmationUrl,
 }: InviteEmailProps) => (
-  <Html lang="en" dir="ltr">
+  <Html lang="pt-BR" dir="ltr">
     <Head />
-    <Preview>Você foi convidado para o GestoraIT</Preview>
+    <Preview>Convite para {siteName}</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Heading style={h1}>Convite para acessar o GestoraIT</Heading>
+        <Heading style={h1}>Bem-vindo ao {siteName}</Heading>
         <Text style={text}>
-           Você foi convidado para acessar o{' '}
-          <Link href={siteUrl} style={link}>
-            <strong>GestoraIT</strong>
-          </Link>
-          . Clique no botão abaixo para aceitar o convite e definir sua senha de
-          acesso.
+          Você foi convidado para acessar o sistema corporativo {siteName}. Clique no botão abaixo para concluir seu cadastro e definir sua senha.
         </Text>
         <Button style={button} href={confirmationUrl}>
           Aceitar Convite
         </Button>
         <Text style={footer}>
-          Se você não esperava este convite, pode ignorar este e-mail com segurança.
+          Este convite é destinado exclusivamente para uso corporativo. Se você acredita que recebeu este e-mail por engano, entre em contato com o suporte da MTR2.TECH.
         </Text>
       </Container>
     </Body>
@@ -64,7 +57,6 @@ const text = {
   lineHeight: '1.5',
   margin: '0 0 25px',
 }
-const link = { color: 'inherit', textDecoration: 'underline' }
 const button = {
   backgroundColor: '#000000',
   color: '#ffffff',
