@@ -129,19 +129,39 @@ function Page() {
     return Array.from(set).sort((a, b) => a.localeCompare(b));
   }, [produtos]);
 
-  const [tab, setTab] = useState<string>("todas");
-  const [statusFiltro, setStatusFiltro] = useState<StatusFiltro>("todos");
+  const fabricantes = useMemo(() => {
+    const set = new Set<string>();
+    (produtos ?? []).forEach((p) => { if (p.fabricante) set.add(p.fabricante); });
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [produtos]);
+
+  const [tab, setTab] = useState<string>(queryCat || "todas");
+  const [statusFiltro, setStatusFiltro] = useState<StatusFiltro>((queryStatus as any) || "todos");
+  const [fabFiltro, setFabFiltro] = useState<string>(queryFab || "todos");
+  const [busca, setBusca] = useState(queryBusca || "");
   const [selectedProdId, setSelectedProdId] = useState<string | null>(null);
   const [newLicOpen, setNewLicOpen] = useState(false);
   const [editingLicId, setEditingLicId] = useState<string | null>(null);
   const [defaultCategoria, setDefaultCategoria] = useState<string | null>(null);
 
-  const selected = produtos?.find((p) => p.produto_id === selectedProdId) ?? null;
+  useEffect(() => {
+    if (queryCat) setTab(queryCat);
+  }, [queryCat]);
 
-  function aplicarStatus(list: ProdutoAgg[]) {
-    if (statusFiltro === "todos") return list;
-    return list.filter((p) => statusLicenca(p) === statusFiltro);
-  }
+  const filtrarProdutos = (list: ProdutoAgg[]) => {
+    let filtered = [...list];
+    if (tab !== "todas") filtered = filtered.filter(p => p.categoria === tab);
+    if (statusFiltro !== "todos") filtered = filtered.filter(p => statusLicenca(p) === statusFiltro);
+    if (fabFiltro !== "todos") filtered = filtered.filter(p => p.fabricante === fabFiltro);
+    if (busca) {
+      const b = busca.toLowerCase();
+      filtered = filtered.filter(p => p.nome_oficial.toLowerCase().includes(b) || (p.fabricante?.toLowerCase().includes(b)));
+    }
+    return filtered;
+  };
+
+  const filteredData = useMemo(() => filtrarProdutos(produtos ?? []), [produtos, tab, statusFiltro, fabFiltro, busca]);
+
   const contagem = useMemo(() => {
     const base = produtos ?? [];
     return {
