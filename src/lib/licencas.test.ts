@@ -58,7 +58,9 @@ describe("Regras de Negócio de Licenças", () => {
     const { data: prodExtra } = await supabase.from("produtos_catalogo").insert({
       nome_oficial: `VITEST-PROD-LOW-${Date.now()}`,
       fabricante_id: fabricanteId,
-      categoria: "Software"
+      categoria: "Software",
+      modelo_licenciamento: "por_dispositivo",
+      tipo_licenciamento: "perpetuo"
     }).select("id").single();
 
     const { data: licLow } = await supabase.from("licencas").insert({
