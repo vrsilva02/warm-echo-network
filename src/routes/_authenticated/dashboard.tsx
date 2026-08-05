@@ -317,7 +317,6 @@ function DashboardPage() {
         <GapEdrCard count={data?.gapEdrCount ?? 0} />
         <TcoPorCentroCard tco={data?.tco ?? []} ativos={(data?.ativos ?? []) as any[]} />
       </div>
-      </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5 mb-6">
         <Link to="/ativos" search={{ status: "em_estoque" } as any} className="block transition-transform hover:scale-[1.01]">
