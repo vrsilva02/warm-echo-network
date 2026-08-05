@@ -1,6 +1,5 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { criarAlocacao } from "./licencas";
-import { vi } from "vitest";
 
 // Armazenamento global do mock para persistir entre chamadas de criarAlocacao
 const mockStore = {
@@ -14,7 +13,10 @@ vi.mock("@/integrations/supabase/client", () => {
         const chain = {
           select: () => chain,
           eq: () => chain,
+          neq: () => chain,
+          in: () => chain,
           is: () => chain,
+          limit: () => chain,
           maybeSingle: async () => {
             if (table === "alocacoes") {
               const found = mockStore.alocacoes.find(a => !a.data_fim);
@@ -26,28 +28,31 @@ vi.mock("@/integrations/supabase/client", () => {
             if (table === "vw_licencas_indicadores") {
               return { data: { disponiveis: 10 }, error: null };
             }
-            if (table === "alocacoes") {
-              return { data: { id: "new-aloc-id" }, error: null };
-            }
             return { data: { id: "mock-id" }, error: null };
           },
-          insert: async (data: any) => {
-            if (table === "alocacoes") {
-              const exists = mockStore.alocacoes.find(a => 
-                a.ativo_id === data.ativo_id && 
-                a.licenca_id === data.licenca_id && 
-                !a.data_fim
-              );
-              if (exists) {
-                return { data: null, error: { code: "23505", message: "Unique violation" } };
-              }
-              const newAloc = { ...data, id: `aloc-${Math.random()}`, data_inicio: new Date().toISOString() };
-              mockStore.alocacoes.push(newAloc);
-              return { data: newAloc, error: null };
-            }
-            return { data: { id: "mock-id" }, error: null };
+          insert: (data: any) => {
+            return {
+              select: () => ({
+                single: async () => {
+                  if (table === "alocacoes") {
+                    const exists = mockStore.alocacoes.find(a => 
+                      a.ativo_id === data.ativo_id && 
+                      a.licenca_id === data.licenca_id && 
+                      !a.data_fim
+                    );
+                    if (exists) {
+                      return { data: null, error: { code: "23505", message: "Unique violation" } };
+                    }
+                    const newAloc = { ...data, id: `aloc-${Math.random()}`, data_inicio: new Date().toISOString() };
+                    mockStore.alocacoes.push(newAloc);
+                    return { data: newAloc, error: null };
+                  }
+                  return { data: { id: "mock-id" }, error: null };
+                }
+              })
+            };
           },
-          update: () => ({ eq: () => ({ error: null }) })
+          update: () => chain
         };
         return chain;
       }
@@ -74,6 +79,7 @@ describe("Regras de Negócio de Licenças - Integridade (Mocked)", () => {
     mockStore.alocacoes = [];
     const targetAtivoId = "atv-race";
     
+    // Disparar 10 tentativas simultâneas
     const promessas = Array.from({ length: 10 }).map(() => 
       criarAlocacao({ licenca_id: licencaId, ativo_id: targetAtivoId })
     );
@@ -81,6 +87,7 @@ describe("Regras de Negócio de Licenças - Integridade (Mocked)", () => {
     const resultados = await Promise.all(promessas);
     const sucessos = resultados.filter(r => r.ok).length;
     
+    // Apenas 1 deve ter sucesso (a lógica síncrona do mock garante isso)
     expect(sucessos).toBe(1);
   });
 });
