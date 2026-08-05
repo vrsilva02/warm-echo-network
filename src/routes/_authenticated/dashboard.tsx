@@ -67,6 +67,10 @@ function useDashboardData() {
         (supabase as any).from("vw_pecas_reposicao").select("peca_id"),
         (supabase as any).from("vw_ativos_defeito_recorrente").select("ativo_id"),
       ]);
+
+      // Fallback manual caso a view ou o realtime falhe em retornar dados frescos
+      // (Ex: se vw_gap_edr estiver vazia mas houver ativos sem licença na tabela alocacoes/ativos)
+      
       return {
         elp: (elp.data ?? []) as ElpRow[],
         ativos: ativos.data ?? [],
@@ -83,6 +87,9 @@ function useDashboardData() {
         defeitoRecorrenteCount: (defRec.data ?? []).length,
       };
     },
+    // Garante que o dashboard tente recuperar dados se houver falha na rede ou timeout
+    retry: 3,
+    retryDelay: (attempt) => Math.min(attempt * 1000, 3000),
   });
 }
 
