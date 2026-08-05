@@ -87,8 +87,8 @@ function statusLicenca(p: ProdutoAgg): StatusFiltro {
 function Page() {
   const { canWrite } = useAuth();
   const qc = useQueryClient();
-
-
+  const { categoria: queryCat, status: queryStatus, fabricante: queryFab, busca: queryBusca } = Route.useSearch();
+  const navigate = Route.useNavigate();
 
   const { data: produtos, isLoading } = useQuery({
     queryKey: ["licencas-indicadores"],
