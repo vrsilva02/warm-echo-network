@@ -22,16 +22,30 @@ export const Route = createFileRoute("/auth/concluir")({
 });
 
 function ConcluirCadastroPage() {
-  const { token } = Route.useSearch();
+  const { token: searchToken } = Route.useSearch();
   const navigate = useNavigate();
   const getConvite = useServerFn(getConviteByToken);
   const finish = useServerFn(finalizarCadastro);
 
+  // Às vezes o token pode vir no hash (#token=...) se o Supabase redirecionar de forma estranha
+  const [token, setToken] = useState<string | undefined>(searchToken);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+
+  import("react").then(({ useEffect }) => {
+    useEffect(() => {
+      if (!token) {
+        const hashParams = new URLSearchParams(window.location.hash.replace("#", "?"));
+        const hashToken = hashParams.get("token");
+        if (hashToken && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(hashToken)) {
+          setToken(hashToken);
+        }
+      }
+    }, [token]);
+  });
 
   const { data: convite, isLoading, error } = useQuery({
     queryKey: ["convite", token],
