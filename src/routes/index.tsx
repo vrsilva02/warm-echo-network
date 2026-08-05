@@ -1,6 +1,3 @@
-/**
- * Execute esta instrucao no projeto: em contratos alterar o nome da coluna "Seats" pelo nome "Licenças Contratadas".
- */
 import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth";
 import { Loader2 } from "lucide-react";
