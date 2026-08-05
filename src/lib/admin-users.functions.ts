@@ -96,12 +96,15 @@ export const inviteUser = createServerFn({ method: "POST" })
     try {
       // Redirecionamos para a nova tela de conclusão de cadastro passando o token
       const officialDomain = "https://gestorait.mtr2tech.com.br";
-      const redirectTo = `${officialDomain}/auth/concluir?token=${token}`;
+      // Usamos redirectTo fixo que aponta para a página de conclusão com o token.
+      // O Supabase irá anexar os parâmetros dele (como confirmation_token ou access_token no hash)
+      // a esta URL se for um link de confirmação padrão, mas aqui estamos controlando via token manual.
+      const inviteUrl = `${officialDomain}/auth/concluir?token=${token}`;
 
-      console.log(`[inviteUser] Enviando convite via Supabase com redirectTo: ${redirectTo}`);
+      console.log(`[inviteUser] Enviando convite via Supabase com redirectTo: ${inviteUrl}`);
       const { data: invited, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(data.email, {
         data: data.nome ? { nome: data.nome } : undefined,
-        redirectTo: redirectTo,
+        redirectTo: inviteUrl,
       });
       
       if (error) {
