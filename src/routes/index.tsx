@@ -1,6 +1,6 @@
 /**
- * Execute esta instrucao no projeto: Verificar se o link do convite funciona corretamente em diferentes clientes de e-mail e dispositivos, garantindo que sempre leve para a página de cadastro de senha (/auth/concluir).
- * Adicionar testes automatizados de integração para o fluxo completo de convite, validação de token na rota /auth/concluir e verificação de que o usuário vê a tela de cadastro de senha.
+ * Execute esta instrucao no projeto: Quero que você refatore completamente a lógica do módulo de Gestão de Licenças do meu sistema de Asset Management (ITAM), mantendo o layout atual e alterando apenas a lógica de negócio, validações e persistência de dados.
+ * O objetivo é transformar este módulo em um sistema robusto de controle de licenças, garantindo integridade dos dados, atualização automática dos indicadores e impedindo inconsistências.
  */
 import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth";

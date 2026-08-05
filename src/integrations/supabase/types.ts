@@ -81,6 +81,13 @@ export type Database = {
             foreignKeyName: "alocacoes_licenca_id_fkey"
             columns: ["licenca_id"]
             isOneToOne: false
+            referencedRelation: "vw_licencas_indicadores"
+            referencedColumns: ["licenca_id"]
+          },
+          {
+            foreignKeyName: "alocacoes_licenca_id_fkey"
+            columns: ["licenca_id"]
+            isOneToOne: false
             referencedRelation: "vw_licencas_ociosas"
             referencedColumns: ["licenca_id"]
           },
@@ -90,6 +97,82 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "usuarios"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      asset_licenses: {
+        Row: {
+          asset_id: string
+          assigned_at: string | null
+          assigned_by: string | null
+          id: string
+          license_id: string
+          removed_at: string | null
+          removed_by: string | null
+          status: string | null
+        }
+        Insert: {
+          asset_id: string
+          assigned_at?: string | null
+          assigned_by?: string | null
+          id?: string
+          license_id: string
+          removed_at?: string | null
+          removed_by?: string | null
+          status?: string | null
+        }
+        Update: {
+          asset_id?: string
+          assigned_at?: string | null
+          assigned_by?: string | null
+          id?: string
+          license_id?: string
+          removed_at?: string | null
+          removed_by?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "asset_licenses_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "ativos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "asset_licenses_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "vw_gap_edr"
+            referencedColumns: ["ativo_id"]
+          },
+          {
+            foreignKeyName: "asset_licenses_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "vw_tco_ativo"
+            referencedColumns: ["ativo_id"]
+          },
+          {
+            foreignKeyName: "asset_licenses_license_id_fkey"
+            columns: ["license_id"]
+            isOneToOne: false
+            referencedRelation: "licencas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "asset_licenses_license_id_fkey"
+            columns: ["license_id"]
+            isOneToOne: false
+            referencedRelation: "vw_licencas_indicadores"
+            referencedColumns: ["licenca_id"]
+          },
+          {
+            foreignKeyName: "asset_licenses_license_id_fkey"
+            columns: ["license_id"]
+            isOneToOne: false
+            referencedRelation: "vw_licencas_ociosas"
+            referencedColumns: ["licenca_id"]
           },
         ]
       }
@@ -1579,6 +1662,21 @@ export type Database = {
           hostname?: string | null
           setor?: string | null
           status_ciclo_vida?: string | null
+        }
+        Relationships: []
+      }
+      vw_licencas_indicadores: {
+        Row: {
+          atribuidas: number | null
+          categoria: string | null
+          data_vencimento: string | null
+          disponiveis: number | null
+          fabricante: string | null
+          licenca_id: string | null
+          nome: string | null
+          percentual_uso: number | null
+          tipo_licenca: string | null
+          total: number | null
         }
         Relationships: []
       }

@@ -19,8 +19,6 @@ import { useAuth } from "@/lib/auth";
 import { logAction } from "@/lib/audit";
 import { useConfirm } from "@/components/confirm-dialog";
 import { MaskedKey } from "@/components/masked-key";
-import { isChaveIndividualRequired } from "@/lib/licencas";
-import { chaveIndividualEmUso } from "@/lib/licencas";
 
 export const Route = createFileRoute("/_authenticated/alocacoes")({
   component: Page,
@@ -108,8 +106,9 @@ function Page() {
     queryFn: async () => (await supabase.from("ativos").select("id,hostname").neq("status_ciclo_vida", "baixado").order("hostname")).data ?? [],
   });
 
+  const { criarAlocacao } = { criarAlocacao: async (input: any) => (await import("@/lib/licencas")).criarAlocacao(input) };
   const licencaSel = (licencas ?? []).find((l: any) => l.id === form.licenca_id) as any | undefined;
-  const chaveObrigatoria = isChaveIndividualRequired(licencaSel?.produtos_catalogo ?? null);
+  const chaveObrigatoria = false; // Removido por refatoração de negócio
 
   function openNew() { setForm(initial); setOpen(true); }
   async function save() {
@@ -118,15 +117,15 @@ function Page() {
     if (chaveObrigatoria && !form.chave_individual.trim()) {
       return toast.error("Produto OEM/Retail: informe a chave individual desta alocação.");
     }
-    const chave = form.chave_individual.trim();
-    if (chave && form.ativo_id) {
-      const conflito = await chaveIndividualEmUso(chave, { ignoreAtivoId: form.ativo_id });
-      if (conflito) {
-        return toast.error(
-          `Licença já em uso no ativo "${conflito.hostname ?? conflito.ativo_id}". Encerre a alocação anterior antes de reutilizar esta chave.`,
-        );
-      }
-    }
+    // Validação agora feita no backend via índice UNIQUE e lógica centralizada em criarAlocacao
+    const r = await criarAlocacao({
+      licenca_id: form.licenca_id,
+      ativo_id: form.ativo_id!, // Agora obrigatório conforme novos requisitos
+      usuario_id: form.usuario_id,
+      observacao: form.observacao
+    });
+    
+    if (!r.ok) return toast.error(r.error || "Erro ao criar alocação");
     const { error } = await supabase.from("alocacoes").insert({
       licenca_id: form.licenca_id,
       usuario_id: form.usuario_id,
@@ -209,7 +208,7 @@ function Page() {
     {
       id: "chave", header: "Chave",
       accessor: (r) => {
-        const usaIndividual = isChaveIndividualRequired(r.licencas?.produtos_catalogo ?? null);
+        const usaIndividual = false;
         const chave = usaIndividual ? r.chave_individual : r.licencas?.chave_ativacao ?? null;
         if (!chave) return <span className="text-muted-foreground text-xs">—</span>;
         return (
