@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getConviteByToken, finalizarCadastro } from "@/lib/invitation-flow.functions";
@@ -11,6 +11,7 @@ import { ShieldCheck, Loader2, AlertCircle, CheckCircle2, Eye, EyeOff } from "lu
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
 import { z } from "zod";
+import { supabase } from "@/integrations/supabase/client";
 
 const searchSchema = z.object({
   token: z.string().uuid().optional(),
