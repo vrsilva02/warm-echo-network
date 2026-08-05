@@ -1,5 +1,5 @@
 /**
- * Execute esta instrucao no projeto: Crie testes automatizados para garantir que a função criarAlocacao nunca permita duplicar a mesma licença para o mesmo ativo (incluindo caso de corrida).
+ * Execute esta instrucao no projeto: em contratos alterar o nome da coluna "Seats" pelo nome "Licenças Contratadas".
  */
 import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth";

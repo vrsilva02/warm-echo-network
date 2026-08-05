@@ -148,12 +148,12 @@ function Page() {
     <>
       <PageHeader
         title="Contratos"
-        description="Fornecedores, seats contratados e datas de renovação."
+        description="Fornecedores, licenças contratadas e datas de renovação."
         actions={canWrite ? <Button size="sm" onClick={openNew}>Novo contrato</Button> : undefined}
       />
       <ListToolbar query={q} onQueryChange={setQ} />
       <DataTable
-        columns={["Fornecedor", "Cliente", "Nº", "Tipo", "Início", "Fim", "Seats", "Valor", "Vencimento", "Ações"]}
+        columns={["Fornecedor", "Cliente", "Nº", "Tipo", "Início", "Fim", "Licenças Contratadas", "Valor", "Vencimento", "Ações"]}
         empty={isLoading ? "Carregando…" : "Nenhum contrato."}
         rows={filtered.map((r) => [
           <span key="f" className="font-medium">{r.fornecedor}</span>,
@@ -189,7 +189,7 @@ function Page() {
               <SelectContent>{TIPOS.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
             </Select>
           </div>
-          <div><Label>Seats</Label><Input type="number" min={0} value={form.quantidade_seats} onChange={(e) => setForm({ ...form, quantidade_seats: Number(e.target.value) })} /></div>
+          <div><Label>Licenças Contratadas</Label><Input type="number" min={0} value={form.quantidade_seats} onChange={(e) => setForm({ ...form, quantidade_seats: Number(e.target.value) })} /></div>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div><Label>Início</Label><Input type="date" required value={form.data_inicio} onChange={(e) => setForm({ ...form, data_inicio: e.target.value })} /></div>
