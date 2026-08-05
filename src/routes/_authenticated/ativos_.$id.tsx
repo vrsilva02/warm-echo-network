@@ -148,7 +148,14 @@ function Page() {
       licenca_id: licId,
       ativo_id: id,
     });
-    if (!r.ok) return toast.error(r.error || "Erro ao vincular licença");
+    if (!r.ok) {
+      if (r.error === "ALREADY_ALLOCATED") {
+        return toast.error("Conflito de Alocação", {
+          description: "Essa licença já está alocada para este ativo. Verifique a lista de licenças atribuídas."
+        });
+      }
+      return toast.error(r.error || "Erro ao vincular licença");
+    }
     
     setLicId(null);
     setOpenLic(false);
