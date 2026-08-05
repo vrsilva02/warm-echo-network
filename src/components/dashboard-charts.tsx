@@ -10,6 +10,8 @@ import {
   Pie,
   Cell,
   Legend,
+  LineChart,
+  Line,
 } from "recharts";
 
 /**
@@ -74,6 +76,20 @@ export function TcoCentroBarChart({
         <Tooltip formatter={(v: any) => formatValue(Number(v))} />
         <Bar dataKey="valor" fill="hsl(215 85% 55%)" />
       </BarChart>
+    </ResponsiveContainer>
+  );
+}
+
+export function ComplianceTrendChart({ data }: { data: Array<{ date: string; compliance: number }> }) {
+  return (
+    <ResponsiveContainer width="100%" height="100%">
+      <LineChart data={data}>
+        <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+        <XAxis dataKey="date" fontSize={11} />
+        <YAxis fontSize={11} domain={[0, 100]} />
+        <Tooltip />
+        <Line type="monotone" dataKey="compliance" stroke="hsl(215 85% 55%)" strokeWidth={2} dot={{ r: 4 }} />
+      </LineChart>
     </ResponsiveContainer>
   );
 }

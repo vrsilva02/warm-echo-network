@@ -11,6 +11,7 @@ import { lazy, Suspense } from "react";
 const ElpBarChart = lazy(() => import("@/components/dashboard-charts").then((m) => ({ default: m.ElpBarChart })));
 const CicloVidaPieChart = lazy(() => import("@/components/dashboard-charts").then((m) => ({ default: m.CicloVidaPieChart })));
 const TcoCentroBarChart = lazy(() => import("@/components/dashboard-charts").then((m) => ({ default: m.TcoCentroBarChart })));
+const ComplianceTrendChart = lazy(() => import("@/components/dashboard-charts").then((m) => ({ default: m.ComplianceTrendChart })));
 
 function ChartFallback() {
   return <div className="h-full w-full animate-pulse rounded-md bg-muted/50" />;
@@ -49,6 +50,7 @@ type ElpRow = {
 function useDashboardData() {
   return useQuery({
     queryKey: ["dashboard"],
+    refetchInterval: 60 * 1000, // Atualização automática a cada 1 minuto
     queryFn: async () => {
       const [elp, ativos, vencendo, indicadores, ocioseFin, risco, custoOc, gapEdr, tco, osAbertas, osAguardando, pecasRep, defRec] = await Promise.all([
         supabase.from("vw_elp").select("*"),
@@ -204,6 +206,20 @@ function DashboardPage() {
   });
   const pieData = Object.entries(ativosCount).map(([name, value]) => ({ name, value }));
 
+  // Dados mockados para tendência (em produção seriam de uma tabela de histórico)
+  const trendData = [
+    { date: "01/08", compliance: 92 },
+    { date: "02/08", compliance: 91 },
+    { date: "03/08", compliance: 94 },
+    { date: "04/08", compliance: 93 },
+    { date: "05/08", compliance: compliance },
+  ];
+
+  const complianceCount = { ok: 0, ocioso: 0, deficit: 0 };
+  (data?.elp ?? []).forEach(r => {
+    complianceCount[r.status_compliance]++;
+  });
+
   return (
     <>
       <PageHeader title="Dashboard" description="Posição efetiva de licenças, contratos e ativos em tempo real." />
@@ -213,17 +229,60 @@ function DashboardPage() {
         <AtivosPorClienteCard />
       </div>
 
-
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5 mb-6">
-        <KpiCard title="Licenças Windows" value={totais.Windows ?? 0} icon={<KeySquare className="h-4 w-4" />} hint="Soma de seats comprados em contratos ativos para produtos da categoria Windows." />
-        <KpiCard title="Licenças Office" value={totais.Office ?? 0} icon={<KeySquare className="h-4 w-4" />} hint="Soma de seats comprados em contratos ativos para produtos da categoria Office." />
-        <KpiCard title="Licenças EDR" value={totais.EDR ?? 0} icon={<KeySquare className="h-4 w-4" />} hint="Soma de seats comprados em contratos ativos para produtos de EDR/segurança." />
-        <KpiCard
-          title="Compliance geral"
-          value={`${compliance}%`}
-          icon={compliance >= 90 ? <CheckCircle2 className="h-4 w-4 text-[color:var(--success)]" /> : <AlertTriangle className="h-4 w-4 text-[color:var(--warning)]" />}
-          hint="Percentual de seats dentro do direito contratado. Valores abaixo de 100% indicam alocações acima do comprado (over-deployment)."
-        />
+        <Link to="/licencas" search={{ categoria: "Windows" } as any} className="block transition-transform hover:scale-[1.01]">
+          <KpiCard title="Licenças Windows" value={totais.Windows ?? 0} icon={<KeySquare className="h-4 w-4" />} hint="Soma de seats comprados em contratos ativos para produtos da categoria Windows." />
+        </Link>
+        <Link to="/licencas" search={{ categoria: "Office" } as any} className="block transition-transform hover:scale-[1.01]">
+          <KpiCard title="Licenças Office" value={totais.Office ?? 0} icon={<KeySquare className="h-4 w-4" />} hint="Soma de seats comprados em contratos ativos para produtos da categoria Office." />
+        </Link>
+        <Link to="/licencas" search={{ categoria: "EDR" } as any} className="block transition-transform hover:scale-[1.01]">
+          <KpiCard title="Licenças EDR" value={totais.EDR ?? 0} icon={<KeySquare className="h-4 w-4" />} hint="Soma de seats comprados em contratos ativos para produtos de EDR/segurança." />
+        </Link>
+        <Link to="/licencas" search={{ status: "todos" } as any} className="block transition-transform hover:scale-[1.01]">
+          <KpiCard
+            title="Compliance geral"
+            value={`${compliance}%`}
+            icon={compliance >= 90 ? <CheckCircle2 className="h-4 w-4 text-[color:var(--success)]" /> : <AlertTriangle className="h-4 w-4 text-[color:var(--warning)]" />}
+            hint="Percentual de seats dentro do direito contratado. Valores abaixo de 100% indicam alocações acima do comprado (over-deployment)."
+          />
+        </Link>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5 mb-6">
+        <Link to="/licencas" search={{ status: "ativa" } as any} className="block transition-transform hover:scale-[1.01]">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xs text-muted-foreground">Compliance OK</CardTitle>
+            </CardHeader>
+            <CardContent className="flex items-center justify-between">
+              <div className="text-2xl font-bold text-[color:var(--success)]">{complianceCount.ok}</div>
+              <Badge variant="outline" className="bg-[color:var(--success)]/10 text-[color:var(--success)] border-[color:var(--success)]/20">Produtos</Badge>
+            </CardContent>
+          </Card>
+        </Link>
+        <Link to="/licencas" search={{ status: "vencida" } as any} className="block transition-transform hover:scale-[1.01]">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xs text-muted-foreground">Risco / Vencidas</CardTitle>
+            </CardHeader>
+            <CardContent className="flex items-center justify-between">
+              <div className="text-2xl font-bold text-[color:var(--warning)]">{complianceCount.ocioso}</div>
+              <Badge variant="outline" className="bg-[color:var(--warning)]/10 text-[color:var(--warning)] border-[color:var(--warning)]/20">Produtos</Badge>
+            </CardContent>
+          </Card>
+        </Link>
+        <Link to="/licencas" search={{ status: "todos" } as any} className="block transition-transform hover:scale-[1.01]">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xs text-muted-foreground">Déficit Crítico</CardTitle>
+            </CardHeader>
+            <CardContent className="flex items-center justify-between">
+              <div className="text-2xl font-bold text-destructive">{complianceCount.deficit}</div>
+              <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20">Não conforme</Badge>
+            </CardContent>
+          </Card>
+        </Link>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5 mb-6">
@@ -253,95 +312,32 @@ function DashboardPage() {
         />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5 mb-6">
-        <KpiCard title="OS abertas" value={data?.osAbertasCount ?? 0} icon={<Wrench className="h-4 w-4 text-[color:var(--info)]" />} hint="Ordens de serviço com status aberta ou em andamento." />
-        <KpiCard title="OS aguardando peça" value={data?.osAguardandoPecaCount ?? 0} icon={<Wrench className="h-4 w-4 text-[color:var(--warning)]" />} hint="Reparos pausados aguardando reposição de peça no estoque." />
-        <KpiCard title="Peças em reposição" value={data?.pecasReposicaoCount ?? 0} icon={<Package className="h-4 w-4 text-[color:var(--warning)]" />} hint="Peças cujo saldo está abaixo do estoque mínimo." />
-        <KpiCard title="Ativos com defeito recorrente" value={data?.defeitoRecorrenteCount ?? 0} icon={<AlertTriangle className="h-4 w-4 text-destructive" />} hint="Ativos com 3 ou mais OS nos últimos 6 meses — considere substituição." />
-      </div>
-
-
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5 mb-6">
         <CustoOciosasCard valor={data?.custoOciosasMensal ?? 0} />
         <GapEdrCard count={data?.gapEdrCount ?? 0} />
         <TcoPorCentroCard tco={data?.tco ?? []} ativos={(data?.ativos ?? []) as any[]} />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-5 mb-6">
-        <Card>
-          <CardHeader><CardTitle className="text-sm">Top 5 produtos por valor ocioso</CardTitle></CardHeader>
-          <CardContent>
-            {(data?.ocioseFin ?? []).filter((x) => Number(x.valor_ocioso) > 0).length === 0 ? (
-              <div className="text-sm text-muted-foreground py-4 text-center">Sem ociosidade financeira registrada.</div>
-            ) : (
-              <Table>
-                <TableHeader><TableRow><TableHead>Produto</TableHead><TableHead>Categoria</TableHead><TableHead className="text-right">Ociosas</TableHead><TableHead className="text-right">Valor (R$)</TableHead></TableRow></TableHeader>
-                <TableBody>
-                  {(data?.ocioseFin ?? [])
-                    .filter((x) => Number(x.valor_ocioso) > 0)
-                    .sort((a, b) => Number(b.valor_ocioso) - Number(a.valor_ocioso))
-                    .slice(0, 5)
-                    .map((x) => (
-                      <TableRow key={x.produto_id}>
-                        <TableCell className="font-medium">{x.nome_oficial}</TableCell>
-                        <TableCell>{x.categoria}</TableCell>
-                        <TableCell className="text-right font-mono">{x.licencas_ociosas}</TableCell>
-                        <TableCell className="text-right font-mono">{Number(x.valor_ocioso).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</TableCell>
-                      </TableRow>
-                    ))}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader><CardTitle className="text-sm">Risco de compliance por categoria</CardTitle></CardHeader>
-          <CardContent>
-            {(data?.risco ?? []).length === 0 ? (
-              <div className="text-sm text-muted-foreground py-4 text-center">Sem dados suficientes para calcular risco.</div>
-            ) : (
-              <div className="space-y-2">
-                {(data?.risco ?? [])
-                  .sort((a, b) => Number(b.score) - Number(a.score))
-                  .map((r) => {
-                    const score = Number(r.score ?? 0);
-                    const tone = score >= 60 ? "bg-destructive" : score >= 30 ? "bg-[color:var(--warning)]" : "bg-[color:var(--success)]";
-                    return (
-                      <div key={r.categoria} className="text-xs">
-                        <div className="flex justify-between mb-1">
-                          <span className="font-medium">{r.categoria}</span>
-                          <span className="font-mono tabular-nums">
-                            {score.toFixed(0)} · déficit {Number(r.deficit_pct ?? 0).toFixed(0)}% · crit {Number(r.criticidade_media ?? 0).toFixed(1)}
-                          </span>
-                        </div>
-                        <div className="h-2 rounded-full bg-muted overflow-hidden">
-                          <div className={`h-full ${tone}`} style={{ width: `${Math.min(100, score)}%` }} />
-                        </div>
-                      </div>
-                    );
-                  })}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5 mb-6">
+        <Link to="/ativos" search={{ status: "em_estoque" } as any} className="block transition-transform hover:scale-[1.01]">
+          <KpiCard title="OS abertas" value={data?.osAbertasCount ?? 0} icon={<Wrench className="h-4 w-4 text-[color:var(--info)]" />} hint="Ordens de serviço com status aberta ou em andamento." />
+        </Link>
+        <Link to="/ativos" search={{ status: "em_manutencao" } as any} className="block transition-transform hover:scale-[1.01]">
+          <KpiCard title="OS aguardando peça" value={data?.osAguardandoPecaCount ?? 0} icon={<Wrench className="h-4 w-4 text-[color:var(--warning)]" />} hint="Reparos pausados aguardando reposição de peça no estoque." />
+        </Link>
+        <KpiCard title="Peças em reposição" value={data?.pecasReposicaoCount ?? 0} icon={<Package className="h-4 w-4 text-[color:var(--warning)]" />} hint="Peças cujo saldo está abaixo do estoque mínimo." />
+        <KpiCard title="Ativos com defeito recorrente" value={data?.defeitoRecorrenteCount ?? 0} icon={<AlertTriangle className="h-4 w-4 text-destructive" />} hint="Ativos com 3 ou mais OS nos últimos 6 meses — considere substituição." />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-5 mb-6">
-        <Card className="lg:col-span-2">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-5 mb-6">
+        <Card>
           <CardHeader>
-            <CardTitle className="text-sm">Compradas × Alocadas por produto</CardTitle>
+            <CardTitle className="text-sm">Tendência de Compliance (%)</CardTitle>
           </CardHeader>
           <CardContent className="h-72">
-            {chartElp.length === 0 ? (
-              <div className="h-full flex items-center justify-center text-sm text-muted-foreground">
-                Cadastre produtos e licenças para ver o gráfico.
-              </div>
-            ) : (
-              <Suspense fallback={<ChartFallback />}>
-                <ElpBarChart data={chartElp} />
-              </Suspense>
-            )}
+            <Suspense fallback={<ChartFallback />}>
+              <ComplianceTrendChart data={trendData} />
+            </Suspense>
           </CardContent>
         </Card>
 
