@@ -177,12 +177,22 @@ function DashboardPage() {
   useRealtimeInvalidate({
     channel: "dashboard-ativos-live",
     table: "ativos",
-    queryKeys: [["dashboard"]],
+    queryKeys: [["dashboard"], ["dashboard", "ativos-por-cliente"]],
   });
   useRealtimeInvalidate({
     channel: "dashboard-licencas-live",
     table: "licencas",
     queryKeys: [["dashboard"]],
+  });
+  useRealtimeInvalidate({
+    channel: "dashboard-contratos-live",
+    table: "contratos",
+    queryKeys: [["dashboard"]],
+  });
+  useRealtimeInvalidate({
+    channel: "dashboard-clientes-live",
+    table: "clientes",
+    queryKeys: [["dashboard", "ativos-por-cliente"]],
   });
 
   const totais = { Windows: 0, Office: 0, EDR: 0 } as Record<string, number>;
