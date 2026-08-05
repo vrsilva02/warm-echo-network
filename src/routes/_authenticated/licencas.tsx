@@ -925,7 +925,14 @@ function VincularDialog({
       observacao: obs || null,
     });
     setBusy(false);
-    if (!r.ok) return toast.error(r.error || "Erro");
+    if (!r.ok) {
+      if (r.error === "ALREADY_ALLOCATED") {
+        return toast.error("Conflito de Alocação", {
+          description: "Essa licença já está alocada para este ativo. Verifique a lista de atribuições."
+        });
+      }
+      return toast.error(r.error || "Erro");
+    }
     toast.success("Vinculado com sucesso");
     onOpenChange(false);
     setLicencaId(null); setAtivoId(null); setUsuarioId(null); setObs("");
