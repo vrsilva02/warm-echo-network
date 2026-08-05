@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useEffect, useState } from "react";
+import { useRealtimeInvalidate } from "@/hooks/use-realtime-invalidate";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: DashboardPage,
@@ -49,11 +50,11 @@ function useDashboardData() {
   return useQuery({
     queryKey: ["dashboard"],
     queryFn: async () => {
-      const [elp, ativos, vencendo, ociosas, ocioseFin, risco, custoOc, gapEdr, tco, osAbertas, osAguardando, pecasRep, defRec] = await Promise.all([
+      const [elp, ativos, vencendo, indicadores, ocioseFin, risco, custoOc, gapEdr, tco, osAbertas, osAguardando, pecasRep, defRec] = await Promise.all([
         supabase.from("vw_elp").select("*"),
         supabase.from("ativos").select("id, status_ciclo_vida, centro_custo_id, centros_custo(nome)"),
         supabase.from("vw_contratos_vencendo").select("id,dias_para_vencer,urgencia"),
-        supabase.from("vw_licencas_ociosas").select("licenca_id"),
+        supabase.from("vw_licencas_indicadores").select("*"),
         supabase.from("vw_ociosidade_financeira").select("*"),
         supabase.rpc("fn_risco_compliance", { _categoria: null as unknown as string }),
         supabase.from("vw_custo_ociosas").select("*"),
@@ -68,7 +69,7 @@ function useDashboardData() {
         elp: (elp.data ?? []) as ElpRow[],
         ativos: ativos.data ?? [],
         contratosVencendo30: (vencendo.data ?? []).filter((r: any) => r.dias_para_vencer <= 30).length,
-        licencasOciosas: ociosas.data?.length ?? 0,
+        licencasOciosas: (indicadores.data ?? []).reduce((acc, curr) => acc + (curr.disponiveis ?? 0), 0),
         ocioseFin: (ocioseFin.data ?? []) as Array<{ produto_id: string; nome_oficial: string; categoria: string; licencas_ociosas: number; valor_ocioso: number }>,
         risco: (risco.data ?? []) as Array<{ categoria: string; deficit_pct: number; criticidade_media: number; score: number }>,
         custoOciosasMensal: (custoOc.data ?? []).reduce((a: number, r: any) => a + Number(r.custo_mensal_desperdicado ?? 0), 0),
@@ -165,6 +166,22 @@ function DashboardPage() {
   const { data, isLoading } = useDashboardData();
   const { data: ativosCliente } = useAtivosPorCliente();
 
+  useRealtimeInvalidate({
+    channel: "dashboard-live",
+    table: "alocacoes",
+    queryKeys: [["dashboard"]],
+  });
+  useRealtimeInvalidate({
+    channel: "dashboard-ativos-live",
+    table: "ativos",
+    queryKeys: [["dashboard"]],
+  });
+  useRealtimeInvalidate({
+    channel: "dashboard-licencas-live",
+    table: "licencas",
+    queryKeys: [["dashboard"]],
+  });
+
   const totais = { Windows: 0, Office: 0, EDR: 0 } as Record<string, number>;
   let compradas = 0;
   let alocadas = 0;
@@ -217,16 +234,16 @@ function DashboardPage() {
           hint="Contratos com data de término nos próximos 30 dias."
         />
         <KpiCard
-          title="Licenças ociosas (>90d)"
+          title="Licenças ociosas"
           value={data?.licencasOciosas ?? 0}
           icon={<Snowflake className="h-4 w-4 text-primary" />}
-          hint="Alocações ativas sem uso registrado há mais de 90 dias."
+          hint="Quantidade de licenças em estoque não atribuídas a nenhum ativo (Disponíveis)."
         />
         <KpiCard
           title="Valor financeiro ocioso"
           value={`R$ ${(data?.ocioseFin ?? []).reduce((a, x) => a + Number(x.valor_ocioso ?? 0), 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`}
-          icon={<Snowflake className="h-4 w-4 text-[color:var(--warning)]" />}
-          hint="Soma de custo_unitário × licenças ociosas por produto (janela >90d sem alocação)."
+          icon={<Coins className="h-4 w-4 text-[color:var(--warning)]" />}
+          hint="Soma do valor de aquisição das licenças em estoque (disponíveis)."
         />
         <KpiCard
           title="Score máx. de risco"

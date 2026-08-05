@@ -28,6 +28,7 @@ import { logAction } from "@/lib/audit";
 import { encerrarAlocacao, encerrarAlocacoes, criarAlocacao } from "@/lib/licencas";
 import { friendlyError } from "@/lib/errors";
 import { MaskedKey } from "@/components/masked-key";
+import { useRealtimeInvalidate } from "@/hooks/use-realtime-invalidate";
 
 const LicencasImportExport = lazy(() =>
   import("@/components/licencas-import-export").then((m) => ({ default: m.LicencasImportExport })),
@@ -99,6 +100,17 @@ function Page() {
         proxima_expiracao: r.data_vencimento
       })) as ProdutoAgg[];
     },
+  });
+
+  useRealtimeInvalidate({
+    channel: "licencas-page-live",
+    table: "alocacoes",
+    queryKeys: [["licencas-indicadores"], ["alocacoes-produto"]],
+  });
+  useRealtimeInvalidate({
+    channel: "licencas-data-live",
+    table: "licencas",
+    queryKeys: [["licencas-indicadores"]],
   });
 
   const categorias = useMemo(() => {
