@@ -443,7 +443,7 @@ function ProductDetail({
   const [sel, setSel] = useState<Set<string>>(new Set());
   const [showHistorico, setShowHistorico] = useState(false);
   const [vincOpen, setVincOpen] = useState(false);
-  const usaChaveIndividual = isChaveIndividualRequired(produto);
+  const usaChaveIndividual = false;
 
   const { data, isLoading } = useQuery({
     queryKey: ["alocacoes-produto", produto.produto_id, showHistorico],
@@ -776,7 +776,7 @@ function VincularDialog({
   const [chaveIndividual, setChaveIndividual] = useState("");
   const [obs, setObs] = useState("");
   const [busy, setBusy] = useState(false);
-  const chaveObrigatoria = isChaveIndividualRequired(produto);
+  const chaveObrigatoria = false;
 
   const { data: licencas } = useQuery({
     queryKey: ["licencas-do-produto", produto.produto_id],
