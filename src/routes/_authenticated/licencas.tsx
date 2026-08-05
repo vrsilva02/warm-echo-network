@@ -148,6 +148,8 @@ function Page() {
     if (queryCat) setTab(queryCat);
   }, [queryCat]);
 
+  const selected = useMemo(() => produtos?.find((p) => p.produto_id === selectedProdId) ?? null, [produtos, selectedProdId]);
+
   const filtrarProdutos = (list: ProdutoAgg[]) => {
     let filtered = [...list];
     if (tab !== "todas") filtered = filtered.filter(p => p.categoria === tab);
