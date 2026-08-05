@@ -10,13 +10,19 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { ShieldCheck, Loader2, AlertCircle, CheckCircle2, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
+import { z } from "zod";
+
+const searchSchema = z.object({
+  token: z.string().uuid().optional(),
+});
 
 export const Route = createFileRoute("/auth/concluir")({
+  validateSearch: (s) => searchSchema.parse(s),
   component: ConcluirCadastroPage,
 });
 
 function ConcluirCadastroPage() {
-  const { token } = Route.useSearch<{ token?: string }>();
+  const { token } = Route.useSearch();
   const navigate = useNavigate();
   const getConvite = useServerFn(getConviteByToken);
   const finish = useServerFn(finalizarCadastro);

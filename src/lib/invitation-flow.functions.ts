@@ -25,7 +25,8 @@ export const getConviteByToken = createServerFn({ method: "GET" })
       return { valid: false, error: "Este convite já foi utilizado." };
     }
 
-    if (new Date(convite.expira_em) < new Date()) {
+    const expiraEm = convite.expira_em ? new Date(convite.expira_em as string) : null;
+    if (expiraEm && expiraEm < new Date()) {
       return { valid: false, error: "Este convite expirou. Solicite um novo convite ao administrador." };
     }
 
@@ -46,7 +47,9 @@ export const finalizarCadastro = createServerFn({ method: "POST" })
 
     if (cerr || !convite) throw new Error("Convite inválido.");
     if (convite.aceito_em) throw new Error("Convite já utilizado.");
-    if (new Date(convite.expira_em) < new Date()) throw new Error("Convite expirado.");
+    
+    const expiraEm = convite.expira_em ? new Date(convite.expira_em as string) : null;
+    if (expiraEm && expiraEm < new Date()) throw new Error("Convite expirado.");
 
     // 2. Busca o ID do usuário pelo e-mail (usuário criado no invite)
     const { data: userData, error: uerr } = await supabaseAdmin.auth.admin.listUsers();
@@ -58,7 +61,7 @@ export const finalizarCadastro = createServerFn({ method: "POST" })
     // 3. Atualiza a senha do usuário
     const { error: perr } = await supabaseAdmin.auth.admin.updateUserById(user.id, {
       password: data.password,
-      email_confirm: true // Garante que o e-mail está confirmado
+      email_confirm: true 
     });
     if (perr) throw new Error("Erro ao definir senha: " + perr.message);
 
