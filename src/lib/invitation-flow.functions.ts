@@ -22,11 +22,21 @@ export const getConviteByToken = createServerFn({ method: "GET" })
     }
 
     if (convite.aceito_em || convite.status === "aceito") {
+      await supabaseAdmin.from("auditoria_convites").insert({
+        convite_id: convite.id,
+        evento: "tentativa_invalida",
+        detalhes: { motivo: "ja_utilizado" }
+      });
       return { valid: false, error: "Este convite já foi utilizado." };
     }
 
     const expiraEm = convite.expira_em ? new Date(convite.expira_em as string) : null;
     if (expiraEm && expiraEm < new Date()) {
+      await supabaseAdmin.from("auditoria_convites").insert({
+        convite_id: convite.id,
+        evento: "tentativa_invalida",
+        detalhes: { motivo: "expirado" }
+      });
       return { valid: false, error: "Este convite expirou. Solicite um novo convite ao administrador." };
     }
 
