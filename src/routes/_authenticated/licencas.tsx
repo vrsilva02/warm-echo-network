@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 // (Dialog imported below)
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState, lazy, Suspense } from "react";
+import { useMemo, useState, lazy, Suspense, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
