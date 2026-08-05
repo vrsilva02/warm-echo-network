@@ -1,5 +1,5 @@
 /**
- * Execute esta instrucao no projeto: ao receber o convite o usuário deverá cadastrar a sua senha.
+ * Execute esta instrucao no projeto: testei agora e ao clicar no e-mai o usuário não recebe a opção de cadastrar a senha
  */
 import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth";
