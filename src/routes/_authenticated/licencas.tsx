@@ -19,7 +19,8 @@ import { EmptyState } from "@/components/empty-state";
 import { Combobox } from "@/components/combobox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Checkbox } from "@/components/ui/checkbox";
-import { KeyRound, ArrowLeft, Plus, Link2, Unlink, Pencil, Trash2, Settings2 } from "lucide-react";
+import { KeyRound, ArrowLeft, Plus, Link2, Unlink, Pencil, Trash2, Settings2, Download, FileText } from "lucide-react";
+import { downloadXLSX, downloadPDF } from "@/lib/export";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
 import { useConfirm } from "@/components/confirm-dialog";
@@ -27,6 +28,7 @@ import { logAction } from "@/lib/audit";
 import { encerrarAlocacao, encerrarAlocacoes, criarAlocacao } from "@/lib/licencas";
 import { friendlyError } from "@/lib/errors";
 import { MaskedKey } from "@/components/masked-key";
+import { useRealtimeInvalidate } from "@/hooks/use-realtime-invalidate";
 
 const LicencasImportExport = lazy(() =>
   import("@/components/licencas-import-export").then((m) => ({ default: m.LicencasImportExport })),
@@ -100,6 +102,17 @@ function Page() {
     },
   });
 
+  useRealtimeInvalidate({
+    channel: "licencas-page-live",
+    table: "alocacoes",
+    queryKeys: [["licencas-indicadores"], ["alocacoes-produto"]],
+  });
+  useRealtimeInvalidate({
+    channel: "licencas-data-live",
+    table: "licencas",
+    queryKeys: [["licencas-indicadores"]],
+  });
+
   const categorias = useMemo(() => {
     const set = new Set<string>();
     (produtos ?? []).forEach((p) => set.add(p.categoria || "Outro"));
@@ -171,7 +184,35 @@ function Page() {
               ))}
             </TabsList>
             <div className="flex items-center gap-2">
-              <Label className="text-xs text-muted-foreground">Status</Label>
+              <Button variant="outline" size="sm" onClick={() => {
+                const cols = ["Produto", "Fabricante", "Categoria", "Total", "Atribuídas", "Disponíveis", "% Uso", "Status"];
+                const data = (produtos ?? []).map(p => {
+                  const pct = p.licencas_compradas > 0 ? (p.licencas_alocadas / p.licencas_compradas) * 100 : 0;
+                  const status = p.saldo === 0 ? "Sem licenças" : pct > 90 ? "Crítico" : pct > 70 ? "Atenção" : "OK";
+                  return [p.nome_oficial, p.fabricante ?? "", p.categoria, p.licencas_compradas, p.licencas_alocadas, p.saldo, `${pct.toFixed(1)}%`, status];
+                });
+                downloadXLSX(`licencas_indicadores_${new Date().toISOString().slice(0, 10)}.xlsx`, cols, data);
+              }}>
+                <Download className="h-4 w-4 mr-1" /> XLSX
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => {
+                const cols = ["Produto", "Fabricante", "Total", "Atrib.", "Disp.", "%", "Status"];
+                const data = (produtos ?? []).map(p => {
+                  const pct = p.licencas_compradas > 0 ? (p.licencas_alocadas / p.licencas_compradas) * 100 : 0;
+                  const status = p.saldo === 0 ? "Sem licenças" : pct > 90 ? "Crítico" : pct > 70 ? "Atenção" : "OK";
+                  return [p.nome_oficial, p.fabricante ?? "", p.licencas_compradas, p.licencas_alocadas, p.saldo, `${pct.toFixed(0)}%`, status];
+                });
+                downloadPDF({
+                  filename: `relatorio_licencas_${new Date().toISOString().slice(0, 10)}.pdf`,
+                  title: "Relatório de Indicadores de Licenciamento",
+                  subtitle: `Total de ${produtos?.length ?? 0} produtos monitorados`,
+                  columns: cols,
+                  rows: data
+                });
+              }}>
+                <FileText className="h-4 w-4 mr-1" /> PDF
+              </Button>
+              <Label className="text-xs text-muted-foreground ml-2">Status</Label>
               <Select value={statusFiltro} onValueChange={(v) => setStatusFiltro(v as StatusFiltro)}>
                 <SelectTrigger className="h-8 w-[190px]">
                   <SelectValue />

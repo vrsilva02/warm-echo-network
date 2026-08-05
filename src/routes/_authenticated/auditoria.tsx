@@ -121,7 +121,7 @@ function Page() {
     [rows, total],
   );
 
-  const cols = ["Quando", "Ação", "Tabela", "Registro", "Usuário"];
+  const cols = ["Quando", "Ação", "Tabela", "Registro", "Usuário", "Diff"];
   const exportRows = () =>
     rows.map((r) => [
       new Date(r.created_at).toLocaleString("pt-BR"),
@@ -129,6 +129,8 @@ function Page() {
       r.tabela_afetada,
       r.registro_id ?? "",
       r.usuario_sistema ?? "",
+      r.acao === "UPDATE" ? `Alteração em ${Object.keys(r.valor_novo ?? {}).join(", ")}` : 
+      r.acao === "INSERT" ? "Novo registro" : "Remoção"
     ]);
 
   return (
