@@ -49,6 +49,7 @@ type ElpRow = {
 function useDashboardData() {
   return useQuery({
     queryKey: ["dashboard"],
+    refetchInterval: 60 * 1000, // Atualização automática a cada 1 minuto
     queryFn: async () => {
       const [elp, ativos, vencendo, indicadores, ocioseFin, risco, custoOc, gapEdr, tco, osAbertas, osAguardando, pecasRep, defRec] = await Promise.all([
         supabase.from("vw_elp").select("*"),
