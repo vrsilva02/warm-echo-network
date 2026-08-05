@@ -312,6 +312,17 @@ function DashboardPage() {
         />
       </div>
 
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5 mb-6">
+        <Link to="/ativos" search={{ status: "em_estoque" } as any} className="block transition-transform hover:scale-[1.01]">
+          <KpiCard title="OS abertas" value={data?.osAbertasCount ?? 0} icon={<Wrench className="h-4 w-4 text-[color:var(--info)]" />} hint="Ordens de serviço com status aberta ou em andamento." />
+        </Link>
+        <Link to="/ativos" search={{ status: "em_manutencao" } as any} className="block transition-transform hover:scale-[1.01]">
+          <KpiCard title="OS aguardando peça" value={data?.osAguardandoPecaCount ?? 0} icon={<Wrench className="h-4 w-4 text-[color:var(--warning)]" />} hint="Reparos pausados aguardando reposição de peça no estoque." />
+        </Link>
+        <KpiCard title="Peças em reposição" value={data?.pecasReposicaoCount ?? 0} icon={<Package className="h-4 w-4 text-[color:var(--warning)]" />} hint="Peças cujo saldo está abaixo do estoque mínimo." />
+        <KpiCard title="Ativos com defeito recorrente" value={data?.defeitoRecorrenteCount ?? 0} icon={<AlertTriangle className="h-4 w-4 text-destructive" />} hint="Ativos com 3 ou mais OS nos últimos 6 meses — considere substituição." />
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-5 mb-6">
         <Card>
           <CardHeader>
