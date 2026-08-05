@@ -12,7 +12,7 @@ import { CrudDialog } from "@/components/crud-dialog";
 import { StatusPill } from "@/components/status-pill";
 import { TcoCard } from "@/components/tco-card";
 import { EdrBadge, useGapEdrSet } from "@/components/edr-badge";
-import { Trash2, Plus, Server, ServerCog, Boxes, ExternalLink, ArrowLeft } from "lucide-react";
+import { Trash2, Plus, Server, ServerCog, Boxes, ExternalLink, ArrowLeft, KeyRound, Unlink } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
 import { logAction } from "@/lib/audit";
@@ -45,10 +45,12 @@ function Page() {
   const { set: edrSet } = useGapEdrSet();
   const [openServ, setOpenServ] = useState(false);
   const [openRel, setOpenRel] = useState(false);
+  const [openLic, setOpenLic] = useState(false);
   const [servId, setServId] = useState<string | null>(null);
   const [tipoDep, setTipoDep] = useState("suporta");
   const [filhoId, setFilhoId] = useState<string | null>(null);
   const [tipoRel, setTipoRel] = useState("hospeda_vm");
+  const [licId, setLicId] = useState<string | null>(null);
 
   const { data: ativo } = useQuery({
     queryKey: ["ativo", id],
@@ -79,6 +81,29 @@ function Page() {
   const { data: ativosList } = useQuery({
     queryKey: ["ativos-lite-all"],
     queryFn: async () => (await supabase.from("ativos").select("id,hostname").order("hostname")).data ?? [],
+  });
+  const { data: alocacoes } = useQuery({
+    queryKey: ["ativo-alocacoes", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("alocacoes")
+        .select("id, licenca_id, observacao, licencas(id, produtos_catalogo(nome_oficial))")
+        .eq("ativo_id", id)
+        .is("data_fim", null);
+      if (error) throw error;
+      return data as any[];
+    },
+  });
+  const { data: licencasDisponiveis } = useQuery({
+    queryKey: ["licencas-disponiveis"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("vw_licencas_indicadores")
+        .select("*")
+        .gt("disponiveis", 0);
+      if (error) throw error;
+      return data;
+    },
   });
 
   const jaServ = new Set((servicos ?? []).map((v: any) => v.servicos?.id));
@@ -114,6 +139,31 @@ function Page() {
     const { error } = await supabase.from("ativos_relacionamentos").delete().eq("id", rId);
     if (error) return toast.error(error.message);
     qc.invalidateQueries({ queryKey: ["ativo-filhos", id] });
+  }
+
+  async function vincLic() {
+    if (!licId) return toast.error("Selecione a licença");
+    const { criarAlocacao } = await import("@/lib/licencas");
+    const r = await criarAlocacao({
+      licenca_id: licId,
+      ativo_id: id,
+    });
+    if (!r.ok) return toast.error(r.error || "Erro ao vincular licença");
+    
+    setLicId(null);
+    setOpenLic(false);
+    qc.invalidateQueries({ queryKey: ["ativo-alocacoes", id] });
+    qc.invalidateQueries({ queryKey: ["licencas-indicadores"] });
+    toast.success("Licença vinculada");
+  }
+
+  async function desvincLic(alocId: string) {
+    const { encerrarAlocacao } = await import("@/lib/licencas");
+    const r = await encerrarAlocacao(alocId);
+    if (!r.ok) return toast.error(r.error || "Erro ao desvincular");
+    qc.invalidateQueries({ queryKey: ["ativo-alocacoes", id] });
+    qc.invalidateQueries({ queryKey: ["licencas-indicadores"] });
+    toast.success("Licença removida");
   }
 
   return (
@@ -218,6 +268,56 @@ function Page() {
           )}
         </CardContent>
       </Card>
+
+      <Card className="mt-4">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm flex items-center gap-2"><KeyRound className="h-4 w-4" /> Licenças Atribuídas</CardTitle>
+          {canWrite && <Button size="sm" variant="outline" onClick={() => setOpenLic(true)}><Plus className="h-3 w-3 mr-1" />Atribuir licença</Button>}
+        </CardHeader>
+        <CardContent>
+          {(alocacoes ?? []).length === 0 ? (
+            <div className="text-sm text-muted-foreground py-4 text-center">Nenhuma licença vinculada a este ativo.</div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+              {(alocacoes ?? []).map((a: any) => (
+                <div key={a.id} className="flex items-center justify-between p-2 border rounded-md bg-muted/30">
+                  <div className="min-w-0">
+                    <div className="text-sm font-medium truncate">{a.licencas?.produtos_catalogo?.nome_oficial ?? "Licença"}</div>
+                    {a.observacao && <div className="text-[10px] text-muted-foreground truncate">{a.observacao}</div>}
+                  </div>
+                  {canWrite && (
+                    <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => desvincLic(a.id)}>
+                      <Unlink className="h-3.5 w-3.5" />
+                    </Button>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <CrudDialog title="Atribuir licença" open={openLic} onOpenChange={setOpenLic} onSubmit={vincLic} trigger={null} submitLabel="Atribuir">
+        <div className="space-y-4">
+          <div>
+            <Label>Licença Disponível *</Label>
+            <Combobox
+              placeholder="Selecionar licença"
+              searchPlaceholder="Buscar produto…"
+              value={licId}
+              onChange={setLicId}
+              options={(licencasDisponiveis ?? []).map((l: any) => ({ 
+                value: l.licenca_id, 
+                label: l.nome,
+                hint: `${l.disponiveis} disponíveis`
+              }))}
+            />
+          </div>
+          {(licencasDisponiveis ?? []).length === 0 && (
+            <p className="text-xs text-destructive">Não há licenças com saldo disponível para atribuição.</p>
+          )}
+        </div>
+      </CrudDialog>
 
       <CrudDialog title="Vincular serviço" open={openServ} onOpenChange={setOpenServ} onSubmit={vincServ} trigger={null} submitLabel="Vincular">
         <div>
