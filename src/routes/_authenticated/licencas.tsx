@@ -215,58 +215,82 @@ function Page() {
                 <TabsTrigger key={c} value={c}>{c}</TabsTrigger>
               ))}
             </TabsList>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={() => {
-                const cols = ["Produto", "Fabricante", "Categoria", "Total", "Atribuídas", "Disponíveis", "% Uso", "Status"];
-                const data = (produtos ?? []).map(p => {
-                  const pct = p.licencas_compradas > 0 ? (p.licencas_alocadas / p.licencas_compradas) * 100 : 0;
-                  const status = p.saldo === 0 ? "Sem licenças" : pct > 90 ? "Crítico" : pct > 70 ? "Atenção" : "OK";
-                  return [p.nome_oficial, p.fabricante ?? "", p.categoria, p.licencas_compradas, p.licencas_alocadas, p.saldo, `${pct.toFixed(1)}%`, status];
-                });
-                downloadXLSX(`licencas_indicadores_${new Date().toISOString().slice(0, 10)}.xlsx`, cols, data);
-              }}>
-                <Download className="h-4 w-4 mr-1" /> XLSX
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => {
-                const cols = ["Produto", "Fabricante", "Total", "Atrib.", "Disp.", "%", "Status"];
-                const data = (produtos ?? []).map(p => {
-                  const pct = p.licencas_compradas > 0 ? (p.licencas_alocadas / p.licencas_compradas) * 100 : 0;
-                  const status = p.saldo === 0 ? "Sem licenças" : pct > 90 ? "Crítico" : pct > 70 ? "Atenção" : "OK";
-                  return [p.nome_oficial, p.fabricante ?? "", p.licencas_compradas, p.licencas_alocadas, p.saldo, `${pct.toFixed(0)}%`, status];
-                });
-                downloadPDF({
-                  filename: `relatorio_licencas_${new Date().toISOString().slice(0, 10)}.pdf`,
-                  title: "Relatório de Indicadores de Licenciamento",
-                  subtitle: `Total de ${produtos?.length ?? 0} produtos monitorados`,
-                  columns: cols,
-                  rows: data
-                });
-              }}>
-                <FileText className="h-4 w-4 mr-1" /> PDF
-              </Button>
-              <Label className="text-xs text-muted-foreground ml-2">Status</Label>
-              <Select value={statusFiltro} onValueChange={(v) => setStatusFiltro(v as StatusFiltro)}>
-                <SelectTrigger className="h-8 w-[190px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todos ({contagem.todos})</SelectItem>
-                  <SelectItem value="ativa">Ativas ({contagem.ativa})</SelectItem>
-                  <SelectItem value="inativa">Inativas ({contagem.inativa})</SelectItem>
-                  <SelectItem value="vencida">Vencidas ({contagem.vencida})</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-2">
+                <Input
+                  placeholder="Buscar produto ou fabricante..."
+                  className="h-8 w-64"
+                  value={busca}
+                  onChange={(e) => setBusca(e.target.value)}
+                />
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Label className="text-xs text-muted-foreground">Fabricante</Label>
+                <Select value={fabFiltro} onValueChange={setFabFiltro}>
+                  <SelectTrigger className="h-8 w-40">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todos">Todos</SelectItem>
+                    {fabricantes.map(f => (
+                      <SelectItem key={f} value={f}>{f}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Label className="text-xs text-muted-foreground">Status</Label>
+                <Select value={statusFiltro} onValueChange={(v) => setStatusFiltro(v as StatusFiltro)}>
+                  <SelectTrigger className="h-8 w-40">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todos">Todos ({contagem.todos})</SelectItem>
+                    <SelectItem value="ativa">Ativas ({contagem.ativa})</SelectItem>
+                    <SelectItem value="inativa">Inativas ({contagem.inativa})</SelectItem>
+                    <SelectItem value="vencida">Vencidas ({contagem.vencida})</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" onClick={() => {
+                  const cols = ["Produto", "Fabricante", "Categoria", "Total", "Atribuídas", "Disponíveis", "% Uso", "Status"];
+                  const data = filteredData.map(p => {
+                    const pct = p.licencas_compradas > 0 ? (p.licencas_alocadas / p.licencas_compradas) * 100 : 0;
+                    const status = p.saldo === 0 ? "Sem licenças" : pct > 90 ? "Crítico" : pct > 70 ? "Atenção" : "OK";
+                    return [p.nome_oficial, p.fabricante ?? "", p.categoria, p.licencas_compradas, p.licencas_alocadas, p.saldo, `${pct.toFixed(1)}%`, status];
+                  });
+                  downloadXLSX(`licencas_filtradas_${new Date().toISOString().slice(0, 10)}.xlsx`, cols, data);
+                }}>
+                  <Download className="h-4 w-4" />
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => {
+                  const cols = ["Produto", "Fabricante", "Total", "Atrib.", "Disp.", "%", "Status"];
+                  const data = filteredData.map(p => {
+                    const pct = p.licencas_compradas > 0 ? (p.licencas_alocadas / p.licencas_compradas) * 100 : 0;
+                    const status = p.saldo === 0 ? "Sem licenças" : pct > 90 ? "Crítico" : pct > 70 ? "Atenção" : "OK";
+                    return [p.nome_oficial, p.fabricante ?? "", p.licencas_compradas, p.licencas_alocadas, p.saldo, `${pct.toFixed(0)}%`, status];
+                  });
+                  downloadPDF({
+                    filename: `relatorio_licencas_filtradas_${new Date().toISOString().slice(0, 10)}.pdf`,
+                    title: "Relatório de Indicadores de Licenciamento (Filtrado)",
+                    subtitle: `Exibindo ${filteredData.length} de ${produtos?.length ?? 0} produtos`,
+                    columns: cols,
+                    rows: data
+                  });
+                }}>
+                  <FileText className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
 
-          <TabsContent value="todas" className="mt-4">
-            <ProductGrid rows={aplicarStatus(produtos ?? [])} isLoading={isLoading} onSelect={setSelectedProdId} />
-          </TabsContent>
-          {categorias.map((c) => (
-            <TabsContent key={c} value={c} className="mt-4">
-              <ProductGrid rows={aplicarStatus((produtos ?? []).filter((p) => p.categoria === c))} isLoading={isLoading} onSelect={setSelectedProdId} />
-            </TabsContent>
-          ))}
+          <div className="mt-4">
+            <ProductGrid rows={filteredData} isLoading={isLoading} onSelect={setSelectedProdId} />
+          </div>
         </Tabs>
       )}
 
