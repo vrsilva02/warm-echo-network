@@ -321,9 +321,14 @@ function AcessosPage() {
                 {(c.roles as AppRole[]).map((role: AppRole) => roleBadge(role))}
               </div>,
               <div key="s">
+                {c.status === "aceito" && (
+                  <Badge className="bg-success/15 text-success border-success/30">
+                    <CheckCircle2 className="mr-1 h-3 w-3" /> Aceito
+                  </Badge>
+                )}
                 {c.status === "enviado" && (
                   <Badge className="bg-[color:var(--success)]/15 text-[color:var(--success)] border-[color:var(--success)]/30">
-                    <CheckCircle2 className="mr-1 h-3 w-3" /> Enviado
+                    <Mail className="mr-1 h-3 w-3" /> Enviado
                   </Badge>
                 )}
                 {c.status === "enfileirado" && (

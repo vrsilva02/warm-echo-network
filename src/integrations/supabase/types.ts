@@ -363,6 +363,38 @@ export type Database = {
           },
         ]
       }
+      auditoria_convites: {
+        Row: {
+          convite_id: string | null
+          created_at: string | null
+          detalhes: Json | null
+          evento: string
+          id: string
+        }
+        Insert: {
+          convite_id?: string | null
+          created_at?: string | null
+          detalhes?: Json | null
+          evento: string
+          id?: string
+        }
+        Update: {
+          convite_id?: string | null
+          created_at?: string | null
+          detalhes?: Json | null
+          evento?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "auditoria_convites_convite_id_fkey"
+            columns: ["convite_id"]
+            isOneToOne: false
+            referencedRelation: "convites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       auditoria_log: {
         Row: {
           acao: string
@@ -588,36 +620,45 @@ export type Database = {
       }
       convites: {
         Row: {
+          aceito_em: string | null
           created_at: string | null
           email: string
           enviado_por: string | null
           erro: string | null
+          expira_em: string | null
           id: string
           nome: string | null
           roles: Database["public"]["Enums"]["app_role"][]
           status: Database["public"]["Enums"]["status_convite"]
+          token: string | null
           updated_at: string | null
         }
         Insert: {
+          aceito_em?: string | null
           created_at?: string | null
           email: string
           enviado_por?: string | null
           erro?: string | null
+          expira_em?: string | null
           id?: string
           nome?: string | null
           roles: Database["public"]["Enums"]["app_role"][]
           status?: Database["public"]["Enums"]["status_convite"]
+          token?: string | null
           updated_at?: string | null
         }
         Update: {
+          aceito_em?: string | null
           created_at?: string | null
           email?: string
           enviado_por?: string | null
           erro?: string | null
+          expira_em?: string | null
           id?: string
           nome?: string | null
           roles?: Database["public"]["Enums"]["app_role"][]
           status?: Database["public"]["Enums"]["status_convite"]
+          token?: string | null
           updated_at?: string | null
         }
         Relationships: []
@@ -1637,7 +1678,7 @@ export type Database = {
         | "concluida"
         | "cancelada"
       solicitacao_status: "pendente" | "aprovada" | "rejeitada" | "cancelada"
-      status_convite: "enfileirado" | "enviado" | "falhou"
+      status_convite: "enfileirado" | "enviado" | "falhou" | "aceito"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1784,7 +1825,7 @@ export const Constants = {
         "cancelada",
       ],
       solicitacao_status: ["pendente", "aprovada", "rejeitada", "cancelada"],
-      status_convite: ["enfileirado", "enviado", "falhou"],
+      status_convite: ["enfileirado", "enviado", "falhou", "aceito"],
     },
   },
 } as const

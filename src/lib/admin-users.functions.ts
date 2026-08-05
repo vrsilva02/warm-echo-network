@@ -68,6 +68,7 @@ export const inviteUser = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     // Registra o início do convite
+    const token = crypto.randomUUID();
     const { data: convite, error: cerr } = await supabaseAdmin
       .from("convites")
       .insert({
@@ -76,20 +77,26 @@ export const inviteUser = createServerFn({ method: "POST" })
         roles: data.roles,
         status: "enfileirado",
         enviado_por: context.userId,
+        token: token,
+        expira_em: new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString(),
       })
       .select("id")
       .single();
 
     if (cerr) {
       console.error("[inviteUser] Erro ao registrar convite:", cerr);
-      // Não lançamos erro aqui para não travar o fluxo se apenas o log falhar, 
-      // mas seria ideal que funcionasse.
+    } else {
+      await supabaseAdmin.from("auditoria_convites").insert({
+        convite_id: convite.id,
+        evento: "criado",
+        detalhes: { roles: data.roles }
+      });
     }
 
     try {
-      // Forçamos o uso do domínio oficial em qualquer ambiente que não seja estritamente localhost
+      // Redirecionamos para a nova tela de conclusão de cadastro passando o token
       const officialDomain = "https://gestorait.mtr2tech.com.br";
-      const redirectTo = `${officialDomain}/auth/callback?next=/auth`;
+      const redirectTo = `${officialDomain}/auth/concluir?token=${token}`;
 
       console.log(`[inviteUser] Enviando convite via Supabase com redirectTo: ${redirectTo}`);
       const { data: invited, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(data.email, {
@@ -130,6 +137,11 @@ export const inviteUser = createServerFn({ method: "POST" })
           .from("convites")
           .update({ status: "enviado", updated_at: new Date().toISOString() })
           .eq("id", convite.id);
+        
+        await supabaseAdmin.from("auditoria_convites").insert({
+          convite_id: convite.id,
+          evento: "enviado"
+        });
       }
 
       console.log(`[inviteUser] Convite finalizado com sucesso para ${data.email}`);
