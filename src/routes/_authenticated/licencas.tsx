@@ -35,7 +35,17 @@ const LicencasImportExport = lazy(() =>
 );
 
 
+import { z } from "zod";
+
+const licencasSearchSchema = z.object({
+  categoria: z.string().optional(),
+  status: z.string().optional(),
+  fabricante: z.string().optional(),
+  busca: z.string().optional(),
+});
+
 export const Route = createFileRoute("/_authenticated/licencas")({
+  validateSearch: (search) => licencasSearchSchema.parse(search),
   component: Page,
   head: () => ({
     meta: [
