@@ -28,7 +28,6 @@ function ConcluirCadastroPage() {
   const getConvite = useServerFn(getConviteByToken);
   const finish = useServerFn(finalizarCadastro);
 
-  // Às vezes o token pode vir no hash (#token=...) se o Supabase redirecionar de forma estranha
   const [token, setToken] = useState<string | undefined>(searchToken);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -36,17 +35,28 @@ function ConcluirCadastroPage() {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  import("react").then(({ useEffect }) => {
-    useEffect(() => {
-      if (!token) {
-        const hashParams = new URLSearchParams(window.location.hash.replace("#", "?"));
-        const hashToken = hashParams.get("token");
-        if (hashToken && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(hashToken)) {
-          setToken(hashToken);
+  useEffect(() => {
+    // 1. Tenta extrair token do hash ou da URL se não estiver no search
+    if (!token) {
+      const hashParams = new URLSearchParams(window.location.hash.replace("#", "?"));
+      const hashToken = hashParams.get("token");
+      if (hashToken && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(hashToken)) {
+        console.log("[ConcluirCadastroPage] Token encontrado no hash:", hashToken);
+        setToken(hashToken);
+      } else {
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlToken = urlParams.get("token");
+        if (urlToken && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(urlToken)) {
+           console.log("[ConcluirCadastroPage] Token encontrado via URLSearchParams:", urlToken);
+           setToken(urlToken);
         }
       }
-    }, [token]);
-  });
+    }
+
+    // 2. Garante que o usuário está deslogado para não ter conflitos de sessão durante a definição de senha
+    // No entanto, o convite do Supabase pode logar o usuário automaticamente. 
+    // Se o convite for validado pelo token manual, não precisamos da sessão do Supabase ativa ainda.
+  }, [token]);
 
   const { data: convite, isLoading, error } = useQuery({
     queryKey: ["convite", token],
