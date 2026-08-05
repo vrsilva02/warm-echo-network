@@ -1,4 +1,5 @@
 import { createFileRoute, Navigate, useNavigate, Link } from "@tanstack/react-router";
+/** Execute esta instrucao no projeto: em esqueci a minha senha esta direcionando para o lovable, porem não pode aparecer nada associado a lovable para mnater a autenticidade do sistema. */
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
