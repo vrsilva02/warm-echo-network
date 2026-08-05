@@ -47,6 +47,34 @@ export async function testLicenseRules() {
     if (r2.ok) throw new Error("Permitiu duplicidade indevidamente");
     console.log("OK: Duplicidade bloqueada");
 
+    // 4.1 Teste Condição de Corrida (Race Condition)
+    console.log("Teste: Condição de corrida (múltiplas requisições paralelas)");
+    const { data: ativoCorrida } = await supabase.from("ativos").insert({
+      hostname: `TEST-RACE-${Date.now()}`,
+      status_ciclo_vida: "estoque"
+    }).select("id").single();
+
+    // Criamos uma nova licença com bastante saldo para o teste de corrida
+    const { data: licencaCorrida } = await supabase.from("licencas").insert({
+      produto_id: produto.id,
+      quantidade: 10
+    }).select("id").single();
+
+    // Dispara 5 tentativas simultâneas para o mesmo ativo e licença
+    const resultados = await Promise.all([
+      criarAlocacao({ licenca_id: licencaCorrida!.id, ativo_id: ativoCorrida!.id }),
+      criarAlocacao({ licenca_id: licencaCorrida!.id, ativo_id: ativoCorrida!.id }),
+      criarAlocacao({ licenca_id: licencaCorrida!.id, ativo_id: ativoCorrida!.id }),
+      criarAlocacao({ licenca_id: licencaCorrida!.id, ativo_id: ativoCorrida!.id }),
+      criarAlocacao({ licenca_id: licencaCorrida!.id, ativo_id: ativoCorrida!.id }),
+    ]);
+
+    const sucessos = resultados.filter(r => r.ok).length;
+    if (sucessos !== 1) {
+      throw new Error(`Teste de corrida falhou: ${sucessos} alocações foram criadas em vez de apenas 1.`);
+    }
+    console.log("OK: Condição de corrida tratada corretamente pelo banco (UNIQUE index).");
+
     // 5. Teste Saldo Negativo
     console.log("Teste: Bloqueio de saldo insuficiente");
     const { data: ativo2 } = await supabase.from("ativos").insert({
