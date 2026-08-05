@@ -1,5 +1,6 @@
 /**
- * Execute esta instrucao no projeto: Ajustar o texto da tela de conclusão de cadastro para explicar claramente que o usuário está cadastrando a própria senha ao receber o convite.
+ * Execute esta instrucao no projeto: Verificar se o link do convite funciona corretamente em diferentes clientes de e-mail e dispositivos, garantindo que sempre leve para a página de cadastro de senha (/auth/concluir).
+ * Adicionar testes automatizados de integração para o fluxo completo de convite, validação de token na rota /auth/concluir e verificação de que o usuário vê a tela de cadastro de senha.
  */
 import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth";
