@@ -1,5 +1,5 @@
 /**
- * Execute esta instrucao no projeto: testei agora e ao clicar no e-mai o usuário não recebe a opção de cadastrar a senha
+ * Execute esta instrucao no projeto: Ajustar o texto da tela de conclusão de cadastro para explicar claramente que o usuário está cadastrando a própria senha ao receber o convite.
  */
 import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth";
