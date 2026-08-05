@@ -1,5 +1,5 @@
 /**
- * Execute esta instrucao no projeto: Não deixar alocar a mesma licença para o mesmo ativo
+ * Execute esta instrucao no projeto: Ajuste a exibição de erros para que, quando ocorrer o código 23505 de unicidade, eu veja uma notificação clara explicando que essa licença já está alocada para esse ativo.
  */
 import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth";

@@ -104,7 +104,7 @@ export async function criarAlocacao(input: {
     .single();
 
   if (error) {
-    if (error.code === "23505") return { ok: false, error: "Este ativo já possui esta licença atribuída." };
+    if (error.code === "23505") return { ok: false, error: "ALREADY_ALLOCATED" };
     return { ok: false, error: error.message };
   }
 
