@@ -88,7 +88,7 @@ function Page() {
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 mb-6">
         <Metric label="Ativos" value={data?.ativos.length ?? 0} />
         <Metric label="Contratos" value={data?.contratos.length ?? 0} />
-        <Metric label="Seats de licença" value={seats} />
+        <Metric label="Licenças Contratadas" value={seats} />
         <Metric
           label="Custo de licenças"
           value={`R$ ${custoLicencas.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`}
@@ -114,7 +114,7 @@ function Page() {
       <section className="space-y-2 mb-8">
         <h2 className="text-sm font-semibold">Contratos</h2>
         <DataTable
-          columns={["Fornecedor", "Nº", "Tipo", "Fim", "Seats", "Valor"]}
+          columns={["Fornecedor", "Nº", "Tipo", "Fim", "Licenças Contratadas", "Valor"]}
           empty={isLoading ? "Carregando…" : "Nenhum contrato associado a este cliente."}
           rows={(data?.contratos ?? []).map((c: any) => [
             <span key="f" className="font-medium">{c.fornecedor}</span>,

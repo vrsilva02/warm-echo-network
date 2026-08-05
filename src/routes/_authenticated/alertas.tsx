@@ -63,7 +63,7 @@ function useAlertas() {
           severidade: sev,
           titulo: `${c.fornecedor} — ${c.numero_contrato ?? "sem número"}`,
           descricao: dias < 0 ? `Vencido há ${Math.abs(dias)} dia(s)` : `Vence em ${dias} dia(s) (${c.data_fim})`,
-          detalhe: `Tipo ${c.tipo_contrato ?? "—"} · ${c.quantidade_seats} seats`,
+          detalhe: `Tipo ${c.tipo_contrato ?? "—"} · ${c.quantidade_seats} licenças`,
           acaoLink: "/contratos",
           acaoLabel: "Ver contratos",
         });
@@ -245,7 +245,7 @@ function VincularEdrDialog({ target, onClose }: { target: { ativoId: string; hos
               onChange={setLicencaId}
               options={(licencas ?? []).map((l: any) => ({
                 value: l.id,
-                label: `${l.produtos_catalogo?.nome_oficial ?? "EDR"} · ${l.quantidade} seats`,
+                label: `${l.produtos_catalogo?.nome_oficial ?? "EDR"} · ${l.quantidade} licenças`,
               }))}
             />
             {(licencas ?? []).length === 0 && (

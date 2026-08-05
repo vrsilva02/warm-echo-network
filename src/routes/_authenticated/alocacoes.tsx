@@ -169,7 +169,7 @@ function Page() {
       impact: [
         { label: "Alocações a encerrar", value: ativas.length },
         { label: "Alocações já encerradas ignoradas", value: sel.length - ativas.length },
-        { label: "Seats liberados", value: `+${ativas.length}`, tone: "warn" },
+        { label: "Licenças liberadas", value: `+${ativas.length}`, tone: "warn" },
       ],
       confirmLabel: "Encerrar todas",
     });
@@ -309,7 +309,7 @@ function Page() {
     <>
       <PageHeader
         title="Alocações"
-        description="Cada vínculo consome um seat efetivo do produto até ser encerrado."
+        description="Cada vínculo consome uma licença efetiva do produto até ser encerrado."
         actions={canWrite ? <Button size="sm" onClick={openNew}>Nova alocação</Button> : undefined}
       />
       <div className="grid gap-3 md:grid-cols-6 mb-4">
@@ -380,7 +380,7 @@ function Page() {
           <EmptyState
             icon={<Link2 className="h-6 w-6" />}
             title="Nenhuma alocação"
-            description="Vincule licenças a colaboradores ou ativos para consumir seats."
+            description="Vincule licenças a colaboradores ou ativos para consumir o saldo contratado."
             action={canWrite ? <Button size="sm" onClick={openNew}>Nova alocação</Button> : undefined}
           />
         }

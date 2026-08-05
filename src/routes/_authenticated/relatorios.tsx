@@ -66,7 +66,7 @@ const REPORT_META: Record<ReportType, { title: string; desc: string; usesFilters
   },
   custo_licencas_ociosas: {
     title: "Custo de licenças ociosas por período",
-    desc: "Seats não alocados × custo unitário no período.",
+    desc: "Licenças não alocadas × custo unitário no período.",
     usesFilters: ["categoria", "fabricanteId", "periodoInicio", "periodoFim"],
   },
   historico_ativo: {
