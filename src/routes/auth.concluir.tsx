@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getConviteByToken, finalizarCadastro } from "@/lib/invitation-flow.functions";
@@ -11,6 +11,7 @@ import { ShieldCheck, Loader2, AlertCircle, CheckCircle2, Eye, EyeOff } from "lu
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
 import { z } from "zod";
+import { supabase } from "@/integrations/supabase/client";
 
 const searchSchema = z.object({
   token: z.string().uuid().optional(),
@@ -22,20 +23,49 @@ export const Route = createFileRoute("/auth/concluir")({
 });
 
 function ConcluirCadastroPage() {
-  const { token } = Route.useSearch();
+  const { token: searchToken } = Route.useSearch();
   const navigate = useNavigate();
   const getConvite = useServerFn(getConviteByToken);
   const finish = useServerFn(finalizarCadastro);
 
+  const [token, setToken] = useState<string | undefined>(searchToken);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
 
+  useEffect(() => {
+    // 1. Tenta extrair token do hash ou da URL se não estiver no search
+    if (!token) {
+      const hashParams = new URLSearchParams(window.location.hash.replace("#", "?"));
+      const hashToken = hashParams.get("token");
+      if (hashToken && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(hashToken)) {
+        console.log("[ConcluirCadastroPage] Token encontrado no hash:", hashToken);
+        setToken(hashToken);
+      } else {
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlToken = urlParams.get("token");
+        if (urlToken && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(urlToken)) {
+           console.log("[ConcluirCadastroPage] Token encontrado via URLSearchParams:", urlToken);
+           setToken(urlToken);
+        }
+      }
+    }
+
+    // 2. Garante que o usuário está deslogado para não ter conflitos de sessão durante a definição de senha
+    // No entanto, o convite do Supabase pode logar o usuário automaticamente. 
+    // Se o convite for validado pelo token manual, não precisamos da sessão do Supabase ativa ainda.
+  }, [token]);
+
   const { data: convite, isLoading, error } = useQuery({
     queryKey: ["convite", token],
-    queryFn: () => getConvite({ data: token! }),
+    queryFn: async () => {
+      console.log("[ConcluirCadastroPage] Buscando convite para o token:", token);
+      const res = await getConvite({ data: token! });
+      console.log("[ConcluirCadastroPage] Resposta do convite:", res);
+      return res;
+    },
     enabled: !!token,
     retry: false,
   });
