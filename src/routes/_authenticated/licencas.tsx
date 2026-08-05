@@ -24,7 +24,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
 import { useConfirm } from "@/components/confirm-dialog";
 import { logAction } from "@/lib/audit";
-import { encerrarAlocacao, encerrarAlocacoes, criarAlocacao, isChaveIndividualRequired } from "@/lib/licencas";
+import { encerrarAlocacao, encerrarAlocacoes, criarAlocacao } from "@/lib/licencas";
 import { friendlyError } from "@/lib/errors";
 import { MaskedKey } from "@/components/masked-key";
 
@@ -823,17 +823,15 @@ function VincularDialog({
     setBusy(true);
     const r = await criarAlocacao({
       licenca_id: effectiveLic,
-      ativo_id: ativoId,
+      ativo_id: ativoId!,
       usuario_id: usuarioId,
-      chave_individual: chaveObrigatoria ? chaveIndividual.trim() : (chaveIndividual.trim() || null),
       observacao: obs || null,
-      saldoAntes: saldo,
     });
     setBusy(false);
     if (!r.ok) return toast.error(r.error || "Erro");
-    toast.success(r.deficit ? "Vinculado (com déficit registrado)" : "Vinculado");
+    toast.success("Vinculado com sucesso");
     onOpenChange(false);
-    setLicencaId(null); setAtivoId(null); setUsuarioId(null); setChaveIndividual(""); setObs("");
+    setLicencaId(null); setAtivoId(null); setUsuarioId(null); setObs("");
     onDone();
   }
 
