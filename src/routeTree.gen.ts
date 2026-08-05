@@ -18,6 +18,7 @@ import { Route as CadastroRouteImport } from './routes/cadastro'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthConcluirRouteImport } from './routes/auth.concluir'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AuthenticatedUnidadesRouteImport } from './routes/_authenticated/unidades'
 import { Route as AuthenticatedSolicitacoesRouteImport } from './routes/_authenticated/solicitacoes'
@@ -92,6 +93,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthConcluirRoute = AuthConcluirRouteImport.update({
+  id: '/concluir',
+  path: '/concluir',
+  getParentRoute: () => AuthRoute,
 } as any)
 const AuthCallbackRoute = AuthCallbackRouteImport.update({
   id: '/callback',
@@ -284,6 +290,7 @@ export interface FileRoutesByFullPath {
   '/solicitacoes': typeof AuthenticatedSolicitacoesRoute
   '/unidades': typeof AuthenticatedUnidadesRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/auth/concluir': typeof AuthConcluirRoute
   '/ativos/$id': typeof AuthenticatedAtivosIdRoute
   '/clientes/$id': typeof AuthenticatedClientesIdRoute
   '/ordens-servico/$id': typeof AuthenticatedOrdensServicoIdRoute
@@ -324,6 +331,7 @@ export interface FileRoutesByTo {
   '/solicitacoes': typeof AuthenticatedSolicitacoesRoute
   '/unidades': typeof AuthenticatedUnidadesRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/auth/concluir': typeof AuthConcluirRoute
   '/ativos/$id': typeof AuthenticatedAtivosIdRoute
   '/clientes/$id': typeof AuthenticatedClientesIdRoute
   '/ordens-servico/$id': typeof AuthenticatedOrdensServicoIdRoute
@@ -366,6 +374,7 @@ export interface FileRoutesById {
   '/_authenticated/solicitacoes': typeof AuthenticatedSolicitacoesRoute
   '/_authenticated/unidades': typeof AuthenticatedUnidadesRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/auth/concluir': typeof AuthConcluirRoute
   '/_authenticated/ativos_/$id': typeof AuthenticatedAtivosIdRoute
   '/_authenticated/clientes_/$id': typeof AuthenticatedClientesIdRoute
   '/_authenticated/ordens-servico_/$id': typeof AuthenticatedOrdensServicoIdRoute
@@ -408,6 +417,7 @@ export interface FileRouteTypes {
     | '/solicitacoes'
     | '/unidades'
     | '/auth/callback'
+    | '/auth/concluir'
     | '/ativos/$id'
     | '/clientes/$id'
     | '/ordens-servico/$id'
@@ -448,6 +458,7 @@ export interface FileRouteTypes {
     | '/solicitacoes'
     | '/unidades'
     | '/auth/callback'
+    | '/auth/concluir'
     | '/ativos/$id'
     | '/clientes/$id'
     | '/ordens-servico/$id'
@@ -489,6 +500,7 @@ export interface FileRouteTypes {
     | '/_authenticated/solicitacoes'
     | '/_authenticated/unidades'
     | '/auth/callback'
+    | '/auth/concluir'
     | '/_authenticated/ativos_/$id'
     | '/_authenticated/clientes_/$id'
     | '/_authenticated/ordens-servico_/$id'
@@ -576,6 +588,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/auth/concluir': {
+      id: '/auth/concluir'
+      path: '/concluir'
+      fullPath: '/auth/concluir'
+      preLoaderRoute: typeof AuthConcluirRouteImport
+      parentRoute: typeof AuthRoute
     }
     '/auth/callback': {
       id: '/auth/callback'
@@ -856,10 +875,12 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
 
 interface AuthRouteChildren {
   AuthCallbackRoute: typeof AuthCallbackRoute
+  AuthConcluirRoute: typeof AuthConcluirRoute
 }
 
 const AuthRouteChildren: AuthRouteChildren = {
   AuthCallbackRoute: AuthCallbackRoute,
+  AuthConcluirRoute: AuthConcluirRoute,
 }
 
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
