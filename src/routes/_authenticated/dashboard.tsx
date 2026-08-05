@@ -341,8 +341,6 @@ function DashboardPage() {
           </CardContent>
         </Card>
       </div>
-        </Card>
-      </div>
 
       <Card>
         <CardHeader>
