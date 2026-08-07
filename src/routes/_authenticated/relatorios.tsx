@@ -480,9 +480,10 @@ function ReportRunner({
   const { data, isLoading, isFetching, refetch, error, isError } = useQuery({
     queryKey: ["report-run", tipo, filters],
     queryFn: async () => {
+      if (!filters) return { columns: [], rows: [], duration: 0, timestamp: new Date() };
       const toastId = toast.loading(`Sincronizando ${meta.title.toLowerCase()}...`);
       try {
-        const res = await runReport(tipo, filters!);
+        const res = await runReport(tipo, filters);
         toast.success(`${meta.title} sincronizado`, { 
           id: toastId,
           description: `${res.rows.length} registros em ${res.duration.toFixed(0)}ms`
@@ -508,7 +509,7 @@ function ReportRunner({
            tipo === "historico_ativo" ? "alocacoes" : 
            "licencas",
     queryKeys: [["report-run", tipo]],
-    enabled: true,
+    enabled: !!filters,
   });
 
   const rows = data?.rows ?? [];
