@@ -502,31 +502,40 @@ function ReportRunner({
           <CardTitle className="text-base">{meta.title}</CardTitle>
           <p className="text-xs text-muted-foreground mt-1">{meta.desc}</p>
         </div>
-        <div className="flex gap-2 flex-wrap">
-          <Button 
-            size="sm" 
-            variant="outline" 
-            onClick={() => refetch()} 
-            disabled={isFetching}
-            className={isFetching ? "animate-pulse" : ""}
-          >
-            <RefreshCw className={`h-4 w-4 mr-2 ${isFetching ? "animate-spin" : ""}`} /> 
-            {isFetching ? "Sincronizando..." : "Atualizar agora"}
-          </Button>
-          <Button size="sm" variant="outline" disabled={rows.length === 0} onClick={() => {
-            void downloadXLSX(
-              `${tipo}-${stamp}.xlsx`,
-              columns,
-              rows,
-              meta.title.slice(0, 31)
-            );
-            void logAction("EXPORT", tipo, { formato: "xlsx", total: rows.length, filtros: filters ?? {} });
-          }}><Download className="h-4 w-4 mr-2" /> XLSX</Button>
-          <Button size="sm" disabled={rows.length === 0} onClick={() => {
-            downloadPDF({ filename: `${tipo}-${stamp}.pdf`, title: meta.title, subtitle: filterLabel, columns, rows });
-            void logAction("EXPORT", tipo, { formato: "pdf", total: rows.length, filtros: filters ?? {} });
-          }}><FileText className="h-4 w-4 mr-2" /> PDF</Button>
-          <Button size="sm" variant="secondary" onClick={onSaveRecurring}><Save className="h-4 w-4 mr-2" /> Salvar recorrente</Button>
+        <div className="flex flex-col items-end gap-2 flex-wrap">
+          <div className="flex gap-2 flex-wrap">
+            <Button 
+              size="sm" 
+              variant="outline" 
+              onClick={() => refetch()} 
+              disabled={isFetching}
+              className={isFetching ? "animate-pulse" : ""}
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${isFetching ? "animate-spin" : ""}`} /> 
+              {isFetching ? "Sincronizando..." : "Atualizar agora"}
+            </Button>
+            <Button size="sm" variant="outline" disabled={rows.length === 0} onClick={() => {
+              void downloadXLSX(
+                `${tipo}-${stamp}.xlsx`,
+                columns,
+                rows,
+                meta.title.slice(0, 31)
+              );
+              void logAction("EXPORT", tipo, { formato: "xlsx", total: rows.length, filtros: filters ?? {} });
+            }}><Download className="h-4 w-4 mr-2" /> XLSX</Button>
+            <Button size="sm" disabled={rows.length === 0} onClick={() => {
+              downloadPDF({ filename: `${tipo}-${stamp}.pdf`, title: meta.title, subtitle: filterLabel, columns, rows });
+              void logAction("EXPORT", tipo, { formato: "pdf", total: rows.length, filtros: filters ?? {} });
+            }}><FileText className="h-4 w-4 mr-2" /> PDF</Button>
+            <Button size="sm" variant="secondary" onClick={onSaveRecurring}><Save className="h-4 w-4 mr-2" /> Salvar recorrente</Button>
+          </div>
+          {data && (
+            <div className="flex gap-3 text-[10px] text-muted-foreground bg-muted/30 px-2 py-1 rounded border">
+              <span>Última sincronização: <strong>{data.timestamp.toLocaleTimeString("pt-BR")}</strong></span>
+              <span>Duração: <strong>{data.duration.toFixed(0)}ms</strong></span>
+              <span>Registros: <strong>{rows.length}</strong></span>
+            </div>
+          )}
         </div>
       </CardHeader>
       <CardContent>
