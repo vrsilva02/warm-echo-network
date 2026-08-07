@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Combobox } from "@/components/combobox";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
-import { AlertTriangle, CheckCircle2, Package, Trash2, Clock, DollarSign } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Package, Trash2, Clock, DollarSign, History } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/ordens-servico_/$id")({
   component: Page,
@@ -28,9 +28,16 @@ export const Route = createFileRoute("/_authenticated/ordens-servico_/$id")({
 
 type OSDetail = {
   id: string; numero: number; ativo_id: string; descricao_defeito: string;
-  prioridade: string; status: string; aberto_em: string; fechado_em: string | null;
+  prioridade: string; status: string; data_abertura: string; data_conclusao: string | null;
   custo_total: number | null; observacoes_tecnicas: string | null;
   ativos?: { hostname: string; tipo: string; setor: string | null; modelo?: string | null } | null;
+};
+type OSHistorico = {
+  id: string;
+  status_anterior: string | null;
+  status_novo: string;
+  created_at: string;
+  alterado_por: string | null;
 };
 type PecaUsada = {
   id: string; peca_id: string; quantidade: number; custo_unitario: number | null;
@@ -48,6 +55,10 @@ function Page() {
     queryKey: ["os", id],
     queryFn: async () => ((await (supabase as any).from("ordens_servico").select("*, ativos(hostname, tipo, setor)").eq("id", id).maybeSingle()).data) as OSDetail | null,
   });
+  const { data: historico } = useQuery({
+    queryKey: ["os_historico", id],
+    queryFn: async () => ((await (supabase as any).from("ordens_servico_historico").select("*").eq("ordem_servico_id", id).order("created_at")).data ?? []) as OSHistorico[],
+  });
   const { data: pecas } = useQuery({
     queryKey: ["os_pecas", id],
     queryFn: async () => ((await (supabase as any).from("ordens_servico_pecas").select("*, pecas_catalogo(nome)").eq("ordem_servico_id", id).order("created_at")).data ?? []) as PecaUsada[],
@@ -58,6 +69,7 @@ function Page() {
     if (error) return toast.error(error.message);
     toast.success("Status atualizado");
     qc.invalidateQueries({ queryKey: ["os", id] });
+    qc.invalidateQueries({ queryKey: ["os_historico", id] });
     qc.invalidateQueries({ queryKey: ["ordens_servico"] });
     qc.invalidateQueries({ queryKey: ["ativos"] });
   }
@@ -69,8 +81,8 @@ function Page() {
   }
 
   const totalPecas = (pecas ?? []).reduce((s, p) => s + p.quantidade * Number(p.custo_unitario ?? 0), 0);
-  const tempoMin = os?.fechado_em && os.aberto_em
-    ? Math.round((new Date(os.fechado_em).getTime() - new Date(os.aberto_em).getTime()) / 60000)
+  const tempoMin = os?.data_conclusao && os.data_abertura
+    ? Math.round((new Date(os.data_conclusao).getTime() - new Date(os.data_abertura).getTime()) / 60000)
     : null;
 
   if (!os) return <PageHeader title="OS não encontrada" />;
@@ -106,8 +118,8 @@ function Page() {
           <CardHeader><CardTitle className="text-sm">Resumo</CardTitle></CardHeader>
           <CardContent className="space-y-2 text-sm">
             <div className="flex justify-between"><span className="text-muted-foreground">Status</span><Badge>{os.status}</Badge></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">Aberta em</span><span className="tabular-nums">{new Date(os.aberto_em).toLocaleString("pt-BR")}</span></div>
-            {os.fechado_em && <div className="flex justify-between"><span className="text-muted-foreground">Fechada em</span><span className="tabular-nums">{new Date(os.fechado_em).toLocaleString("pt-BR")}</span></div>}
+            <div className="flex justify-between"><span className="text-muted-foreground">Aberta em</span><span className="tabular-nums">{new Date(os.data_abertura).toLocaleString("pt-BR")}</span></div>
+            {os.data_conclusao && <div className="flex justify-between"><span className="text-muted-foreground">Fechada em</span><span className="tabular-nums">{new Date(os.data_conclusao).toLocaleString("pt-BR")}</span></div>}
             {tempoMin != null && (
               <div className="flex justify-between"><span className="text-muted-foreground flex items-center gap-1"><Clock className="h-3 w-3" /> Tempo total</span>
                 <span className="tabular-nums">{Math.floor(tempoMin / 60)}h {tempoMin % 60}min</span>
@@ -121,46 +133,84 @@ function Page() {
         </Card>
       </div>
 
-      <Card className="mt-4">
-        <CardHeader className="flex-row items-center justify-between space-y-0">
-          <CardTitle className="text-sm flex items-center gap-2"><Package className="h-4 w-4" /> Peças utilizadas</CardTitle>
-          {canOperateOS && os.status !== "concluida" && os.status !== "cancelada" && (
-            <Button size="sm" onClick={() => setAddOpen(true)}>Adicionar peça</Button>
-          )}
-        </CardHeader>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Peça</TableHead>
-                <TableHead className="text-right">Qtde.</TableHead>
-                <TableHead className="text-right">Custo un.</TableHead>
-                <TableHead className="text-right">Subtotal</TableHead>
-                <TableHead>Registrada em</TableHead>
-                <TableHead></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {(pecas ?? []).length === 0 ? (
-                <TableRow><TableCell colSpan={6} className="text-center text-sm text-muted-foreground py-6">Nenhuma peça utilizada.</TableCell></TableRow>
-              ) : pecas!.map((p) => (
-                <TableRow key={p.id}>
-                  <TableCell className="font-medium">{p.pecas_catalogo?.nome ?? "—"}</TableCell>
-                  <TableCell className="text-right tabular-nums">{p.quantidade}</TableCell>
-                  <TableCell className="text-right tabular-nums">{p.custo_unitario != null ? `R$ ${Number(p.custo_unitario).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}` : "—"}</TableCell>
-                  <TableCell className="text-right tabular-nums">R$ {(p.quantidade * Number(p.custo_unitario ?? 0)).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</TableCell>
-                  <TableCell className="text-xs">{new Date(p.created_at).toLocaleString("pt-BR")}</TableCell>
-                  <TableCell className="text-right">
-                    {canOperateOS && os.status !== "concluida" && (
-                      <Button size="icon" variant="ghost" onClick={() => removerPeca(p.id)}><Trash2 className="h-4 w-4" /></Button>
-                    )}
-                  </TableCell>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
+        <Card>
+          <CardHeader className="flex-row items-center justify-between space-y-0">
+            <CardTitle className="text-sm flex items-center gap-2"><History className="h-4 w-4" /> Histórico de Fluxo</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-xs">Status</TableHead>
+                  <TableHead className="text-xs">Data/Hora</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+              </TableHeader>
+              <TableBody>
+                {(historico ?? []).length === 0 ? (
+                  <TableRow><TableCell colSpan={2} className="text-center text-xs text-muted-foreground py-4">Sem registros.</TableCell></TableRow>
+                ) : historico!.map((h) => (
+                  <TableRow key={h.id}>
+                    <TableCell className="text-xs">
+                      {h.status_anterior ? (
+                        <div className="flex items-center gap-1">
+                          <span className="text-muted-foreground line-through">{h.status_anterior}</span>
+                          <span>→</span>
+                          <span className="font-medium">{h.status_novo}</span>
+                        </div>
+                      ) : (
+                        <span className="font-medium">{h.status_novo} (Abertura)</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-xs tabular-nums">{new Date(h.created_at).toLocaleString("pt-BR")}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex-row items-center justify-between space-y-0">
+            <CardTitle className="text-sm flex items-center gap-2"><Package className="h-4 w-4" /> Peças utilizadas</CardTitle>
+            {canOperateOS && os.status !== "concluida" && os.status !== "cancelada" && (
+              <Button size="sm" onClick={() => setAddOpen(true)}>Adicionar peça</Button>
+            )}
+          </CardHeader>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Peça</TableHead>
+                  <TableHead className="text-right">Qtde.</TableHead>
+                  <TableHead className="text-right">Custo un.</TableHead>
+                  <TableHead className="text-right">Subtotal</TableHead>
+                  <TableHead>Registrada em</TableHead>
+                  <TableHead></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {(pecas ?? []).length === 0 ? (
+                  <TableRow><TableCell colSpan={6} className="text-center text-sm text-muted-foreground py-6">Nenhuma peça utilizada.</TableCell></TableRow>
+                ) : pecas!.map((p) => (
+                  <TableRow key={p.id}>
+                    <TableCell className="font-medium">{p.pecas_catalogo?.nome ?? "—"}</TableCell>
+                    <TableCell className="text-right tabular-nums">{p.quantidade}</TableCell>
+                    <TableCell className="text-right tabular-nums">{p.custo_unitario != null ? `R$ ${Number(p.custo_unitario).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}` : "—"}</TableCell>
+                    <TableCell className="text-right tabular-nums">R$ {(p.quantidade * Number(p.custo_unitario ?? 0)).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</TableCell>
+                    <TableCell className="text-xs">{new Date(p.created_at).toLocaleString("pt-BR")}</TableCell>
+                    <TableCell className="text-right">
+                      {canOperateOS && os.status !== "concluida" && (
+                        <Button size="icon" variant="ghost" onClick={() => removerPeca(p.id)}><Trash2 className="h-4 w-4" /></Button>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
 
       <AnexosCard osId={id} canOperate={canOperateOS} uploaderId={user?.id ?? null} />
 
@@ -314,7 +364,6 @@ function AnexosCard({ osId, canOperate, uploaderId }: { osId: string; canOperate
       setDescricao("");
       qc.invalidateQueries({ queryKey: ["os_anexos", osId] });
     } catch (e: any) {
-      // Evita arquivo órfão no storage quando o registro no banco falha
       if (uploadedPath) {
         await supabase.storage.from("os-evidencias").remove([uploadedPath]).catch(() => {});
       }
@@ -341,14 +390,12 @@ function AnexosCard({ osId, canOperate, uploaderId }: { osId: string; canOperate
 
   async function remover(id: string, path: string) {
     if (!confirm("Remover esta evidência?")) return;
-    // Remove primeiro o registro (protegido por RLS); só então apaga o binário.
     const { error } = await (supabase as any).from("ordens_servico_anexos").delete().eq("id", id);
     if (error) return toast.error(error.message);
     const { error: sErr } = await supabase.storage.from("os-evidencias").remove([path]);
     if (sErr) toast.warning("Registro removido, mas o arquivo permaneceu no armazenamento.");
     qc.invalidateQueries({ queryKey: ["os_anexos", osId] });
   }
-
 
   function fmtSize(n: number | null) {
     if (!n) return "—";
