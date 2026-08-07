@@ -114,7 +114,10 @@ function Page() {
             tipo={tipo} 
             filters={filters} 
             onChange={setFilters} 
-            onExecute={() => setLastExecutedFilters({ ...filters })}
+            onExecute={() => {
+              setLastExecutedFilters(null);
+              setTimeout(() => setLastExecutedFilters({ ...filters }), 0);
+            }}
           />
           <ReportRunner 
             tipo={tipo} 
