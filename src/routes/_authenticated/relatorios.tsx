@@ -454,12 +454,21 @@ async function runReport(tipo: ReportType, f: Filters): Promise<{ columns: strin
   return { columns: [], rows: [] };
 }
 
-function ReportRunner({ tipo, filters, onSaveRecurring }: { tipo: ReportType; filters: Filters; onSaveRecurring: () => void }) {
+function ReportRunner({ 
+  tipo, 
+  filters, 
+  onSaveRecurring 
+}: { 
+  tipo: ReportType; 
+  filters: Filters | null; 
+  onSaveRecurring: () => void 
+}) {
   const meta = REPORT_META[tipo];
   const { data, isLoading, isFetching, refetch } = useQuery({
     queryKey: ["report-run", tipo, filters],
-    queryFn: () => runReport(tipo, filters),
+    queryFn: () => runReport(tipo, filters!),
     refetchInterval: 15000, // Auto-refresh all reports for sync
+    enabled: !!filters,
   });
 
   useRealtimeInvalidate({
