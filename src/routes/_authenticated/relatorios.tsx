@@ -430,14 +430,17 @@ function ReportRunner({ tipo, filters, onSaveRecurring }: { tipo: ReportType; fi
   const { data, isLoading, isFetching, refetch } = useQuery({
     queryKey: ["report-run", tipo, filters],
     queryFn: () => runReport(tipo, filters),
-    refetchInterval: tipo === "ordens_servico" ? 15000 : false, // Auto-refresh for OS report
+    refetchInterval: 15000, // Auto-refresh all reports for sync
   });
 
   useRealtimeInvalidate({
-    channel: `relatorios-os-${tipo}`,
-    table: "ordens_servico",
-    queryKeys: [["report-run", "ordens_servico"]],
-    enabled: tipo === "ordens_servico",
+    channel: `relatorios-sync-${tipo}`,
+    table: tipo === "ordens_servico" ? "ordens_servico" : 
+           tipo === "elp" ? "vw_elp" : 
+           tipo === "historico_ativo" ? "alocacoes" : 
+           "licencas",
+    queryKeys: [["report-run", tipo]],
+    enabled: true,
   });
 
   const rows = data?.rows ?? [];
