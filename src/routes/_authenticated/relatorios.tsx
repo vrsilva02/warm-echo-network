@@ -351,9 +351,17 @@ async function runReport(tipo: ReportType, f: Filters): Promise<{ columns: strin
 
   if (tipo === "custo_licencas_ociosas") {
     const { data: elp } = await supabase.from("vw_elp").select("*");
-    const { data: licencas } = await supabase.from("licencas").select("produto_id, quantidade, custo_unitario");
+    const { data: licencas } = await supabase.from("licencas").select("produto_id, quantidade, custo_unitario, created_at");
+    
+    // Filtrar licenças pelo período se fornecido
+    const filteredLicencas = (licencas ?? []).filter(l => {
+      if (f.periodoInicio && l.created_at && l.created_at < f.periodoInicio) return false;
+      if (f.periodoFim && l.created_at && l.created_at > f.periodoFim + "T23:59:59") return false;
+      return true;
+    });
+
     const custoMedio = new Map<string, number>();
-    (licencas ?? []).forEach((l: any) => {
+    filteredLicencas.forEach((l: any) => {
       if (l.custo_unitario == null) return;
       const cur = custoMedio.get(l.produto_id);
       custoMedio.set(l.produto_id, cur == null ? Number(l.custo_unitario) : (cur + Number(l.custo_unitario)) / 2);
@@ -435,9 +443,9 @@ async function runReport(tipo: ReportType, f: Filters): Promise<{ columns: strin
       .from("ordens_servico")
       .select("numero, status, prioridade, descricao_defeito, data_abertura, data_conclusao, custo_total, ativos(hostname), usuarios:aberto_por(nome)");
 
-    if (f.statusOS) q = q.eq("status", f.statusOS as any);
-    if (f.periodoInicio) q = q.gte("data_abertura", f.periodoInicio + "T00:00:00");
-    if (f.periodoFim) q = q.lte("data_abertura", f.periodoFim + "T23:59:59");
+    if (f.statusOS) q = q.eq("status", f.statusOS);
+    if (f.periodoInicio) q = q.gte("data_abertura", f.periodoInicio + "T00:00:00.000Z");
+    if (f.periodoFim) q = q.lte("data_abertura", f.periodoFim + "T23:59:59.999Z");
 
     const { data } = await q.order("data_abertura", { ascending: false });
 
