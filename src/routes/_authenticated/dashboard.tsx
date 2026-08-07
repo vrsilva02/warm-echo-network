@@ -336,9 +336,8 @@ function DashboardPage() {
         />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4 lg:gap-5 mb-6">
         <CustoOciosasCard valor={data?.custoOciosasMensal ?? 0} />
-        <GapEdrCard count={data?.gapEdrCount ?? 0} isLoading={isLoading} isError={!!data === false && !isLoading} />
         <TcoPorCentroCard tco={data?.tco ?? []} ativos={(data?.ativos ?? []) as any[]} />
       </div>
 
@@ -518,45 +517,6 @@ function CustoOciosasCard({ valor }: { valor: number }) {
   );
 }
 
-function GapEdrCard({ count, isLoading, isError }: { count: number; isLoading?: boolean; isError?: boolean }) {
-  const tone = count > 0 ? "text-destructive" : "text-[color:var(--success)]";
-  
-  return (
-    <Card className={count > 0 ? "border-destructive/40" : ""}>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-xs text-muted-foreground flex items-center gap-1">
-          <ShieldAlert className="h-3.5 w-3.5" /> Ativos sem cobertura EDR
-        </CardTitle>
-        <div className="flex gap-1">
-          <Button asChild variant="ghost" size="sm" className="h-6 text-[10px] px-2">
-            <Link to="/alocacoes" search={{ categoria: "EDR" } as any}>Vincular EDR</Link>
-          </Button>
-          <Button asChild variant="ghost" size="sm" className="h-6 text-[10px] px-2">
-            <Link to="/alertas" search={{ tipo: "edr" } as any}>Ver</Link>
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent>
-        {isLoading ? (
-          <div className="flex items-center gap-2 text-muted-foreground animate-pulse">
-            <div className="h-8 w-16 bg-muted rounded" />
-          </div>
-        ) : isError ? (
-          <div className="flex items-center gap-2 text-destructive text-xs">
-            <XCircle className="h-4 w-4" /> Erro ao carregar
-          </div>
-        ) : (
-          <>
-            <div className={`text-2xl font-semibold tabular-nums ${tone}`}>{count}</div>
-            <div className="text-[11px] text-muted-foreground mt-1">
-              {count === 0 ? "Cobertura total" : "Ativos em uso sem licença EDR vinculada"}
-            </div>
-          </>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
 
 function TcoPorCentroCard({ tco, ativos }: { tco: Array<{ ativo_id: string; tco_anual_estimado: number | null }>; ativos: any[] }) {
   const map = new Map<string, number>();
