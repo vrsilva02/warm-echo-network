@@ -250,6 +250,22 @@ function FiltersCard({ tipo, filters, onChange }: { tipo: ReportType; filters: F
               </Select>
             </div>
           )}
+          {uses.includes("statusOS") && (
+            <div>
+              <Label>Status da OS</Label>
+              <Select value={filters.statusOS ?? "todos"} onValueChange={(v) => set("statusOS", v === "todos" ? null : v)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos</SelectItem>
+                  <SelectItem value="aberta">Aberta</SelectItem>
+                  <SelectItem value="em_andamento">Em andamento</SelectItem>
+                  <SelectItem value="aguardando_peca">Aguardando peça</SelectItem>
+                  <SelectItem value="concluida">Concluída</SelectItem>
+                  <SelectItem value="cancelada">Cancelada</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
