@@ -177,39 +177,40 @@ function Page() {
               <Button size="sm" onClick={() => setAddOpen(true)}>Adicionar peça</Button>
             )}
           </CardHeader>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Peça</TableHead>
-                <TableHead className="text-right">Qtde.</TableHead>
-                <TableHead className="text-right">Custo un.</TableHead>
-                <TableHead className="text-right">Subtotal</TableHead>
-                <TableHead>Registrada em</TableHead>
-                <TableHead></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {(pecas ?? []).length === 0 ? (
-                <TableRow><TableCell colSpan={6} className="text-center text-sm text-muted-foreground py-6">Nenhuma peça utilizada.</TableCell></TableRow>
-              ) : pecas!.map((p) => (
-                <TableRow key={p.id}>
-                  <TableCell className="font-medium">{p.pecas_catalogo?.nome ?? "—"}</TableCell>
-                  <TableCell className="text-right tabular-nums">{p.quantidade}</TableCell>
-                  <TableCell className="text-right tabular-nums">{p.custo_unitario != null ? `R$ ${Number(p.custo_unitario).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}` : "—"}</TableCell>
-                  <TableCell className="text-right tabular-nums">R$ {(p.quantidade * Number(p.custo_unitario ?? 0)).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</TableCell>
-                  <TableCell className="text-xs">{new Date(p.created_at).toLocaleString("pt-BR")}</TableCell>
-                  <TableCell className="text-right">
-                    {canOperateOS && os.status !== "concluida" && (
-                      <Button size="icon" variant="ghost" onClick={() => removerPeca(p.id)}><Trash2 className="h-4 w-4" /></Button>
-                    )}
-                  </TableCell>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Peça</TableHead>
+                  <TableHead className="text-right">Qtde.</TableHead>
+                  <TableHead className="text-right">Custo un.</TableHead>
+                  <TableHead className="text-right">Subtotal</TableHead>
+                  <TableHead>Registrada em</TableHead>
+                  <TableHead></TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+              </TableHeader>
+              <TableBody>
+                {(pecas ?? []).length === 0 ? (
+                  <TableRow><TableCell colSpan={6} className="text-center text-sm text-muted-foreground py-6">Nenhuma peça utilizada.</TableCell></TableRow>
+                ) : pecas!.map((p) => (
+                  <TableRow key={p.id}>
+                    <TableCell className="font-medium">{p.pecas_catalogo?.nome ?? "—"}</TableCell>
+                    <TableCell className="text-right tabular-nums">{p.quantidade}</TableCell>
+                    <TableCell className="text-right tabular-nums">{p.custo_unitario != null ? `R$ ${Number(p.custo_unitario).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}` : "—"}</TableCell>
+                    <TableCell className="text-right tabular-nums">R$ {(p.quantidade * Number(p.custo_unitario ?? 0)).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</TableCell>
+                    <TableCell className="text-xs">{new Date(p.created_at).toLocaleString("pt-BR")}</TableCell>
+                    <TableCell className="text-right">
+                      {canOperateOS && os.status !== "concluida" && (
+                        <Button size="icon" variant="ghost" onClick={() => removerPeca(p.id)}><Trash2 className="h-4 w-4" /></Button>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
 
       <AnexosCard osId={id} canOperate={canOperateOS} uploaderId={user?.id ?? null} />
 
@@ -363,7 +364,6 @@ function AnexosCard({ osId, canOperate, uploaderId }: { osId: string; canOperate
       setDescricao("");
       qc.invalidateQueries({ queryKey: ["os_anexos", osId] });
     } catch (e: any) {
-      // Evita arquivo órfão no storage quando o registro no banco falha
       if (uploadedPath) {
         await supabase.storage.from("os-evidencias").remove([uploadedPath]).catch(() => {});
       }
@@ -390,14 +390,12 @@ function AnexosCard({ osId, canOperate, uploaderId }: { osId: string; canOperate
 
   async function remover(id: string, path: string) {
     if (!confirm("Remover esta evidência?")) return;
-    // Remove primeiro o registro (protegido por RLS); só então apaga o binário.
     const { error } = await (supabase as any).from("ordens_servico_anexos").delete().eq("id", id);
     if (error) return toast.error(error.message);
     const { error: sErr } = await supabase.storage.from("os-evidencias").remove([path]);
     if (sErr) toast.warning("Registro removido, mas o arquivo permaneceu no armazenamento.");
     qc.invalidateQueries({ queryKey: ["os_anexos", osId] });
   }
-
 
   function fmtSize(n: number | null) {
     if (!n) return "—";
