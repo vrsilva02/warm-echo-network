@@ -511,17 +511,23 @@ function ReportRunner({
               rows,
               meta.title.slice(0, 31)
             );
-            void logAction("EXPORT", tipo, { formato: "xlsx", total: rows.length, filtros: filters });
+            void logAction("EXPORT", tipo, { formato: "xlsx", total: rows.length, filtros: filters ?? {} });
           }}><Download className="h-4 w-4 mr-2" /> XLSX</Button>
           <Button size="sm" disabled={rows.length === 0} onClick={() => {
             downloadPDF({ filename: `${tipo}-${stamp}.pdf`, title: meta.title, subtitle: filterLabel, columns, rows });
-            void logAction("EXPORT", tipo, { formato: "pdf", total: rows.length, filtros: filters });
+            void logAction("EXPORT", tipo, { formato: "pdf", total: rows.length, filtros: filters ?? {} });
           }}><FileText className="h-4 w-4 mr-2" /> PDF</Button>
           <Button size="sm" variant="secondary" onClick={onSaveRecurring}><Save className="h-4 w-4 mr-2" /> Salvar recorrente</Button>
         </div>
       </CardHeader>
       <CardContent>
-        {isLoading || isFetching ? (
+        {!filters ? (
+          <EmptyState 
+            icon={<Play className="h-6 w-6" />} 
+            title="Relatório pronto para execução" 
+            description="Configure os filtros acima e clique em 'Gerar Relatório' para visualizar a prévia." 
+          />
+        ) : isLoading || isFetching ? (
           <div className="space-y-2">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-8" />)}</div>
         ) : rows.length === 0 ? (
           <EmptyState icon={<FileText className="h-6 w-6" />} title="Sem resultados" description="Ajuste os filtros e execute novamente." />
