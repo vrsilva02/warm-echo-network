@@ -157,7 +157,17 @@ function ShortcutsPanel({ current, onPick }: { current: ReportType; onPick: (t: 
 
 /* ------------------------------ Filtros ------------------------------ */
 
-function FiltersCard({ tipo, filters, onChange }: { tipo: ReportType; filters: Filters; onChange: (f: Filters) => void }) {
+function FiltersCard({ 
+  tipo, 
+  filters, 
+  onChange,
+  onExecute
+}: { 
+  tipo: ReportType; 
+  filters: Filters; 
+  onChange: (f: Filters) => void;
+  onExecute: () => void;
+}) {
   const uses = REPORT_META[tipo].usesFilters;
 
   const { data: fabricantes } = useQuery({
@@ -178,7 +188,12 @@ function FiltersCard({ tipo, filters, onChange }: { tipo: ReportType; filters: F
 
   return (
     <Card>
-      <CardHeader><CardTitle className="text-base">Filtros</CardTitle></CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-base">Filtros</CardTitle>
+        <Button size="sm" onClick={onExecute}>
+          <Play className="h-4 w-4 mr-2" /> Gerar Relatório
+        </Button>
+      </CardHeader>
       <CardContent>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {uses.includes("categoria") && (
