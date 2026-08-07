@@ -118,8 +118,8 @@ function Page() {
           <CardHeader><CardTitle className="text-sm">Resumo</CardTitle></CardHeader>
           <CardContent className="space-y-2 text-sm">
             <div className="flex justify-between"><span className="text-muted-foreground">Status</span><Badge>{os.status}</Badge></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">Aberta em</span><span className="tabular-nums">{new Date(os.aberto_em).toLocaleString("pt-BR")}</span></div>
-            {os.fechado_em && <div className="flex justify-between"><span className="text-muted-foreground">Fechada em</span><span className="tabular-nums">{new Date(os.fechado_em).toLocaleString("pt-BR")}</span></div>}
+            <div className="flex justify-between"><span className="text-muted-foreground">Aberta em</span><span className="tabular-nums">{new Date(os.data_abertura).toLocaleString("pt-BR")}</span></div>
+            {os.data_conclusao && <div className="flex justify-between"><span className="text-muted-foreground">Fechada em</span><span className="tabular-nums">{new Date(os.data_conclusao).toLocaleString("pt-BR")}</span></div>}
             {tempoMin != null && (
               <div className="flex justify-between"><span className="text-muted-foreground flex items-center gap-1"><Clock className="h-3 w-3" /> Tempo total</span>
                 <span className="tabular-nums">{Math.floor(tempoMin / 60)}h {tempoMin % 60}min</span>
@@ -133,13 +133,50 @@ function Page() {
         </Card>
       </div>
 
-      <Card className="mt-4">
-        <CardHeader className="flex-row items-center justify-between space-y-0">
-          <CardTitle className="text-sm flex items-center gap-2"><Package className="h-4 w-4" /> Peças utilizadas</CardTitle>
-          {canOperateOS && os.status !== "concluida" && os.status !== "cancelada" && (
-            <Button size="sm" onClick={() => setAddOpen(true)}>Adicionar peça</Button>
-          )}
-        </CardHeader>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
+        <Card>
+          <CardHeader className="flex-row items-center justify-between space-y-0">
+            <CardTitle className="text-sm flex items-center gap-2"><History className="h-4 w-4" /> Histórico de Fluxo</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-xs">Status</TableHead>
+                  <TableHead className="text-xs">Data/Hora</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {(historico ?? []).length === 0 ? (
+                  <TableRow><TableCell colSpan={2} className="text-center text-xs text-muted-foreground py-4">Sem registros.</TableCell></TableRow>
+                ) : historico!.map((h) => (
+                  <TableRow key={h.id}>
+                    <TableCell className="text-xs">
+                      {h.status_anterior ? (
+                        <div className="flex items-center gap-1">
+                          <span className="text-muted-foreground line-through">{h.status_anterior}</span>
+                          <span>→</span>
+                          <span className="font-medium">{h.status_novo}</span>
+                        </div>
+                      ) : (
+                        <span className="font-medium">{h.status_novo} (Abertura)</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-xs tabular-nums">{new Date(h.created_at).toLocaleString("pt-BR")}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex-row items-center justify-between space-y-0">
+            <CardTitle className="text-sm flex items-center gap-2"><Package className="h-4 w-4" /> Peças utilizadas</CardTitle>
+            {canOperateOS && os.status !== "concluida" && os.status !== "cancelada" && (
+              <Button size="sm" onClick={() => setAddOpen(true)}>Adicionar peça</Button>
+            )}
+          </CardHeader>
         <CardContent className="p-0">
           <Table>
             <TableHeader>
