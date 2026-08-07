@@ -9,6 +9,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Combobox } from "@/components/combobox";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertTriangle, ShieldCheck, Wrench, Plus, ChevronRight } from "lucide-react";
@@ -53,14 +55,24 @@ function Page() {
   const qc = useQueryClient();
   const [newOpen, setNewOpen] = useState(false);
   const [drag, setDrag] = useState<string | null>(null);
+  const [filters, setFilters] = useState({
+    status: "todos",
+    periodoInicio: "",
+    periodoFim: "",
+  });
 
   const { data: rows } = useQuery({
-    queryKey: ["ordens_servico"],
-    queryFn: async () => ((await (supabase as any)
-      .from("ordens_servico")
-      .select("*, ativos(hostname, tipo, setor)")
-      .order("data_abertura", { ascending: false })
-    ).data ?? []) as OS[],
+    queryKey: ["ordens_servico", filters],
+    queryFn: async () => {
+      let q = (supabase as any).from("ordens_servico").select("*, ativos(hostname, tipo, setor)");
+      if (filters.status !== "todos") q = q.eq("status", filters.status);
+      if (filters.periodoInicio) q = q.gte("data_abertura", filters.periodoInicio);
+      if (filters.periodoFim) q = q.lte("data_abertura", filters.periodoFim);
+      
+      const { data, error } = await q.order("data_abertura", { ascending: false });
+      if (error) throw error;
+      return data as OS[];
+    },
   });
 
   const grouped = useMemo(() => {
@@ -84,7 +96,36 @@ function Page() {
       <PageHeader
         title="Ordens de serviço"
         description="Kanban de reparos. Ao abrir uma OS, o ativo entra em manutenção automaticamente; ao concluir, volta ao status anterior."
-        actions={canWrite ? <Button size="sm" onClick={() => setNewOpen(true)}><Plus className="h-4 w-4 mr-1" /> Nova OS</Button> : undefined}
+        actions={
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 mr-4">
+              <Input 
+                type="date" 
+                className="h-8 w-32 text-xs" 
+                value={filters.periodoInicio} 
+                onChange={e => setFilters(f => ({ ...f, periodoInicio: e.target.value }))} 
+              />
+              <span className="text-muted-foreground text-xs">até</span>
+              <Input 
+                type="date" 
+                className="h-8 w-32 text-xs" 
+                value={filters.periodoFim} 
+                onChange={e => setFilters(f => ({ ...f, periodoFim: e.target.value }))} 
+              />
+              <Select value={filters.status} onValueChange={v => setFilters(f => ({ ...f, status: v }))}>
+                <SelectTrigger className="h-8 w-32 text-xs"><SelectValue placeholder="Status" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos status</SelectItem>
+                  <SelectItem value="aberta">Aberta</SelectItem>
+                  <SelectItem value="em_andamento">Em andamento</SelectItem>
+                  <SelectItem value="aguardando_peca">Aguardando peça</SelectItem>
+                  <SelectItem value="concluida">Concluída</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {canWrite && <Button size="sm" onClick={() => setNewOpen(true)}><Plus className="h-4 w-4 mr-1" /> Nova OS</Button>}
+          </div>
+        }
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
