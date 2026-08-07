@@ -446,7 +446,7 @@ async function runReport(tipo: ReportType, f: Filters): Promise<{ columns: strin
   } else if (tipo === "ordens_servico") {
     let q = supabase
       .from("ordens_servico")
-      .select("numero, status, prioridade, descricao_defeito, data_abertura, data_conclusao, custo_total, ativos(hostname), usuarios:aberto_por(nome)");
+      .select("numero, status, prioridade, descricao_defeito, data_abertura, data_conclusao, custo_total, ativos(hostname), usuarios(nome)");
 
     if (f.statusOS) q = q.eq("status", f.statusOS as any);
     if (f.periodoInicio) q = q.gte("data_abertura", f.periodoInicio + "T00:00:00.000Z");
