@@ -1,4 +1,4 @@
-{/* Execute esta instrucao no projeto: em relatórios de ordens de serviço dentro do atalhos não esta gerando o relatório solicitado, faça a correção agora. */}
+{/* Execute esta instrucao no projeto: Em relatórios ativos sem cobertura de edr tambem precdisa ser sincronizado e gerar relatório */}
 import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth";
 import { Loader2 } from "lucide-react";
