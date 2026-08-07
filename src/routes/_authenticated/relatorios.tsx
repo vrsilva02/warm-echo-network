@@ -304,7 +304,11 @@ function FiltersCard({
 
 /* ------------------------------ Execução ------------------------------ */
 
-async function runReport(tipo: ReportType, f: Filters): Promise<{ columns: string[]; rows: any[][] }> {
+async function runReport(tipo: ReportType, f: Filters): Promise<{ columns: string[]; rows: any[][]; duration: number; timestamp: Date }> {
+  const start = performance.now();
+  let result: { columns: string[]; rows: any[][] } = { columns: [], rows: [] };
+
+
   if (tipo === "elp") {
     let q = supabase.from("vw_elp").select("*");
     if (f.categoria) q = q.eq("categoria", f.categoria);
@@ -319,27 +323,25 @@ async function runReport(tipo: ReportType, f: Filters): Promise<{ columns: strin
       filtered = filtered.filter((r: any) => ids.has(r.produto_id));
     }
 
-    return {
+    result = {
       columns: ["Produto", "Fabricante", "Categoria", "Compradas", "Alocadas", "Saldo", "Status"],
       rows: filtered.map((r: any) => [r.nome_oficial, r.fabricante ?? "—", r.categoria, r.licencas_compradas, r.licencas_alocadas, r.saldo, r.status_compliance]),
     };
-  }
-
-  if (tipo === "licencas_usuarios_desligados") {
+  } else if (tipo === "licencas_usuarios_desligados") {
     const { data } = await supabase
       .from("alocacoes")
       .select("id, data_inicio, usuarios!inner(nome, status), licencas!inner(produto_id, produtos_catalogo!inner(nome_oficial, categoria, fabricante_id, fabricantes(nome)))")
       .is("data_fim", null)
       .eq("usuarios.status", "desligado");
-    let rows = (data ?? []).filter((r: any) => {
+    let rowsData = (data ?? []).filter((r: any) => {
       const p = r.licencas?.produtos_catalogo;
       if (f.categoria && p?.categoria !== f.categoria) return false;
       if (f.fabricanteId && p?.fabricante_id !== f.fabricanteId) return false;
       return true;
     });
-    return {
+    result = {
       columns: ["Colaborador", "Produto", "Fabricante", "Categoria", "Desde"],
-      rows: rows.map((r: any) => [
+      rows: rowsData.map((r: any) => [
         r.usuarios?.nome,
         r.licencas?.produtos_catalogo?.nome_oficial,
         r.licencas?.produtos_catalogo?.fabricantes?.nome ?? "—",
@@ -347,13 +349,10 @@ async function runReport(tipo: ReportType, f: Filters): Promise<{ columns: strin
         r.data_inicio,
       ]),
     };
-  }
-
-  if (tipo === "custo_licencas_ociosas") {
+  } else if (tipo === "custo_licencas_ociosas") {
     const { data: elp } = await supabase.from("vw_elp").select("*");
     const { data: licencas } = await supabase.from("licencas").select("produto_id, quantidade, custo_unitario, created_at");
     
-    // Filtrar licenças pelo período se fornecido
     const filteredLicencas = (licencas ?? []).filter(l => {
       if (f.periodoInicio && l.created_at && l.created_at < f.periodoInicio) return false;
       if (f.periodoFim && l.created_at && l.created_at > f.periodoFim + "T23:59:59") return false;
@@ -366,7 +365,7 @@ async function runReport(tipo: ReportType, f: Filters): Promise<{ columns: strin
       const cur = custoMedio.get(l.produto_id);
       custoMedio.set(l.produto_id, cur == null ? Number(l.custo_unitario) : (cur + Number(l.custo_unitario)) / 2);
     });
-    let rows = (elp ?? []).filter((r: any) => {
+    let rowsData = (elp ?? []).filter((r: any) => {
       if (f.categoria && r.categoria !== f.categoria) return false;
       const ociosas = Math.max(0, (r.licencas_compradas ?? 0) - (r.licencas_alocadas ?? 0));
       return ociosas > 0;
@@ -374,11 +373,11 @@ async function runReport(tipo: ReportType, f: Filters): Promise<{ columns: strin
     if (f.fabricanteId) {
       const { data: prods } = await supabase.from("produtos_catalogo").select("id").eq("fabricante_id", f.fabricanteId);
       const ids = new Set((prods ?? []).map((p: any) => p.id));
-      rows = rows.filter((r: any) => ids.has(r.produto_id));
+      rowsData = rowsData.filter((r: any) => ids.has(r.produto_id));
     }
-    return {
+    result = {
       columns: ["Produto", "Categoria", "Compradas", "Alocadas", "Ociosas", "Custo unit. médio", "Custo ocioso"],
-      rows: rows.map((r: any) => {
+      rows: rowsData.map((r: any) => {
         const ociosas = Math.max(0, (r.licencas_compradas ?? 0) - (r.licencas_alocadas ?? 0));
         const c = custoMedio.get(r.produto_id) ?? 0;
         return [
@@ -388,43 +387,41 @@ async function runReport(tipo: ReportType, f: Filters): Promise<{ columns: strin
         ];
       }),
     };
-  }
+  } else if (tipo === "historico_ativo") {
+    if (!f.ativoId) {
+      result = { columns: ["Aviso"], rows: [["Selecione um ativo para gerar o histórico."]] };
+    } else {
+      let q = supabase
+        .from("alocacoes")
+        .select("id, data_inicio, data_fim, observacao, licencas(produto_id, produtos_catalogo(nome_oficial, categoria))")
+        .eq("ativo_id", f.ativoId);
 
-  if (tipo === "historico_ativo") {
-    if (!f.ativoId) return { columns: ["Aviso"], rows: [["Selecione um ativo para gerar o histórico."]] };
-    let q = supabase
-      .from("alocacoes")
-      .select("id, data_inicio, data_fim, observacao, licencas(produto_id, produtos_catalogo(nome_oficial, categoria))")
-      .eq("ativo_id", f.ativoId);
+      if (f.periodoInicio) q = q.gte("data_inicio", f.periodoInicio);
+      if (f.periodoFim) q = q.lte("data_inicio", f.periodoFim);
 
-    if (f.periodoInicio) q = q.gte("data_inicio", f.periodoInicio);
-    if (f.periodoFim) q = q.lte("data_inicio", f.periodoFim);
-
-    const { data } = await q.order("data_inicio", { ascending: false });
-    return {
-      columns: ["Produto", "Categoria", "Início", "Fim", "Duração", "Observação"],
-      rows: (data ?? []).map((r: any) => {
-        const ini = r.data_inicio ? new Date(r.data_inicio) : null;
-        const fim = r.data_fim ? new Date(r.data_fim) : null;
-        const dur = ini ? Math.round(((fim ?? new Date()).getTime() - ini.getTime()) / 86400000) : "";
-        return [
-          r.licencas?.produtos_catalogo?.nome_oficial ?? "—",
-          r.licencas?.produtos_catalogo?.categoria ?? "—",
-          r.data_inicio ?? "",
-          r.data_fim ?? "ativa",
-          dur !== "" ? `${dur}d` : "",
-          r.observacao ?? "",
-        ];
-      }),
-    };
-  }
-
-  if (tipo === "gap_edr") {
+      const { data } = await q.order("data_inicio", { ascending: false });
+      result = {
+        columns: ["Produto", "Categoria", "Início", "Fim", "Duração", "Observação"],
+        rows: (data ?? []).map((r: any) => {
+          const ini = r.data_inicio ? new Date(r.data_inicio) : null;
+          const fim = r.data_fim ? new Date(r.data_fim) : null;
+          const dur = ini ? Math.round(((fim ?? new Date()).getTime() - ini.getTime()) / 86400000) : "";
+          return [
+            r.licencas?.produtos_catalogo?.nome_oficial ?? "—",
+            r.licencas?.produtos_catalogo?.categoria ?? "—",
+            r.data_inicio ?? "",
+            r.data_fim ?? "ativa",
+            dur !== "" ? `${dur}d` : "",
+            r.observacao ?? "",
+          ];
+        }),
+      };
+    }
+  } else if (tipo === "gap_edr") {
     let q = supabase.from("ativos").select("id, hostname, tipo, status_ciclo_vida, unidade_id, unidades(nome)");
     q = q.eq("status_ciclo_vida", f.statusAtivo ?? "ativo");
     if (f.unidadeId) q = q.eq("unidade_id", f.unidadeId);
     const { data: ativos } = await q;
-    // Todas alocações ativas com produto EDR:
     const { data: aloc } = await supabase
       .from("alocacoes")
       .select("ativo_id, licencas!inner(produtos_catalogo!inner(categoria))")
@@ -432,13 +429,11 @@ async function runReport(tipo: ReportType, f: Filters): Promise<{ columns: strin
       .eq("licencas.produtos_catalogo.categoria", "EDR");
     const cobertos = new Set((aloc ?? []).map((a: any) => a.ativo_id));
     const sem = (ativos ?? []).filter((a: any) => !cobertos.has(a.id));
-    return {
+    result = {
       columns: ["Hostname", "Tipo", "Unidade", "Status"],
       rows: sem.map((a: any) => [a.hostname, a.tipo, a.unidades?.nome ?? "—", a.status_ciclo_vida]),
     };
-  }
-
-  if (tipo === "ordens_servico") {
+  } else if (tipo === "ordens_servico") {
     let q = supabase
       .from("ordens_servico")
       .select("numero, status, prioridade, descricao_defeito, data_abertura, data_conclusao, custo_total, ativos(hostname), usuarios:aberto_por(nome)");
@@ -449,7 +444,7 @@ async function runReport(tipo: ReportType, f: Filters): Promise<{ columns: strin
 
     const { data } = await q.order("data_abertura", { ascending: false });
 
-    return {
+    result = {
       columns: ["Número", "Status", "Prioridade", "Ativo", "Aberto por", "Abertura", "Conclusão", "Custo"],
       rows: (data ?? []).map((os: any) => [
         `#${os.numero}`,
@@ -464,7 +459,7 @@ async function runReport(tipo: ReportType, f: Filters): Promise<{ columns: strin
     };
   }
 
-  return { columns: [], rows: [] };
+  return { ...result, duration: performance.now() - start, timestamp: new Date() };
 }
 
 function ReportRunner({ 
@@ -507,31 +502,40 @@ function ReportRunner({
           <CardTitle className="text-base">{meta.title}</CardTitle>
           <p className="text-xs text-muted-foreground mt-1">{meta.desc}</p>
         </div>
-        <div className="flex gap-2 flex-wrap">
-          <Button 
-            size="sm" 
-            variant="outline" 
-            onClick={() => refetch()} 
-            disabled={isFetching}
-            className={isFetching ? "animate-pulse" : ""}
-          >
-            <RefreshCw className={`h-4 w-4 mr-2 ${isFetching ? "animate-spin" : ""}`} /> 
-            {isFetching ? "Sincronizando..." : "Atualizar agora"}
-          </Button>
-          <Button size="sm" variant="outline" disabled={rows.length === 0} onClick={() => {
-            void downloadXLSX(
-              `${tipo}-${stamp}.xlsx`,
-              columns,
-              rows,
-              meta.title.slice(0, 31)
-            );
-            void logAction("EXPORT", tipo, { formato: "xlsx", total: rows.length, filtros: filters ?? {} });
-          }}><Download className="h-4 w-4 mr-2" /> XLSX</Button>
-          <Button size="sm" disabled={rows.length === 0} onClick={() => {
-            downloadPDF({ filename: `${tipo}-${stamp}.pdf`, title: meta.title, subtitle: filterLabel, columns, rows });
-            void logAction("EXPORT", tipo, { formato: "pdf", total: rows.length, filtros: filters ?? {} });
-          }}><FileText className="h-4 w-4 mr-2" /> PDF</Button>
-          <Button size="sm" variant="secondary" onClick={onSaveRecurring}><Save className="h-4 w-4 mr-2" /> Salvar recorrente</Button>
+        <div className="flex flex-col items-end gap-2 flex-wrap">
+          <div className="flex gap-2 flex-wrap">
+            <Button 
+              size="sm" 
+              variant="outline" 
+              onClick={() => refetch()} 
+              disabled={isFetching}
+              className={isFetching ? "animate-pulse" : ""}
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${isFetching ? "animate-spin" : ""}`} /> 
+              {isFetching ? "Sincronizando..." : "Atualizar agora"}
+            </Button>
+            <Button size="sm" variant="outline" disabled={rows.length === 0} onClick={() => {
+              void downloadXLSX(
+                `${tipo}-${stamp}.xlsx`,
+                columns,
+                rows,
+                meta.title.slice(0, 31)
+              );
+              void logAction("EXPORT", tipo, { formato: "xlsx", total: rows.length, filtros: filters ?? {} });
+            }}><Download className="h-4 w-4 mr-2" /> XLSX</Button>
+            <Button size="sm" disabled={rows.length === 0} onClick={() => {
+              downloadPDF({ filename: `${tipo}-${stamp}.pdf`, title: meta.title, subtitle: filterLabel, columns, rows });
+              void logAction("EXPORT", tipo, { formato: "pdf", total: rows.length, filtros: filters ?? {} });
+            }}><FileText className="h-4 w-4 mr-2" /> PDF</Button>
+            <Button size="sm" variant="secondary" onClick={onSaveRecurring}><Save className="h-4 w-4 mr-2" /> Salvar recorrente</Button>
+          </div>
+          {data && (
+            <div className="flex gap-3 text-[10px] text-muted-foreground bg-muted/30 px-2 py-1 rounded border">
+              <span>Última sincronização: <strong>{data.timestamp.toLocaleTimeString("pt-BR")}</strong></span>
+              <span>Duração: <strong>{data.duration.toFixed(0)}ms</strong></span>
+              <span>Registros: <strong>{rows.length}</strong></span>
+            </div>
+          )}
         </div>
       </CardHeader>
       <CardContent>

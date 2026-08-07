@@ -1,4 +1,4 @@
-{/* Execute esta instrucao no projeto: Implemente indicadores de carregamento e mensagens de erro nos relatórios para que eu saiba quando a sincronização estiver em andamento ou falhar. */}
+{/* Execute esta instrucao no projeto: Exibir um status detalhado da sincronização (última atualização, duração e contagem de registros) diretamente na página de cada relatório. */}
 import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth";
 import { Loader2 } from "lucide-react";
