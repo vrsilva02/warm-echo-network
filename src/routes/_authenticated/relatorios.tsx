@@ -456,20 +456,30 @@ function ReportRunner({ tipo, filters, onSaveRecurring }: { tipo: ReportType; fi
           <p className="text-xs text-muted-foreground mt-1">{meta.desc}</p>
         </div>
         <div className="flex gap-2 flex-wrap">
-          <Button size="sm" variant="outline" onClick={() => refetch()}><Play className="h-4 w-4" /> Executar</Button>
+          <Button 
+            size="sm" 
+            variant="outline" 
+            onClick={() => refetch()} 
+            disabled={isFetching}
+            className={isFetching ? "animate-pulse" : ""}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${isFetching ? "animate-spin" : ""}`} /> 
+            {isFetching ? "Sincronizando..." : "Atualizar agora"}
+          </Button>
           <Button size="sm" variant="outline" disabled={rows.length === 0} onClick={() => {
-            exportXLSXInBackground({
-              label: `Relatório · ${meta.title}`,
-              filename: `${tipo}-${stamp}.xlsx`,
-              load: async () => ({ columns, rows }),
-            });
+            void downloadXLSX(
+              `${tipo}-${stamp}.xlsx`,
+              columns,
+              rows,
+              meta.title.slice(0, 31)
+            );
             void logAction("EXPORT", tipo, { formato: "xlsx", total: rows.length, filtros: filters });
-          }}><Download className="h-4 w-4" /> XLSX</Button>
+          }}><Download className="h-4 w-4 mr-2" /> XLSX</Button>
           <Button size="sm" disabled={rows.length === 0} onClick={() => {
             downloadPDF({ filename: `${tipo}-${stamp}.pdf`, title: meta.title, subtitle: filterLabel, columns, rows });
             void logAction("EXPORT", tipo, { formato: "pdf", total: rows.length, filtros: filters });
-          }}><FileText className="h-4 w-4" /> PDF</Button>
-          <Button size="sm" variant="secondary" onClick={onSaveRecurring}><Save className="h-4 w-4" /> Salvar recorrente</Button>
+          }}><FileText className="h-4 w-4 mr-2" /> PDF</Button>
+          <Button size="sm" variant="secondary" onClick={onSaveRecurring}><Save className="h-4 w-4 mr-2" /> Salvar recorrente</Button>
         </div>
       </CardHeader>
       <CardContent>
