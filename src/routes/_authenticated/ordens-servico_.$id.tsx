@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Combobox } from "@/components/combobox";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
-import { AlertTriangle, CheckCircle2, Package, Trash2, Clock, DollarSign } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Package, Trash2, Clock, DollarSign, History } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/ordens-servico_/$id")({
   component: Page,
@@ -28,9 +28,16 @@ export const Route = createFileRoute("/_authenticated/ordens-servico_/$id")({
 
 type OSDetail = {
   id: string; numero: number; ativo_id: string; descricao_defeito: string;
-  prioridade: string; status: string; aberto_em: string; fechado_em: string | null;
+  prioridade: string; status: string; data_abertura: string; data_conclusao: string | null;
   custo_total: number | null; observacoes_tecnicas: string | null;
   ativos?: { hostname: string; tipo: string; setor: string | null; modelo?: string | null } | null;
+};
+type OSHistorico = {
+  id: string;
+  status_anterior: string | null;
+  status_novo: string;
+  created_at: string;
+  alterado_por: string | null;
 };
 type PecaUsada = {
   id: string; peca_id: string; quantidade: number; custo_unitario: number | null;
