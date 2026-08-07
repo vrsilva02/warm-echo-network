@@ -1,8 +1,4 @@
-{/* Execute esta instrucao no projeto: em relatórios, preciso que os relatório abaixo sejam sincronizados para gerar o relatório. Neste momento estes relatórios estão em branco
-
-Relatório de ordens de serviço
-Ativos sem Cobertura de EDR
-Custo por licença ociosa por periodo */}
+{/* Execute esta instrucao no projeto: Implemente indicadores de carregamento e mensagens de erro nos relatórios para que eu saiba quando a sincronização estiver em andamento ou falhar. */}
 import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth";
 import { Loader2 } from "lucide-react";

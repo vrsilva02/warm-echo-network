@@ -477,11 +477,12 @@ function ReportRunner({
   onSaveRecurring: () => void 
 }) {
   const meta = REPORT_META[tipo];
-  const { data, isLoading, isFetching, refetch } = useQuery({
+  const { data, isLoading, isFetching, refetch, error, isError } = useQuery({
     queryKey: ["report-run", tipo, filters],
     queryFn: () => runReport(tipo, filters!),
-    refetchInterval: 15000, // Auto-refresh all reports for sync
+    refetchInterval: 15000,
     enabled: !!filters,
+    retry: 2,
   });
 
   useRealtimeInvalidate({
@@ -540,8 +541,27 @@ function ReportRunner({
             title="Relatório pronto para execução" 
             description="Configure os filtros acima e clique em 'Gerar Relatório' para visualizar a prévia." 
           />
+        ) : isError ? (
+          <div className="p-8 border-2 border-dashed border-destructive/20 rounded-lg bg-destructive/5 text-center">
+            <div className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-destructive/10 text-destructive mb-3">
+              <Trash2 className="h-5 w-5" />
+            </div>
+            <h3 className="text-sm font-semibold text-destructive">Falha na sincronização</h3>
+            <p className="text-xs text-muted-foreground mt-1 max-w-[280px] mx-auto">
+              {error instanceof Error ? error.message : "Ocorreu um erro ao carregar os dados do relatório."}
+            </p>
+            <Button size="sm" variant="outline" className="mt-4" onClick={() => refetch()}>
+              Tentar novamente
+            </Button>
+          </div>
         ) : isLoading || isFetching ? (
-          <div className="space-y-2">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-8" />)}</div>
+          <div className="space-y-3 py-4">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground animate-pulse mb-2">
+              <RefreshCw className="h-3 w-3 animate-spin" />
+              Sincronizando dados com o banco de dados...
+            </div>
+            {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-8 w-full" />)}
+          </div>
         ) : rows.length === 0 ? (
           <EmptyState icon={<FileText className="h-6 w-6" />} title="Sem resultados" description="Ajuste os filtros e execute novamente." />
         ) : (
