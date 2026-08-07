@@ -37,7 +37,8 @@ type ReportType =
   | "licencas_usuarios_desligados"
   | "custo_licencas_ociosas"
   | "historico_ativo"
-  | "gap_edr";
+  | "gap_edr"
+  | "ordens_servico";
 
 type Filters = {
   categoria?: string | null;
@@ -51,6 +52,7 @@ type Filters = {
   ativoId?: string | null;
   periodoInicio?: string | null;
   periodoFim?: string | null;
+  statusOS?: string | null;
 };
 
 const REPORT_META: Record<ReportType, { title: string; desc: string; usesFilters: (keyof Filters)[] }> = {
@@ -78,6 +80,11 @@ const REPORT_META: Record<ReportType, { title: string; desc: string; usesFilters
     title: "Ativos sem cobertura de EDR (Kaspersky)",
     desc: "Ativos ativos que não possuem licença EDR vinculada.",
     usesFilters: ["statusAtivo", "unidadeId"],
+  },
+  ordens_servico: {
+    title: "Relatório de Ordens de Serviço",
+    desc: "Listagem detalhada de manutenções, defeitos e custos.",
+    usesFilters: ["periodoInicio", "periodoFim", "statusOS"],
   },
 };
 
@@ -243,6 +250,22 @@ function FiltersCard({ tipo, filters, onChange }: { tipo: ReportType; filters: F
               </Select>
             </div>
           )}
+          {uses.includes("statusOS") && (
+            <div>
+              <Label>Status da OS</Label>
+              <Select value={filters.statusOS ?? "todos"} onValueChange={(v) => set("statusOS", v === "todos" ? null : v)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos</SelectItem>
+                  <SelectItem value="aberta">Aberta</SelectItem>
+                  <SelectItem value="em_andamento">Em andamento</SelectItem>
+                  <SelectItem value="aguardando_peca">Aguardando peça</SelectItem>
+                  <SelectItem value="concluida">Concluída</SelectItem>
+                  <SelectItem value="cancelada">Cancelada</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
@@ -371,6 +394,33 @@ async function runReport(tipo: ReportType, f: Filters): Promise<{ columns: strin
       rows: sem.map((a: any) => [a.hostname, a.tipo, a.unidades?.nome ?? "—", a.status_ciclo_vida]),
     };
   }
+
+  if (tipo === "ordens_servico") {
+    let q = supabase
+      .from("ordens_servico")
+      .select("numero, status, prioridade, descricao_defeito, data_abertura, data_conclusao, custo_total, ativos(hostname)");
+
+    if (f.statusOS) q = q.eq("status", f.statusOS as any);
+    if (f.periodoInicio) q = q.gte("data_abertura", f.periodoInicio);
+    if (f.periodoFim) q = q.lte("data_abertura", f.periodoFim);
+
+    const { data } = await q.order("data_abertura", { ascending: false });
+
+    return {
+      columns: ["Número", "Status", "Prioridade", "Ativo", "Defeito", "Abertura", "Conclusão", "Custo"],
+      rows: (data ?? []).map((os: any) => [
+        `#${os.numero}`,
+        os.status,
+        os.prioridade,
+        os.ativos?.hostname ?? "—",
+        os.descricao_defeito,
+        os.data_abertura ? new Date(os.data_abertura).toLocaleDateString("pt-BR") : "—",
+        os.data_conclusao ? new Date(os.data_conclusao).toLocaleDateString("pt-BR") : "—",
+        os.custo_total ? os.custo_total.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) : "—",
+      ]),
+    };
+  }
+
   return { columns: [], rows: [] };
 }
 
