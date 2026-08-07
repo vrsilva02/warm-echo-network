@@ -75,7 +75,7 @@ const REPORT_META: Record<ReportType, { title: string; desc: string; usesFilters
   historico_ativo: {
     title: "Histórico completo de um ativo",
     desc: "Todos os vínculos e desvínculos de licenças do ativo escolhido.",
-    usesFilters: ["ativoId"],
+    usesFilters: ["ativoId", "periodoInicio", "periodoFim"],
   },
   gap_edr: {
     title: "Ativos sem cobertura de EDR (Kaspersky)",
