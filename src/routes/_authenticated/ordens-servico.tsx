@@ -59,7 +59,7 @@ function Page() {
     queryFn: async () => ((await (supabase as any)
       .from("ordens_servico")
       .select("*, ativos(hostname, tipo, setor)")
-      .order("aberto_em", { ascending: false })
+      .order("data_abertura", { ascending: false })
     ).data ?? []) as OS[],
   });
 
