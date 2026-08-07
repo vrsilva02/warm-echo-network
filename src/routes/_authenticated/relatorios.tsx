@@ -474,7 +474,23 @@ function ReportRunner({
   const meta = REPORT_META[tipo];
   const { data, isLoading, isFetching, refetch, error, isError } = useQuery({
     queryKey: ["report-run", tipo, filters],
-    queryFn: () => runReport(tipo, filters!),
+    queryFn: async () => {
+      const toastId = toast.loading(`Sincronizando ${meta.title.toLowerCase()}...`);
+      try {
+        const res = await runReport(tipo, filters!);
+        toast.success(`${meta.title} sincronizado`, { 
+          id: toastId,
+          description: `${res.rows.length} registros em ${res.duration.toFixed(0)}ms`
+        });
+        return res;
+      } catch (err) {
+        toast.error(`Falha ao sincronizar ${meta.title}`, { 
+          id: toastId,
+          description: err instanceof Error ? err.message : "Erro desconhecido" 
+        });
+        throw err;
+      }
+    },
     refetchInterval: 15000,
     enabled: !!filters,
     retry: 2,

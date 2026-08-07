@@ -1,4 +1,4 @@
-{/* Execute esta instrucao no projeto: Exibir um status detalhado da sincronização (última atualização, duração e contagem de registros) diretamente na página de cada relatório. */}
+{/* Execute esta instrucao no projeto: Notificar com toasts ou banners quando a sincronização iniciar, concluir com sucesso ou falhar, incluindo uma mensagem legível de erro. */}
 import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth";
 import { Loader2 } from "lucide-react";
