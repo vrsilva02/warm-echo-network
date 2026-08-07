@@ -304,8 +304,16 @@ function FiltersCard({
 
 /* ------------------------------ Execução ------------------------------ */
 
-async function runReport(tipo: ReportType, f: Filters): Promise<{ columns: string[]; rows: any[][] }> {
+async function runReport(tipo: ReportType, f: Filters): Promise<{ columns: string[]; rows: any[][]; duration: number; timestamp: Date }> {
+  const start = performance.now();
+  let result: { columns: string[]; rows: any[][] };
+
   if (tipo === "elp") {
+    // ... logic for elp ...
+    // Note: I need to wrap the existing logic in a way that captures the result
+  }
+  // ... rest of the runReport function ...
+
     let q = supabase.from("vw_elp").select("*");
     if (f.categoria) q = q.eq("categoria", f.categoria);
     if (f.statusCompliance) q = q.eq("status_compliance", f.statusCompliance);
