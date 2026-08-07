@@ -449,8 +449,8 @@ async function runReport(tipo: ReportType, f: Filters): Promise<{ columns: strin
       .select("numero, status, prioridade, descricao_defeito, data_abertura, data_conclusao, custo_total, ativos(hostname), usuarios(nome)");
 
     if (f.statusOS) q = q.eq("status", f.statusOS as any);
-    if (f.periodoInicio) q = q.gte("data_abertura", f.periodoInicio + "T00:00:00.000Z");
-    if (f.periodoFim) q = q.lte("data_abertura", f.periodoFim + "T23:59:59.999Z");
+    if (f.periodoInicio) q = q.gte("created_at", f.periodoInicio + "T00:00:00.000Z");
+    if (f.periodoFim) q = q.lte("created_at", f.periodoFim + "T23:59:59.999Z");
 
     const { data, error } = await q.order("data_abertura", { ascending: false });
 
