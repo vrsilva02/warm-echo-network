@@ -75,7 +75,7 @@ const REPORT_META: Record<ReportType, { title: string; desc: string; usesFilters
   historico_ativo: {
     title: "Histórico completo de um ativo",
     desc: "Todos os vínculos e desvínculos de licenças do ativo escolhido.",
-    usesFilters: ["ativoId"],
+    usesFilters: ["ativoId", "periodoInicio", "periodoFim"],
   },
   gap_edr: {
     title: "Ativos sem cobertura de EDR (Kaspersky)",
@@ -94,6 +94,7 @@ const REPORT_META: Record<ReportType, { title: string; desc: string; usesFilters
 function Page() {
   const [tipo, setTipo] = useState<ReportType>("elp");
   const [filters, setFilters] = useState<Filters>({});
+  const [lastExecutedFilters, setLastExecutedFilters] = useState<Filters | null>(null);
   const [recOpen, setRecOpen] = useState(false);
 
   return (
@@ -103,10 +104,23 @@ function Page() {
         description="Construa relatórios com filtros combináveis. Salve como recorrente para envio mensal."
       />
       <div className="grid gap-4 lg:grid-cols-[minmax(240px,280px)_minmax(0,1fr)]">
-        <ShortcutsPanel current={tipo} onPick={(t) => { setTipo(t); setFilters({}); }} />
+        <ShortcutsPanel current={tipo} onPick={(t) => { 
+          setTipo(t); 
+          setFilters({}); 
+          setLastExecutedFilters(null);
+        }} />
         <div className="space-y-4 min-w-0">
-          <FiltersCard tipo={tipo} filters={filters} onChange={setFilters} />
-          <ReportRunner tipo={tipo} filters={filters} onSaveRecurring={() => setRecOpen(true)} />
+          <FiltersCard 
+            tipo={tipo} 
+            filters={filters} 
+            onChange={setFilters} 
+            onExecute={() => setLastExecutedFilters({ ...filters })}
+          />
+          <ReportRunner 
+            tipo={tipo} 
+            filters={lastExecutedFilters} 
+            onSaveRecurring={() => setRecOpen(true)} 
+          />
           <RecurringList />
         </div>
       </div>
@@ -143,7 +157,17 @@ function ShortcutsPanel({ current, onPick }: { current: ReportType; onPick: (t: 
 
 /* ------------------------------ Filtros ------------------------------ */
 
-function FiltersCard({ tipo, filters, onChange }: { tipo: ReportType; filters: Filters; onChange: (f: Filters) => void }) {
+function FiltersCard({ 
+  tipo, 
+  filters, 
+  onChange,
+  onExecute
+}: { 
+  tipo: ReportType; 
+  filters: Filters; 
+  onChange: (f: Filters) => void;
+  onExecute: () => void;
+}) {
   const uses = REPORT_META[tipo].usesFilters;
 
   const { data: fabricantes } = useQuery({
@@ -164,7 +188,12 @@ function FiltersCard({ tipo, filters, onChange }: { tipo: ReportType; filters: F
 
   return (
     <Card>
-      <CardHeader><CardTitle className="text-base">Filtros</CardTitle></CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-base">Filtros</CardTitle>
+        <Button size="sm" onClick={onExecute}>
+          <Play className="h-4 w-4 mr-2" /> Gerar Relatório
+        </Button>
+      </CardHeader>
       <CardContent>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {uses.includes("categoria") && (
@@ -277,18 +306,19 @@ function FiltersCard({ tipo, filters, onChange }: { tipo: ReportType; filters: F
 
 async function runReport(tipo: ReportType, f: Filters): Promise<{ columns: string[]; rows: any[][] }> {
   if (tipo === "elp") {
-    const { data } = await supabase.from("vw_elp").select("*").order("nome_oficial");
-    const rows = (data ?? []).filter((r: any) => {
-      if (f.categoria && r.categoria !== f.categoria) return false;
-      if (f.statusCompliance && r.status_compliance !== f.statusCompliance) return false;
-      return true;
-    });
-    let filtered = rows;
+    let q = supabase.from("vw_elp").select("*");
+    if (f.categoria) q = q.eq("categoria", f.categoria);
+    if (f.statusCompliance) q = q.eq("status_compliance", f.statusCompliance);
+    
+    const { data: rows } = await q.order("nome_oficial");
+    let filtered = rows ?? [];
+
     if (f.fabricanteId) {
       const { data: prods } = await supabase.from("produtos_catalogo").select("id").eq("fabricante_id", f.fabricanteId);
       const ids = new Set((prods ?? []).map((p: any) => p.id));
-      filtered = rows.filter((r: any) => ids.has(r.produto_id));
+      filtered = filtered.filter((r: any) => ids.has(r.produto_id));
     }
+
     return {
       columns: ["Produto", "Fabricante", "Categoria", "Compradas", "Alocadas", "Saldo", "Status"],
       rows: filtered.map((r: any) => [r.nome_oficial, r.fabricante ?? "—", r.categoria, r.licencas_compradas, r.licencas_alocadas, r.saldo, r.status_compliance]),
@@ -354,11 +384,15 @@ async function runReport(tipo: ReportType, f: Filters): Promise<{ columns: strin
 
   if (tipo === "historico_ativo") {
     if (!f.ativoId) return { columns: ["Aviso"], rows: [["Selecione um ativo para gerar o histórico."]] };
-    const { data } = await supabase
+    let q = supabase
       .from("alocacoes")
       .select("id, data_inicio, data_fim, observacao, licencas(produto_id, produtos_catalogo(nome_oficial, categoria))")
-      .eq("ativo_id", f.ativoId)
-      .order("data_inicio", { ascending: false });
+      .eq("ativo_id", f.ativoId);
+
+    if (f.periodoInicio) q = q.gte("data_inicio", f.periodoInicio);
+    if (f.periodoFim) q = q.lte("data_inicio", f.periodoFim);
+
+    const { data } = await q.order("data_inicio", { ascending: false });
     return {
       columns: ["Produto", "Categoria", "Início", "Fim", "Duração", "Observação"],
       rows: (data ?? []).map((r: any) => {
@@ -402,8 +436,8 @@ async function runReport(tipo: ReportType, f: Filters): Promise<{ columns: strin
       .select("numero, status, prioridade, descricao_defeito, data_abertura, data_conclusao, custo_total, ativos(hostname), usuarios:aberto_por(nome)");
 
     if (f.statusOS) q = q.eq("status", f.statusOS as any);
-    if (f.periodoInicio) q = q.gte("data_abertura", f.periodoInicio);
-    if (f.periodoFim) q = q.lte("data_abertura", f.periodoFim);
+    if (f.periodoInicio) q = q.gte("data_abertura", f.periodoInicio + "T00:00:00");
+    if (f.periodoFim) q = q.lte("data_abertura", f.periodoFim + "T23:59:59");
 
     const { data } = await q.order("data_abertura", { ascending: false });
 
@@ -425,12 +459,21 @@ async function runReport(tipo: ReportType, f: Filters): Promise<{ columns: strin
   return { columns: [], rows: [] };
 }
 
-function ReportRunner({ tipo, filters, onSaveRecurring }: { tipo: ReportType; filters: Filters; onSaveRecurring: () => void }) {
+function ReportRunner({ 
+  tipo, 
+  filters, 
+  onSaveRecurring 
+}: { 
+  tipo: ReportType; 
+  filters: Filters | null; 
+  onSaveRecurring: () => void 
+}) {
   const meta = REPORT_META[tipo];
   const { data, isLoading, isFetching, refetch } = useQuery({
     queryKey: ["report-run", tipo, filters],
-    queryFn: () => runReport(tipo, filters),
+    queryFn: () => runReport(tipo, filters!),
     refetchInterval: 15000, // Auto-refresh all reports for sync
+    enabled: !!filters,
   });
 
   useRealtimeInvalidate({
@@ -446,7 +489,7 @@ function ReportRunner({ tipo, filters, onSaveRecurring }: { tipo: ReportType; fi
   const rows = data?.rows ?? [];
   const columns = data?.columns ?? [];
   const stamp = new Date().toISOString().slice(0, 10);
-  const filterLabel = Object.entries(filters).filter(([, v]) => v).map(([k, v]) => `${k}=${v}`).join(" · ") || "sem filtros";
+  const filterLabel = filters ? Object.entries(filters).filter(([, v]) => v).map(([k, v]) => `${k}=${v}`).join(" · ") : "Aguardando execução";
 
   return (
     <Card>
@@ -473,17 +516,23 @@ function ReportRunner({ tipo, filters, onSaveRecurring }: { tipo: ReportType; fi
               rows,
               meta.title.slice(0, 31)
             );
-            void logAction("EXPORT", tipo, { formato: "xlsx", total: rows.length, filtros: filters });
+            void logAction("EXPORT", tipo, { formato: "xlsx", total: rows.length, filtros: filters ?? {} });
           }}><Download className="h-4 w-4 mr-2" /> XLSX</Button>
           <Button size="sm" disabled={rows.length === 0} onClick={() => {
             downloadPDF({ filename: `${tipo}-${stamp}.pdf`, title: meta.title, subtitle: filterLabel, columns, rows });
-            void logAction("EXPORT", tipo, { formato: "pdf", total: rows.length, filtros: filters });
+            void logAction("EXPORT", tipo, { formato: "pdf", total: rows.length, filtros: filters ?? {} });
           }}><FileText className="h-4 w-4 mr-2" /> PDF</Button>
           <Button size="sm" variant="secondary" onClick={onSaveRecurring}><Save className="h-4 w-4 mr-2" /> Salvar recorrente</Button>
         </div>
       </CardHeader>
       <CardContent>
-        {isLoading || isFetching ? (
+        {!filters ? (
+          <EmptyState 
+            icon={<Play className="h-6 w-6" />} 
+            title="Relatório pronto para execução" 
+            description="Configure os filtros acima e clique em 'Gerar Relatório' para visualizar a prévia." 
+          />
+        ) : isLoading || isFetching ? (
           <div className="space-y-2">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-8" />)}</div>
         ) : rows.length === 0 ? (
           <EmptyState icon={<FileText className="h-6 w-6" />} title="Sem resultados" description="Ajuste os filtros e execute novamente." />
