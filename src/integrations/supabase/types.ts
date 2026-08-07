@@ -1097,6 +1097,41 @@ export type Database = {
           },
         ]
       }
+      ordens_servico_historico: {
+        Row: {
+          alterado_por: string | null
+          created_at: string
+          id: string
+          ordem_servico_id: string
+          status_anterior: Database["public"]["Enums"]["os_status"] | null
+          status_novo: Database["public"]["Enums"]["os_status"]
+        }
+        Insert: {
+          alterado_por?: string | null
+          created_at?: string
+          id?: string
+          ordem_servico_id: string
+          status_anterior?: Database["public"]["Enums"]["os_status"] | null
+          status_novo: Database["public"]["Enums"]["os_status"]
+        }
+        Update: {
+          alterado_por?: string | null
+          created_at?: string
+          id?: string
+          ordem_servico_id?: string
+          status_anterior?: Database["public"]["Enums"]["os_status"] | null
+          status_novo?: Database["public"]["Enums"]["os_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ordens_servico_historico_ordem_servico_id_fkey"
+            columns: ["ordem_servico_id"]
+            isOneToOne: false
+            referencedRelation: "ordens_servico"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ordens_servico_pecas: {
         Row: {
           created_at: string
