@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Bell } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import {
   Popover,
   PopoverContent,
@@ -22,14 +23,26 @@ type Item = {
 function useAlertasCount() {
   return useQuery({
     queryKey: ["alertas", "bell"],
-    refetchInterval: 60_000,
+    refetchInterval: 30_000,
     queryFn: async (): Promise<Item[]> => {
-      const [vc, elp, oc] = await Promise.all([
+      const [vc, elp, oc, nt] = await Promise.all([
         supabase.from("vw_contratos_vencendo").select("*"),
         supabase.from("vw_elp").select("*"),
         supabase.from("vw_licencas_ociosas").select("*"),
+        supabase.from("user_notifications").select("*").eq("read", false).order("created_at", { ascending: false }).limit(20),
       ]);
       const out: Item[] = [];
+
+      for (const n of (nt.data ?? []) as any[]) {
+        out.push({
+          id: `n-${n.id}`,
+          titulo: n.title,
+          descricao: n.message,
+          severidade: "medio",
+          link: "/ordens-servico",
+        });
+      }
+
       for (const c of (vc.data ?? []) as any[]) {
         const dias = c.dias_para_vencer;
         if (dias == null || dias > 90) continue;
@@ -62,9 +75,7 @@ function useAlertasCount() {
           link: "/alocacoes",
         });
       }
-      // ordena por severidade
-      const order = { critico: 0, alto: 1, medio: 2 } as const;
-      return out.sort((a, b) => order[a.severidade] - order[b.severidade]);
+      return out;
     },
   });
 }
@@ -100,8 +111,23 @@ export function NotificationsBell() {
       </PopoverTrigger>
       <PopoverContent align="end" className="w-80 p-0">
         <div className="flex items-center justify-between border-b px-3 py-2">
-          <div className="text-sm font-medium">Notificações</div>
-          <Badge variant="secondary" className="font-mono">{total}</Badge>
+          <div className="text-sm font-medium">Notificações e Alertas</div>
+          <div className="flex gap-1 items-center">
+            {total > 0 && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="text-[10px] h-6 px-2"
+                onClick={async () => {
+                  await supabase.from("user_notifications").update({ read: true }).eq("read", false);
+                  toast.success("Notificações marcadas como lidas");
+                }}
+              >
+                Limpar
+              </Button>
+            )}
+            <Badge variant="secondary" className="font-mono">{total}</Badge>
+          </div>
         </div>
         <div className="max-h-80 overflow-auto">
           {preview.length === 0 ? (
