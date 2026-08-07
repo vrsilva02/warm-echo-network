@@ -37,7 +37,8 @@ type ReportType =
   | "licencas_usuarios_desligados"
   | "custo_licencas_ociosas"
   | "historico_ativo"
-  | "gap_edr";
+  | "gap_edr"
+  | "ordens_servico";
 
 type Filters = {
   categoria?: string | null;
@@ -51,6 +52,7 @@ type Filters = {
   ativoId?: string | null;
   periodoInicio?: string | null;
   periodoFim?: string | null;
+  statusOS?: string | null;
 };
 
 const REPORT_META: Record<ReportType, { title: string; desc: string; usesFilters: (keyof Filters)[] }> = {
@@ -78,6 +80,11 @@ const REPORT_META: Record<ReportType, { title: string; desc: string; usesFilters
     title: "Ativos sem cobertura de EDR (Kaspersky)",
     desc: "Ativos ativos que não possuem licença EDR vinculada.",
     usesFilters: ["statusAtivo", "unidadeId"],
+  },
+  ordens_servico: {
+    title: "Relatório de Ordens de Serviço",
+    desc: "Listagem detalhada de manutenções, defeitos e custos.",
+    usesFilters: ["periodoInicio", "periodoFim", "statusOS"],
   },
 };
 
