@@ -1,0 +1,1 @@
+ALTER TABLE public.ordens_servico ADD COLUMN IF NOT EXISTS aberto_por uuid REFERENCES auth.users(id);

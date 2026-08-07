@@ -29,7 +29,8 @@ type StatusOS = "aberta" | "em_andamento" | "aguardando_peca" | "concluida" | "c
 type OS = {
   id: string; numero: number; ativo_id: string; descricao_defeito: string;
   prioridade: "baixa" | "media" | "alta" | "critica"; status: StatusOS;
-  aberto_em: string; fechado_em: string | null; custo_total: number | null;
+  data_abertura: string; data_conclusao: string | null; custo_total: number | null;
+  aberto_por: string | null;
   ativos?: { hostname: string; tipo: string; setor: string | null } | null;
 };
 
@@ -58,7 +59,7 @@ function Page() {
     queryFn: async () => ((await (supabase as any)
       .from("ordens_servico")
       .select("*, ativos(hostname, tipo, setor)")
-      .order("aberto_em", { ascending: false })
+      .order("data_abertura", { ascending: false })
     ).data ?? []) as OS[],
   });
 
@@ -126,7 +127,7 @@ function Page() {
                     </div>
                     <p className="text-xs line-clamp-2">{os.descricao_defeito}</p>
                     <div className="text-[10px] text-muted-foreground tabular-nums">
-                      Aberta em {new Date(os.aberto_em).toLocaleDateString("pt-BR")}
+                      Aberta em {new Date(os.data_abertura).toLocaleDateString("pt-BR")}
                     </div>
                   </CardContent>
                 </Card>

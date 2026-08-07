@@ -982,6 +982,7 @@ export type Database = {
       }
       ordens_servico: {
         Row: {
+          aberto_por: string | null
           ativo_id: string
           created_at: string
           data_abertura: string
@@ -997,6 +998,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          aberto_por?: string | null
           ativo_id: string
           created_at?: string
           data_abertura?: string
@@ -1012,6 +1014,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          aberto_por?: string | null
           ativo_id?: string
           created_at?: string
           data_abertura?: string
