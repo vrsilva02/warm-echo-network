@@ -306,7 +306,8 @@ function FiltersCard({
 
 async function runReport(tipo: ReportType, f: Filters): Promise<{ columns: string[]; rows: any[][]; duration: number; timestamp: Date }> {
   const start = performance.now();
-  let result: { columns: string[]; rows: any[][] };
+  let result: { columns: string[]; rows: any[][] } = { columns: [], rows: [] };
+
 
   if (tipo === "elp") {
     // ... logic for elp ...
