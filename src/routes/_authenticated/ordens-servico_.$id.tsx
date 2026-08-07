@@ -38,6 +38,7 @@ type OSHistorico = {
   status_novo: string;
   created_at: string;
   alterado_por: string | null;
+  usuarios?: { nome: string } | null;
 };
 type PecaUsada = {
   id: string; peca_id: string; quantidade: number; custo_unitario: number | null;
@@ -57,7 +58,7 @@ function Page() {
   });
   const { data: historico } = useQuery({
     queryKey: ["os_historico", id],
-    queryFn: async () => ((await (supabase as any).from("ordens_servico_historico").select("*").eq("ordem_servico_id", id).order("created_at")).data ?? []) as OSHistorico[],
+    queryFn: async () => ((await (supabase as any).from("ordens_servico_historico").select("*, usuarios:alterado_por(nome)").eq("ordem_servico_id", id).order("created_at")).data ?? []) as OSHistorico[],
   });
   const { data: pecas } = useQuery({
     queryKey: ["os_pecas", id],
@@ -143,12 +144,13 @@ function Page() {
               <TableHeader>
                 <TableRow>
                   <TableHead className="text-xs">Status</TableHead>
+                  <TableHead className="text-xs">Responsável</TableHead>
                   <TableHead className="text-xs">Data/Hora</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {(historico ?? []).length === 0 ? (
-                  <TableRow><TableCell colSpan={2} className="text-center text-xs text-muted-foreground py-4">Sem registros.</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={3} className="text-center text-xs text-muted-foreground py-4">Sem registros.</TableCell></TableRow>
                 ) : historico!.map((h) => (
                   <TableRow key={h.id}>
                     <TableCell className="text-xs">
@@ -162,6 +164,7 @@ function Page() {
                         <span className="font-medium">{h.status_novo} (Abertura)</span>
                       )}
                     </TableCell>
+                    <TableCell className="text-xs">{h.usuarios?.nome ?? "Sistema"}</TableCell>
                     <TableCell className="text-xs tabular-nums">{new Date(h.created_at).toLocaleString("pt-BR")}</TableCell>
                   </TableRow>
                 ))}
