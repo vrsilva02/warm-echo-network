@@ -400,7 +400,7 @@ async function runReport(tipo: ReportType, f: Filters): Promise<{ columns: strin
       .from("ordens_servico")
       .select("numero, status, prioridade, descricao_defeito, data_abertura, data_conclusao, custo_total, ativos(hostname)");
 
-    if (f.statusOS) q = q.eq("status", f.statusOS);
+    if (f.statusOS) q = q.eq("status", f.statusOS as any);
     if (f.periodoInicio) q = q.gte("data_abertura", f.periodoInicio);
     if (f.periodoFim) q = q.lte("data_abertura", f.periodoFim);
 
