@@ -55,6 +55,10 @@ function Page() {
     queryKey: ["os", id],
     queryFn: async () => ((await (supabase as any).from("ordens_servico").select("*, ativos(hostname, tipo, setor)").eq("id", id).maybeSingle()).data) as OSDetail | null,
   });
+  const { data: historico } = useQuery({
+    queryKey: ["os_historico", id],
+    queryFn: async () => ((await (supabase as any).from("ordens_servico_historico").select("*").eq("ordem_servico_id", id).order("created_at")).data ?? []) as OSHistorico[],
+  });
   const { data: pecas } = useQuery({
     queryKey: ["os_pecas", id],
     queryFn: async () => ((await (supabase as any).from("ordens_servico_pecas").select("*, pecas_catalogo(nome)").eq("ordem_servico_id", id).order("created_at")).data ?? []) as PecaUsada[],
@@ -65,6 +69,7 @@ function Page() {
     if (error) return toast.error(error.message);
     toast.success("Status atualizado");
     qc.invalidateQueries({ queryKey: ["os", id] });
+    qc.invalidateQueries({ queryKey: ["os_historico", id] });
     qc.invalidateQueries({ queryKey: ["ordens_servico"] });
     qc.invalidateQueries({ queryKey: ["ativos"] });
   }
@@ -76,8 +81,8 @@ function Page() {
   }
 
   const totalPecas = (pecas ?? []).reduce((s, p) => s + p.quantidade * Number(p.custo_unitario ?? 0), 0);
-  const tempoMin = os?.fechado_em && os.aberto_em
-    ? Math.round((new Date(os.fechado_em).getTime() - new Date(os.aberto_em).getTime()) / 60000)
+  const tempoMin = os?.data_conclusao && os.data_abertura
+    ? Math.round((new Date(os.data_conclusao).getTime() - new Date(os.data_abertura).getTime()) / 60000)
     : null;
 
   if (!os) return <PageHeader title="OS não encontrada" />;
