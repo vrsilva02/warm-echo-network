@@ -527,6 +527,37 @@ function ReportRunner({
     enabled: !!filters,
   });
 
+  const qc = useQueryClient();
+  const [syncingEdr, setSyncingEdr] = useState(false);
+
+  async function sincronizarEdr() {
+    if (!filters) {
+      toast.error("Gere o relatório antes de sincronizar");
+      return;
+    }
+    setSyncingEdr(true);
+    const toastId = toast.loading("Sincronizando ativos sem cobertura de EDR...");
+    try {
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ["ativos"] }),
+        qc.invalidateQueries({ queryKey: ["alocacoes"] }),
+      ]);
+      const res = await refetch();
+      if (res.error) throw res.error;
+      toast.success("Lista de EDR atualizada", {
+        id: toastId,
+        description: `${res.data?.rows.length ?? 0} registros em ${(res.data?.duration ?? 0).toFixed(0)}ms`,
+      });
+    } catch (err) {
+      toast.error("Falha ao sincronizar EDR", {
+        id: toastId,
+        description: err instanceof Error ? err.message : "Erro desconhecido",
+      });
+    } finally {
+      setSyncingEdr(false);
+    }
+  }
+
   const rows = data?.rows ?? [];
   const columns = data?.columns ?? [];
   const stamp = new Date().toISOString().slice(0, 10);
@@ -541,6 +572,16 @@ function ReportRunner({
         </div>
         <div className="flex flex-col items-end gap-2 flex-wrap">
           <div className="flex gap-2 flex-wrap">
+            {tipo === "gap_edr" && (
+              <Button
+                size="sm"
+                onClick={() => void sincronizarEdr()}
+                disabled={syncingEdr || isFetching}
+              >
+                <RefreshCw className={`h-4 w-4 mr-2 ${syncingEdr ? "animate-spin" : ""}`} />
+                {syncingEdr ? "Sincronizando..." : "Sincronizar EDR agora"}
+              </Button>
+            )}
             <Button 
               size="sm" 
               variant="outline" 
