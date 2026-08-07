@@ -19,6 +19,7 @@ import { logAction } from "@/lib/audit";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
 import { useConfirm } from "@/components/confirm-dialog";
+import { useRealtimeInvalidate } from "@/hooks/use-realtime-invalidate";
 
 export const Route = createFileRoute("/_authenticated/relatorios")({
   component: Page,
@@ -429,6 +430,14 @@ function ReportRunner({ tipo, filters, onSaveRecurring }: { tipo: ReportType; fi
   const { data, isLoading, isFetching, refetch } = useQuery({
     queryKey: ["report-run", tipo, filters],
     queryFn: () => runReport(tipo, filters),
+    refetchInterval: tipo === "ordens_servico" ? 15000 : false, // Auto-refresh for OS report
+  });
+
+  useRealtimeInvalidate({
+    channel: `relatorios-os-${tipo}`,
+    table: "ordens_servico",
+    queryKeys: [["report-run", "ordens_servico"]],
+    enabled: tipo === "ordens_servico",
   });
 
   const rows = data?.rows ?? [];
