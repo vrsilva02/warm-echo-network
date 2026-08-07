@@ -306,18 +306,19 @@ function FiltersCard({
 
 async function runReport(tipo: ReportType, f: Filters): Promise<{ columns: string[]; rows: any[][] }> {
   if (tipo === "elp") {
-    const { data } = await supabase.from("vw_elp").select("*").order("nome_oficial");
-    const rows = (data ?? []).filter((r: any) => {
-      if (f.categoria && r.categoria !== f.categoria) return false;
-      if (f.statusCompliance && r.status_compliance !== f.statusCompliance) return false;
-      return true;
-    });
-    let filtered = rows;
+    let q = supabase.from("vw_elp").select("*");
+    if (f.categoria) q = q.eq("categoria", f.categoria);
+    if (f.statusCompliance) q = q.eq("status_compliance", f.statusCompliance);
+    
+    const { data: rows } = await q.order("nome_oficial");
+    let filtered = rows ?? [];
+
     if (f.fabricanteId) {
       const { data: prods } = await supabase.from("produtos_catalogo").select("id").eq("fabricante_id", f.fabricanteId);
       const ids = new Set((prods ?? []).map((p: any) => p.id));
-      filtered = rows.filter((r: any) => ids.has(r.produto_id));
+      filtered = filtered.filter((r: any) => ids.has(r.produto_id));
     }
+
     return {
       columns: ["Produto", "Fabricante", "Categoria", "Compradas", "Alocadas", "Saldo", "Status"],
       rows: filtered.map((r: any) => [r.nome_oficial, r.fabricante ?? "—", r.categoria, r.licencas_compradas, r.licencas_alocadas, r.saldo, r.status_compliance]),
