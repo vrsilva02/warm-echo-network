@@ -394,6 +394,33 @@ async function runReport(tipo: ReportType, f: Filters): Promise<{ columns: strin
       rows: sem.map((a: any) => [a.hostname, a.tipo, a.unidades?.nome ?? "—", a.status_ciclo_vida]),
     };
   }
+
+  if (tipo === "ordens_servico") {
+    let q = supabase
+      .from("ordens_servico")
+      .select("numero, status, prioridade, descricao_defeito, data_abertura, data_conclusao, custo_total, ativos(hostname)");
+
+    if (f.statusOS) q = q.eq("status", f.statusOS);
+    if (f.periodoInicio) q = q.gte("data_abertura", f.periodoInicio);
+    if (f.periodoFim) q = q.lte("data_abertura", f.periodoFim);
+
+    const { data } = await q.order("data_abertura", { ascending: false });
+
+    return {
+      columns: ["Número", "Status", "Prioridade", "Ativo", "Defeito", "Abertura", "Conclusão", "Custo"],
+      rows: (data ?? []).map((os: any) => [
+        `#${os.numero}`,
+        os.status,
+        os.prioridade,
+        os.ativos?.hostname ?? "—",
+        os.descricao_defeito,
+        os.data_abertura ? new Date(os.data_abertura).toLocaleDateString("pt-BR") : "—",
+        os.data_conclusao ? new Date(os.data_conclusao).toLocaleDateString("pt-BR") : "—",
+        os.custo_total ? os.custo_total.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) : "—",
+      ]),
+    };
+  }
+
   return { columns: [], rows: [] };
 }
 
