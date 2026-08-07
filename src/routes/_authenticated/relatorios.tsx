@@ -459,7 +459,12 @@ async function runReport(tipo: ReportType, f: Filters): Promise<{ columns: strin
     };
   }
 
-  return { ...result, duration: performance.now() - start, timestamp: new Date() };
+  return { 
+    columns: result.columns, 
+    rows: result.rows, 
+    duration: performance.now() - start, 
+    timestamp: new Date() 
+  };
 }
 
 function ReportRunner({ 

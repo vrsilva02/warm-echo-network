@@ -1,4 +1,4 @@
-{/* Execute esta instrucao no projeto: Notificar com toasts ou banners quando a sincronização iniciar, concluir com sucesso ou falhar, incluindo uma mensagem legível de erro. */}
+{/* Execute esta instrucao no projeto: continua sem funcionar os relatórios */}
 import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth";
 import { Loader2 } from "lucide-react";
