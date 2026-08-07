@@ -384,11 +384,15 @@ async function runReport(tipo: ReportType, f: Filters): Promise<{ columns: strin
 
   if (tipo === "historico_ativo") {
     if (!f.ativoId) return { columns: ["Aviso"], rows: [["Selecione um ativo para gerar o histórico."]] };
-    const { data } = await supabase
+    let q = supabase
       .from("alocacoes")
       .select("id, data_inicio, data_fim, observacao, licencas(produto_id, produtos_catalogo(nome_oficial, categoria))")
-      .eq("ativo_id", f.ativoId)
-      .order("data_inicio", { ascending: false });
+      .eq("ativo_id", f.ativoId);
+
+    if (f.periodoInicio) q = q.gte("data_inicio", f.periodoInicio);
+    if (f.periodoFim) q = q.lte("data_inicio", f.periodoFim);
+
+    const { data } = await q.order("data_inicio", { ascending: false });
     return {
       columns: ["Produto", "Categoria", "Início", "Fim", "Duração", "Observação"],
       rows: (data ?? []).map((r: any) => {
