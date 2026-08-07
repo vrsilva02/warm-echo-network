@@ -29,7 +29,8 @@ type StatusOS = "aberta" | "em_andamento" | "aguardando_peca" | "concluida" | "c
 type OS = {
   id: string; numero: number; ativo_id: string; descricao_defeito: string;
   prioridade: "baixa" | "media" | "alta" | "critica"; status: StatusOS;
-  aberto_em: string; fechado_em: string | null; custo_total: number | null;
+  data_abertura: string; data_conclusao: string | null; custo_total: number | null;
+  aberto_por: string | null;
   ativos?: { hostname: string; tipo: string; setor: string | null } | null;
 };
 
