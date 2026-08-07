@@ -13,8 +13,8 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Textarea } from "@/components/ui/textarea";
 import { EmptyState } from "@/components/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Download, FileText, Save, Repeat, Trash2, Play } from "lucide-react";
-import { exportXLSXInBackground, downloadPDF } from "@/lib/export";
+import { Download, FileText, Save, Repeat, Trash2, Play, RefreshCw } from "lucide-react";
+import { exportXLSXInBackground, downloadPDF, downloadXLSX } from "@/lib/export";
 import { logAction } from "@/lib/audit";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
