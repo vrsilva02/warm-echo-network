@@ -114,7 +114,10 @@ function Page() {
             tipo={tipo} 
             filters={filters} 
             onChange={setFilters} 
-            onExecute={() => setLastExecutedFilters({ ...filters })}
+            onExecute={() => {
+              setLastExecutedFilters(null);
+              setTimeout(() => setLastExecutedFilters({ ...filters }), 0);
+            }}
           />
           <ReportRunner 
             tipo={tipo} 
@@ -442,7 +445,12 @@ async function runReport(tipo: ReportType, f: Filters): Promise<{ columns: strin
     if (f.periodoInicio) q = q.gte("data_abertura", f.periodoInicio + "T00:00:00.000Z");
     if (f.periodoFim) q = q.lte("data_abertura", f.periodoFim + "T23:59:59.999Z");
 
-    const { data } = await q.order("data_abertura", { ascending: false });
+    const { data, error } = await q.order("data_abertura", { ascending: false });
+
+    if (error) {
+      console.error("Erro ao carregar OS:", error);
+      throw new Error(`Erro no banco de dados: ${error.message}`);
+    }
 
     result = {
       columns: ["Número", "Status", "Prioridade", "Ativo", "Aberto por", "Abertura", "Conclusão", "Custo"],
