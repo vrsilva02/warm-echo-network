@@ -484,7 +484,7 @@ function ReportRunner({
   const rows = data?.rows ?? [];
   const columns = data?.columns ?? [];
   const stamp = new Date().toISOString().slice(0, 10);
-  const filterLabel = Object.entries(filters).filter(([, v]) => v).map(([k, v]) => `${k}=${v}`).join(" · ") || "sem filtros";
+  const filterLabel = filters ? Object.entries(filters).filter(([, v]) => v).map(([k, v]) => `${k}=${v}`).join(" · ") : "Aguardando execução";
 
   return (
     <Card>
