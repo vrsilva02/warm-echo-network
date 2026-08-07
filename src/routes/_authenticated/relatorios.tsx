@@ -424,14 +424,21 @@ async function runReport(tipo: ReportType, f: Filters): Promise<{ columns: strin
     let q = supabase.from("ativos").select("id, hostname, tipo, status_ciclo_vida, unidade_id, unidades(nome)");
     q = q.eq("status_ciclo_vida", f.statusAtivo ?? "ativo");
     if (f.unidadeId) q = q.eq("unidade_id", f.unidadeId);
-    const { data: ativos } = await q;
-    const { data: aloc } = await supabase
+    
+    const { data: ativos, error: ativosErr } = await q;
+    if (ativosErr) throw new Error(`Erro ao buscar ativos: ${ativosErr.message}`);
+
+    const { data: aloc, error: alocErr } = await supabase
       .from("alocacoes")
       .select("ativo_id, licencas!inner(produtos_catalogo!inner(categoria))")
       .is("data_fim", null)
       .eq("licencas.produtos_catalogo.categoria", "EDR");
+    
+    if (alocErr) throw new Error(`Erro ao buscar alocações EDR: ${alocErr.message}`);
+
     const cobertos = new Set((aloc ?? []).map((a: any) => a.ativo_id));
     const sem = (ativos ?? []).filter((a: any) => !cobertos.has(a.id));
+    
     result = {
       columns: ["Hostname", "Tipo", "Unidade", "Status"],
       rows: sem.map((a: any) => [a.hostname, a.tipo, a.unidades?.nome ?? "—", a.status_ciclo_vida]),
