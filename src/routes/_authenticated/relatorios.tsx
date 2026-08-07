@@ -94,6 +94,7 @@ const REPORT_META: Record<ReportType, { title: string; desc: string; usesFilters
 function Page() {
   const [tipo, setTipo] = useState<ReportType>("elp");
   const [filters, setFilters] = useState<Filters>({});
+  const [lastExecutedFilters, setLastExecutedFilters] = useState<Filters | null>(null);
   const [recOpen, setRecOpen] = useState(false);
 
   return (
@@ -103,10 +104,23 @@ function Page() {
         description="Construa relatórios com filtros combináveis. Salve como recorrente para envio mensal."
       />
       <div className="grid gap-4 lg:grid-cols-[minmax(240px,280px)_minmax(0,1fr)]">
-        <ShortcutsPanel current={tipo} onPick={(t) => { setTipo(t); setFilters({}); }} />
+        <ShortcutsPanel current={tipo} onPick={(t) => { 
+          setTipo(t); 
+          setFilters({}); 
+          setLastExecutedFilters(null);
+        }} />
         <div className="space-y-4 min-w-0">
-          <FiltersCard tipo={tipo} filters={filters} onChange={setFilters} />
-          <ReportRunner tipo={tipo} filters={filters} onSaveRecurring={() => setRecOpen(true)} />
+          <FiltersCard 
+            tipo={tipo} 
+            filters={filters} 
+            onChange={setFilters} 
+            onExecute={() => setLastExecutedFilters({ ...filters })}
+          />
+          <ReportRunner 
+            tipo={tipo} 
+            filters={lastExecutedFilters} 
+            onSaveRecurring={() => setRecOpen(true)} 
+          />
           <RecurringList />
         </div>
       </div>
