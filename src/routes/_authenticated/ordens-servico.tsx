@@ -127,7 +127,7 @@ function Page() {
                     </div>
                     <p className="text-xs line-clamp-2">{os.descricao_defeito}</p>
                     <div className="text-[10px] text-muted-foreground tabular-nums">
-                      Aberta em {new Date(os.aberto_em).toLocaleDateString("pt-BR")}
+                      Aberta em {new Date(os.data_abertura).toLocaleDateString("pt-BR")}
                     </div>
                   </CardContent>
                 </Card>
