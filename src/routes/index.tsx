@@ -1,4 +1,4 @@
-{/* Execute esta instrucao no projeto: Implemente testes ponta a ponta para validar todo o fluxo de cadastro, convite, definição de senha e ativação do novo usuário, garantindo que nunca apareça referência externa durante o processo. */}
+{/* Execute esta instrucao no projeto: no fluxo  de cadastro de usuárioprecisa cair no gestorait para o novo usuário cadastrar a senha. */}
 import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth";
 import { Loader2 } from "lucide-react";
