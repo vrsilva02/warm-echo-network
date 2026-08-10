@@ -1,4 +1,4 @@
-{/* Execute esta instrucao no projeto: faça o fluxo completo da gestão de acesso para ao cadastrar usuário ele receba o e-mail e siga o passo a passo para cadastrar a senha de acesso ao sistema, valide todo fluxo deste processo ate a validação do cadastro do usuario. */}
+{/* Execute esta instrucao no projeto: vou reenviar o convite para usuário na aba de gestão de acesso. faça funcionar o fluxo perfeitamente sem erro. valide */}
 import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth";
 import { Loader2 } from "lucide-react";
