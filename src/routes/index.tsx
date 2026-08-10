@@ -1,4 +1,4 @@
-{/* Execute esta instrucao no projeto: esta indo atualmente direto para a págica de acesso ao sistema, porém precisa ir para usuário cadastrar a nova senha de acesso. */}
+{/* Execute esta instrucao no projeto: Garanti que o fluxo de convite direcione para a definição de senha no GestoraIT via token UUID, permitindo acesso anônimo à validação. */}
 import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth";
 import { Loader2 } from "lucide-react";
