@@ -95,7 +95,7 @@ export const inviteUser = createServerFn({ method: "POST" })
 
     try {
       // Redirecionamos para a nova tela de conclusão de cadastro passando o token
-      const officialDomain = window.location.origin;
+      const officialDomain = "https://gestorait.mtr2tech.com.br";
       const inviteUrl = `${officialDomain}/auth/concluir?token=${token}`;
 
       console.log(`[inviteUser] Enviando convite via Supabase com redirectTo: ${inviteUrl}`);

@@ -65,7 +65,7 @@ function AuthPage() {
     if (!parsedEmail.success) return toast.error(parsedEmail.error.issues[0]?.message ?? "E-mail inválido");
     setBusy(true);
     const { error } = await supabase.auth.resetPasswordForEmail(parsedEmail.data, {
-      redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
+      redirectTo: `https://gestorait.mtr2tech.com.br/auth/callback?next=/reset-password`,
     });
     setBusy(false);
     if (error) return toast.error(error.message);
