@@ -1,4 +1,4 @@
-{/* Execute esta instrucao no projeto: no fluxo  de cadastro de usuárioprecisa cair no gestorait para o novo usuário cadastrar a senha. */}
+{/* Execute esta instrucao no projeto: esta indo atualmente direto para a págica de acesso ao sistema, porém precisa ir para usuário cadastrar a nova senha de acesso. */}
 import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth";
 import { Loader2 } from "lucide-react";
