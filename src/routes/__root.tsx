@@ -10,7 +10,8 @@ import {
 import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
-import { reportLovableError } from "../lib/lovable-error-reporting";
+// Removendo telemetria Lovable
+const reportLovableError = (...args: any[]) => console.error("Error context:", ...args);
 import { AuthProvider } from "@/lib/auth";
 import { Toaster } from "@/components/ui/sonner";
 import { ConfirmProvider } from "@/components/confirm-dialog";
