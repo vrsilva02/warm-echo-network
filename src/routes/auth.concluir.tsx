@@ -158,7 +158,7 @@ function ConcluirCadastroPage() {
             </div>
             <CardTitle>Bem-vindo ao GestoraIT!</CardTitle>
             <CardDescription>
-              Cadastro concluído com sucesso. Sua conta foi ativada e já pode ser utilizada.
+              Cadastro concluído com sucesso. Sua conta foi ativada. Você já pode acessar o sistema com seu e-mail e a senha definida.
             </CardDescription>
           </CardHeader>
           <CardFooter>
