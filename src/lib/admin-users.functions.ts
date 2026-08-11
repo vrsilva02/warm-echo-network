@@ -8,6 +8,7 @@ type InviteInput = {
   nome?: string;
   roles: AppRole[];
   redirectTo?: string;
+  password?: string;
 };
 
 /**
@@ -41,7 +42,9 @@ function validate(input: unknown): InviteInput {
   if (nome && nome.length > 120) nome = nome.slice(0, 120);
   if (nome === "") nome = undefined;
   const redirectTo = safeRedirectPath(v?.redirectTo);
-  return { email, nome, roles, redirectTo };
+  const password = typeof v?.password === "string" ? v.password : undefined;
+  if (password && password.length < 6) throw new Error("A senha deve ter pelo menos 6 caracteres");
+  return { email, nome, roles, redirectTo, password };
 }
 
 export const inviteUser = createServerFn({ method: "POST" })
@@ -94,57 +97,70 @@ export const inviteUser = createServerFn({ method: "POST" })
     }
 
     try {
-      // Redirecionamos para a nova tela de conclusão de cadastro passando o token
-      const officialDomain = "https://gestorait.mtr2tech.com.br";
-      const inviteUrl = `${officialDomain}/auth/concluir?token=${token}`;
-
-      console.log(`[inviteUser] Enviando convite via Supabase com redirectTo: ${inviteUrl}`);
-      const { data: invited, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(data.email, {
-        data: data.nome ? { nome: data.nome } : undefined,
-        redirectTo: inviteUrl,
-      });
+      let invited;
       
-      if (error) {
+      if (data.password) {
+        // Se a senha foi fornecida, criamos o usuário diretamente e confirmamos o e-mail
+        const { data: created, error } = await supabaseAdmin.auth.admin.createUser({
+          email: data.email,
+          password: data.password,
+          email_confirm: true,
+          user_metadata: data.nome ? { nome: data.nome } : undefined,
+        });
+        
+        if (error) throw error;
+        invited = created;
+        
+        // No caso de senha manual, o convite já é considerado "aceito" ou "concluído"
         if (convite) {
           await supabaseAdmin
             .from("convites")
-            .update({ status: "falhou", erro: error.message })
+            .update({ status: "aceito", updated_at: new Date().toISOString() })
             .eq("id", convite.id);
         }
-        console.error("[inviteUser] Erro no convite do Supabase:", error);
-        throw new Error(error.message);
-      }
+      } else {
+        // Redirecionamos para a nova tela de conclusão de cadastro passando o token
+        const officialDomain = "https://gestorait.mtr2tech.com.br";
+        const inviteUrl = `${officialDomain}/auth/concluir?token=${token}`;
 
+        console.log(`[inviteUser] Enviando convite via Supabase com redirectTo: ${inviteUrl}`);
+        const { data: inviteData, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(data.email, {
+          data: data.nome ? { nome: data.nome } : undefined,
+          redirectTo: inviteUrl,
+        });
+        
+        if (error) throw error;
+        invited = inviteData;
+        
+        if (convite) {
+          await supabaseAdmin
+            .from("convites")
+            .update({ status: "enviado", updated_at: new Date().toISOString() })
+            .eq("id", convite.id);
+          
+          await supabaseAdmin.from("auditoria_convites").insert({
+            convite_id: convite.id,
+            evento: "enviado"
+          });
+        }
+      }
+      
       const newUserId = invited.user?.id;
-      if (!newUserId) throw new Error("Falha ao criar usuário convidado.");
+      if (!newUserId) throw new Error("Falha ao criar usuário.");
 
       // handle_new_user trigger cria profile + role default 'visitante'. Ajusta para as roles escolhidas.
-      const { error: derr } = await supabaseAdmin.from("user_roles").delete().eq("user_id", newUserId);
-      if (derr) throw new Error("Convite criado, mas falhou ao ajustar os perfis do usuário.");
+      await supabaseAdmin.from("user_roles").delete().eq("user_id", newUserId);
       
       const { error: ierr } = await supabaseAdmin
         .from("user_roles")
         .insert(data.roles.map((role) => ({ user_id: newUserId, role })));
-      if (ierr) throw new Error("Convite criado, mas falhou ao aplicar os perfis do usuário.");
+      if (ierr) throw new Error("Usuário criado, mas falhou ao aplicar os perfis.");
 
       if (data.nome) {
         await supabaseAdmin.from("profiles").update({ nome: data.nome }).eq("id", newUserId);
       }
 
-      // Atualiza o status para enviado
-      if (convite) {
-        await supabaseAdmin
-          .from("convites")
-          .update({ status: "enviado", updated_at: new Date().toISOString() })
-          .eq("id", convite.id);
-        
-        await supabaseAdmin.from("auditoria_convites").insert({
-          convite_id: convite.id,
-          evento: "enviado"
-        });
-      }
-
-      console.log(`[inviteUser] Convite finalizado com sucesso para ${data.email}`);
+      console.log(`[inviteUser] Cadastro finalizado com sucesso para ${data.email}`);
       return { ok: true, userId: newUserId, email: data.email };
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Erro desconhecido";

@@ -79,6 +79,8 @@ function AcessosPage() {
   const [invNome, setInvNome] = useState("");
   const [invRoles, setInvRoles] = useState<Set<AppRole>>(new Set(["visitante"]));
   const [inviting, setInviting] = useState(false);
+  const [invPassword, setInvPassword] = useState("");
+  const [showInvPassword, setShowInvPassword] = useState(false);
   const [deleting, setDeleting] = useState<UserRow | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const invite = useServerFn(inviteUser);
@@ -205,12 +207,14 @@ function AcessosPage() {
           nome: invNome.trim() || undefined,
           roles: [...invRoles],
           redirectTo: "/auth",
+          password: invPassword.trim() || undefined,
         },
       });
-      toast.success(`Convite enviado para ${invEmail}`);
+      toast.success(invPassword ? `Usuário ${invEmail} criado com sucesso` : `Convite enviado para ${invEmail}`);
       setInviteOpen(false);
       setInvEmail("");
       setInvNome("");
+      setInvPassword("");
       setInvRoles(new Set(["visitante"]));
       qc.invalidateQueries({ queryKey: ["acessos-profiles"] });
       qc.invalidateQueries({ queryKey: ["acessos-roles"] });
@@ -415,6 +419,28 @@ function AcessosPage() {
                 onChange={(e) => setInvNome(e.target.value)}
                 placeholder="Ex.: Maria Silva"
               />
+            </div>
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="inv-password">Senha (opcional)</Label>
+                <button
+                  type="button"
+                  onClick={() => setShowInvPassword(!showInvPassword)}
+                  className="text-xs text-primary hover:underline"
+                >
+                  {showInvPassword ? "Ocultar" : "Mostrar"}
+                </button>
+              </div>
+              <Input
+                id="inv-password"
+                type={showInvPassword ? "text" : "password"}
+                value={invPassword}
+                onChange={(e) => setInvPassword(e.target.value)}
+                placeholder="Definir senha agora ou deixar em branco para convite"
+              />
+              <p className="text-[10px] text-muted-foreground">
+                Se preenchido, o usuário será criado com esta senha e o e-mail será confirmado automaticamente.
+              </p>
             </div>
             <div className="space-y-1.5">
               <Label>Perfis</Label>
