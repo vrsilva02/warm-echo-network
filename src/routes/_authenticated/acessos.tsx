@@ -21,7 +21,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ShieldAlert, KeyRound, UserPlus, History, Trash2, AlertTriangle, Mail, CheckCircle2, XCircle, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth, roleLabel, type AppRole } from "@/lib/auth";
-import { inviteUser, deleteUser } from "@/lib/admin-users.functions";
+import { inviteUser, deleteUser, updateUserPassword } from "@/lib/admin-users.functions";
 import { RequireRole } from "@/components/require-role";
 import {
   AlertDialog,
@@ -83,8 +83,15 @@ function AcessosPage() {
   const [showInvPassword, setShowInvPassword] = useState(false);
   const [deleting, setDeleting] = useState<UserRow | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  
+  const [passwordChangeUser, setPasswordChangeUser] = useState<UserRow | null>(null);
+  const [newPassword, setNewPassword] = useState("");
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [updatingPassword, setUpdatingPassword] = useState(false);
+
   const invite = useServerFn(inviteUser);
   const remove = useServerFn(deleteUser);
+  const updatePass = useServerFn(updateUserPassword);
 
   const { data: profiles, isLoading: lp } = useQuery({
     queryKey: ["acessos-profiles"],
@@ -242,6 +249,27 @@ function AcessosPage() {
     }
   }
 
+  async function handlePasswordChange() {
+    if (!passwordChangeUser || !newPassword) return;
+    if (newPassword.length < 6) return toast.error("A senha deve ter pelo menos 6 caracteres.");
+    
+    setUpdatingPassword(true);
+    try {
+      await updatePass({
+        data: {
+          userId: passwordChangeUser.id,
+          password: newPassword,
+        }
+      });
+      toast.success(`Senha de ${passwordChangeUser.nome || passwordChangeUser.email} atualizada.`);
+      setPasswordChangeUser(null);
+      setNewPassword("");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Falha ao atualizar senha");
+    } finally {
+      setUpdatingPassword(false);
+    }
+
   if (!isAdmin) {
     return <RequireRole roles={["admin"]}>{null}</RequireRole>;
   }
@@ -287,7 +315,8 @@ function AcessosPage() {
                 {new Date(u.created_at).toLocaleDateString("pt-BR")}
               </span>,
               <div key="a" className="flex gap-1">
-                <Button size="sm" variant="outline" onClick={() => openEdit(u)}>Editar perfis</Button>
+                <Button size="sm" variant="outline" onClick={() => openEdit(u)}>Perfis</Button>
+                <Button size="sm" variant="outline" onClick={() => setPasswordChangeUser(u)}>Senha</Button>
                 <Button
                   size="icon"
                   variant="ghost"
@@ -490,6 +519,44 @@ function AcessosPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      <Dialog open={!!passwordChangeUser} onOpenChange={(o) => !o && setPasswordChangeUser(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Alterar senha de {passwordChangeUser?.nome || passwordChangeUser?.email}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="new-password">Nova Senha</Label>
+                <button
+                  type="button"
+                  onClick={() => setShowNewPassword(!showNewPassword)}
+                  className="text-xs text-primary hover:underline"
+                >
+                  {showNewPassword ? "Ocultar" : "Mostrar"}
+                </button>
+              </div>
+              <Input
+                id="new-password"
+                type={showNewPassword ? "text" : "password"}
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Mínimo 6 caracteres"
+                autoFocus
+              />
+            </div>
+            <p className="text-xs text-muted-foreground bg-muted/50 p-3 rounded-md">
+              A senha será alterada imediatamente. O usuário poderá utilizá-la no próximo login.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setPasswordChangeUser(null)} disabled={updatingPassword}>Cancelar</Button>
+            <Button onClick={handlePasswordChange} disabled={updatingPassword || newPassword.length < 6}>
+              {updatingPassword ? "Atualizando…" : "Alterar Senha"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
