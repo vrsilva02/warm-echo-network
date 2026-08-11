@@ -27,6 +27,7 @@ import { Route as AuthenticatedRelatoriosOsRouteImport } from './routes/_authent
 import { Route as AuthenticatedRelatoriosRouteImport } from './routes/_authenticated/relatorios'
 import { Route as AuthenticatedReconciliacaoRouteImport } from './routes/_authenticated/reconciliacao'
 import { Route as AuthenticatedProdutosRouteImport } from './routes/_authenticated/produtos'
+import { Route as AuthenticatedPerfilRouteImport } from './routes/_authenticated/perfil'
 import { Route as AuthenticatedPecasRouteImport } from './routes/_authenticated/pecas'
 import { Route as AuthenticatedOrdensServicoRouteImport } from './routes/_authenticated/ordens-servico'
 import { Route as AuthenticatedLicencasRouteImport } from './routes/_authenticated/licencas'
@@ -140,6 +141,11 @@ const AuthenticatedReconciliacaoRoute =
 const AuthenticatedProdutosRoute = AuthenticatedProdutosRouteImport.update({
   id: '/produtos',
   path: '/produtos',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedPerfilRoute = AuthenticatedPerfilRouteImport.update({
+  id: '/perfil',
+  path: '/perfil',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedPecasRoute = AuthenticatedPecasRouteImport.update({
@@ -282,6 +288,7 @@ export interface FileRoutesByFullPath {
   '/licencas': typeof AuthenticatedLicencasRoute
   '/ordens-servico': typeof AuthenticatedOrdensServicoRoute
   '/pecas': typeof AuthenticatedPecasRoute
+  '/perfil': typeof AuthenticatedPerfilRoute
   '/produtos': typeof AuthenticatedProdutosRoute
   '/reconciliacao': typeof AuthenticatedReconciliacaoRoute
   '/relatorios': typeof AuthenticatedRelatoriosRoute
@@ -323,6 +330,7 @@ export interface FileRoutesByTo {
   '/licencas': typeof AuthenticatedLicencasRoute
   '/ordens-servico': typeof AuthenticatedOrdensServicoRoute
   '/pecas': typeof AuthenticatedPecasRoute
+  '/perfil': typeof AuthenticatedPerfilRoute
   '/produtos': typeof AuthenticatedProdutosRoute
   '/reconciliacao': typeof AuthenticatedReconciliacaoRoute
   '/relatorios': typeof AuthenticatedRelatoriosRoute
@@ -366,6 +374,7 @@ export interface FileRoutesById {
   '/_authenticated/licencas': typeof AuthenticatedLicencasRoute
   '/_authenticated/ordens-servico': typeof AuthenticatedOrdensServicoRoute
   '/_authenticated/pecas': typeof AuthenticatedPecasRoute
+  '/_authenticated/perfil': typeof AuthenticatedPerfilRoute
   '/_authenticated/produtos': typeof AuthenticatedProdutosRoute
   '/_authenticated/reconciliacao': typeof AuthenticatedReconciliacaoRoute
   '/_authenticated/relatorios': typeof AuthenticatedRelatoriosRoute
@@ -409,6 +418,7 @@ export interface FileRouteTypes {
     | '/licencas'
     | '/ordens-servico'
     | '/pecas'
+    | '/perfil'
     | '/produtos'
     | '/reconciliacao'
     | '/relatorios'
@@ -450,6 +460,7 @@ export interface FileRouteTypes {
     | '/licencas'
     | '/ordens-servico'
     | '/pecas'
+    | '/perfil'
     | '/produtos'
     | '/reconciliacao'
     | '/relatorios'
@@ -492,6 +503,7 @@ export interface FileRouteTypes {
     | '/_authenticated/licencas'
     | '/_authenticated/ordens-servico'
     | '/_authenticated/pecas'
+    | '/_authenticated/perfil'
     | '/_authenticated/produtos'
     | '/_authenticated/reconciliacao'
     | '/_authenticated/relatorios'
@@ -650,6 +662,13 @@ declare module '@tanstack/react-router' {
       path: '/produtos'
       fullPath: '/produtos'
       preLoaderRoute: typeof AuthenticatedProdutosRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/perfil': {
+      id: '/_authenticated/perfil'
+      path: '/perfil'
+      fullPath: '/perfil'
+      preLoaderRoute: typeof AuthenticatedPerfilRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/pecas': {
@@ -825,6 +844,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedLicencasRoute: typeof AuthenticatedLicencasRoute
   AuthenticatedOrdensServicoRoute: typeof AuthenticatedOrdensServicoRoute
   AuthenticatedPecasRoute: typeof AuthenticatedPecasRoute
+  AuthenticatedPerfilRoute: typeof AuthenticatedPerfilRoute
   AuthenticatedProdutosRoute: typeof AuthenticatedProdutosRoute
   AuthenticatedReconciliacaoRoute: typeof AuthenticatedReconciliacaoRoute
   AuthenticatedRelatoriosRoute: typeof AuthenticatedRelatoriosRoute
@@ -855,6 +875,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedLicencasRoute: AuthenticatedLicencasRoute,
   AuthenticatedOrdensServicoRoute: AuthenticatedOrdensServicoRoute,
   AuthenticatedPecasRoute: AuthenticatedPecasRoute,
+  AuthenticatedPerfilRoute: AuthenticatedPerfilRoute,
   AuthenticatedProdutosRoute: AuthenticatedProdutosRoute,
   AuthenticatedReconciliacaoRoute: AuthenticatedReconciliacaoRoute,
   AuthenticatedRelatoriosRoute: AuthenticatedRelatoriosRoute,
@@ -901,13 +922,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
