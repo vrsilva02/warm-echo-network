@@ -252,10 +252,11 @@ function AcessosPage() {
         finally {
             setUpdatingPassword(false);
         }
-        if (!isAdmin) {
-            return <RequireRole roles={["admin"]}>{null}</RequireRole>;
-        }
-        return (<>
+    }
+    if (!isAdmin) {
+        return <RequireRole roles={["admin"]}>{null}</RequireRole>;
+    }
+    return (<>
       <PageHeader title="Gestão de Acessos" description="Convide usuários, atribua perfis e acompanhe a trilha de auditoria." actions={<div className="flex gap-2">
             <Button variant="outline" asChild>
               <Link to="/auditoria">
@@ -275,17 +276,17 @@ function AcessosPage() {
         <TabsContent value="usuarios" className="mt-4 space-y-4">
           <ListToolbar query={q} onQueryChange={setQ}/>
           <DataTable columns={["Nome", "E-mail", "Perfis", "Cadastrado em", "Ações"]} empty={lp || lr ? "Carregando…" : "Nenhum usuário."} rows={filtered.map((u) => [
-                <span key="n" className="font-medium">
+            <span key="n" className="font-medium">
                 {u.nome ?? "—"} {u.id === me?.id && <span className="text-xs text-muted-foreground">(você)</span>}
               </span>,
-                <span key="e" className="text-sm">{u.email ?? "—"}</span>,
-                <div key="r" className="flex flex-wrap gap-1">
+            <span key="e" className="text-sm">{u.email ?? "—"}</span>,
+            <div key="r" className="flex flex-wrap gap-1">
                 {u.roles.length ? u.roles.map(roleBadge) : <span className="text-xs text-muted-foreground">Sem perfil</span>}
               </div>,
-                <span key="c" className="text-xs text-muted-foreground">
+            <span key="c" className="text-xs text-muted-foreground">
                 {new Date(u.created_at).toLocaleDateString("pt-BR")}
               </span>,
-                <div key="a" className="flex gap-1">
+            <div key="a" className="flex gap-1">
                 <Button size="sm" variant="outline" onClick={() => openEdit(u)}>Perfis</Button>
                 <Button size="sm" variant="outline" onClick={() => setPasswordChangeUser(u)}>Senha</Button>
                 <Button size="icon" variant="ghost" title="Enviar link de redefinição de senha" onClick={() => resetPassword(u.email)}>
@@ -295,19 +296,19 @@ function AcessosPage() {
                     <Trash2 className="h-4 w-4"/>
                   </Button>)}
               </div>,
-            ])}/>
+        ])}/>
         </TabsContent>
 
         <TabsContent value="convites" className="mt-4">
           <DataTable columns={["Destinatário", "Perfis", "Status", "Data"]} empty={lc ? "Carregando…" : "Nenhum convite enviado."} rows={(convites ?? []).map((c) => [
-                <div key="d" className="flex flex-col">
+            <div key="d" className="flex flex-col">
                 <span className="font-medium">{c.nome ?? "—"}</span>
                 <span className="text-xs text-muted-foreground">{c.email}</span>
               </div>,
-                <div key="r" className="flex flex-wrap gap-1">
+            <div key="r" className="flex flex-wrap gap-1">
                 {c.roles.map((role) => roleBadge(role))}
               </div>,
-                <div key="s">
+            <div key="s">
                 {c.status === "aceito" && (<Badge className="bg-success/15 text-success border-success/30">
                     <CheckCircle2 className="mr-1 h-3 w-3"/> Aceito
                   </Badge>)}
@@ -321,10 +322,10 @@ function AcessosPage() {
                     <XCircle className="h-3 w-3"/> Falhou
                   </Badge>)}
               </div>,
-                <span key="da" className="text-xs text-muted-foreground">
+            <span key="da" className="text-xs text-muted-foreground">
                 {c.created_at ? new Date(c.created_at).toLocaleString("pt-BR") : "—"}
               </span>
-            ])}/>
+        ])}/>
         </TabsContent>
       </Tabs>
 
@@ -423,9 +424,9 @@ function AcessosPage() {
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={(e) => {
-                e.preventDefault();
-                confirmDelete();
-            }} className="bg-destructive text-destructive-foreground hover:bg-destructive/90" disabled={isDeleting}>
+            e.preventDefault();
+            confirmDelete();
+        }} className="bg-destructive text-destructive-foreground hover:bg-destructive/90" disabled={isDeleting}>
               {isDeleting ? "Excluindo..." : "Sim, excluir usuário"}
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -459,5 +460,4 @@ function AcessosPage() {
         </DialogContent>
       </Dialog>
     </>);
-    }
 }
