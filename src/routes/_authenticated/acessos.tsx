@@ -269,6 +269,7 @@ function AcessosPage() {
     } finally {
       setUpdatingPassword(false);
     }
+  }
 
   if (!isAdmin) {
     return <RequireRole roles={["admin"]}>{null}</RequireRole>;
