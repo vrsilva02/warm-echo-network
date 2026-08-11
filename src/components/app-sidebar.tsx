@@ -21,6 +21,7 @@ import {
   Wallet,
   Wrench,
   Boxes,
+  User,
 } from "lucide-react";
 import {
   Sidebar,
@@ -173,6 +174,16 @@ export function AppSidebar() {
             <div className="text-muted-foreground">{primaryRole ? roleLabel(primaryRole) : "Sem papel"}</div>
           </div>
         )}
+        <SidebarMenu className="px-2">
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild isActive={isActive("/perfil")} tooltip="Meu Perfil">
+              <Link to="/perfil">
+                <User className="h-4 w-4" />
+                {!collapsed && <span>Meu Perfil</span>}
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
         <Button
           variant="ghost"
           size="sm"
