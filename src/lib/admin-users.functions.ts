@@ -204,3 +204,35 @@ export const deleteUser = createServerFn({ method: "POST" })
 
     return { ok: true };
   });
+
+export const updateUserPassword = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => {
+    const v = input as { userId: string; password: string };
+    if (!v.userId) throw new Error("ID de usuário inválido");
+    if (!v.password || v.password.length < 6) throw new Error("A senha deve ter pelo menos 6 caracteres");
+    return v;
+  })
+  .handler(async ({ data, context }) => {
+    const { data: isAdmin, error: rerr } = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
+
+    if (rerr || !isAdmin) {
+      throw new Error("Apenas administradores podem alterar senhas.");
+    }
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { error } = await supabaseAdmin.auth.admin.updateUserById(data.userId, {
+      password: data.password,
+    });
+
+    if (error) {
+      console.error("[updateUserPassword] Erro ao atualizar senha:", error);
+      throw new Error(error.message);
+    }
+
+    return { ok: true };
+  });

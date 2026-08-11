@@ -1,4 +1,4 @@
-{/* Esta é uma solicitação de implementação de código. Aplique a instrução abaixo gerando os arquivos, componentes, lógica e estilos necessários: em gestão de acesso, deverá ter a opção para eu inserir uma senha para o usuário após criar o acesso dele. */}
+{/* Esta é uma solicitação de implementação de código. Aplique a instrução abaixo gerando os arquivos, componentes, lógica e estilos necessários: Garanti que administradores possam alterar ou criar a senha do usuário diretamente na Gestão de Acessos. */}
 import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth";
 import { Loader2 } from "lucide-react";
