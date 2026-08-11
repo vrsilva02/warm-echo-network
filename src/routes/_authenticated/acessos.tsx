@@ -482,7 +482,9 @@ function AcessosPage() {
               ))}
             </div>
             <p className="text-xs text-muted-foreground">
-              Enviaremos um e-mail com link de ativação. O usuário define a senha ao abrir o link.
+              {invPassword 
+                ? "O usuário será criado imediatamente com a senha fornecida." 
+                : "Enviaremos um e-mail com link de ativação. O usuário define a senha ao abrir o link."}
             </p>
           </div>
           <DialogFooter>
