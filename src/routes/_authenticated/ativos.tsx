@@ -17,7 +17,14 @@ import { useAuth } from "@/lib/auth";
 import { logAction } from "@/lib/audit";
 import { useConfirm } from "@/components/confirm-dialog";
 import { Combobox } from "@/components/combobox";
-import { ATIVO_TIPOS, ATIVO_CATEGORIAS, comValorAtual } from "@/lib/ativos-opcoes";
+import { ComboboxCreatable } from "@/components/combobox-creatable";
+import { comValorAtual } from "@/lib/ativos-opcoes";
+import {
+  useAtivoTipos,
+  useAtivoCategorias,
+  criarOpcaoCatalogo,
+  useInvalidateCatalogo,
+} from "@/lib/ativos-catalogo";
 import { useRealtimeInvalidate } from "@/hooks/use-realtime-invalidate";
 
 import { chunk } from "@/lib/bulk-import";
