@@ -551,13 +551,16 @@ function AtivosPage() {
         <div className="grid grid-cols-2 gap-3">
           <div>
             <Label>Tipo <span className="text-muted-foreground font-normal">(opcional)</span></Label>
-            <Combobox
+            <ComboboxCreatable
               placeholder="Selecione o tipo"
-              searchPlaceholder="Buscar tipo…"
+              searchPlaceholder="Buscar ou criar tipo…"
+              emptyText="Nenhum tipo encontrado."
               clearable
               value={form.tipo}
               onChange={(v) => setForm({ ...form, tipo: v })}
-              options={comValorAtual(ATIVO_TIPOS, form.tipo).map((t) => ({ value: t, label: t }))}
+              allowCreate={canWrite}
+              onCreate={(nome) => criarOpcao("ativos_tipos", nome)}
+              options={comValorAtual(tiposCatalogo, form.tipo).map((t) => ({ value: t, label: t }))}
             />
           </div>
           <div>
@@ -567,13 +570,16 @@ function AtivosPage() {
         </div>
         <div>
           <Label>Categoria <span className="text-muted-foreground font-normal">(opcional)</span></Label>
-          <Combobox
+          <ComboboxCreatable
             placeholder="Selecione a categoria"
-            searchPlaceholder="Buscar categoria…"
+            searchPlaceholder="Buscar ou criar categoria…"
+            emptyText="Nenhuma categoria encontrada."
             clearable
             value={form.categoria || null}
             onChange={(v) => setForm({ ...form, categoria: v ?? "" })}
-            options={comValorAtual(ATIVO_CATEGORIAS, form.categoria).map((c) => ({ value: c, label: c }))}
+            allowCreate={canWrite}
+            onCreate={(nome) => criarOpcao("ativos_categorias", nome)}
+            options={comValorAtual(categoriasCatalogo, form.categoria).map((c) => ({ value: c, label: c }))}
           />
         </div>
         <div className="grid grid-cols-2 gap-3">
