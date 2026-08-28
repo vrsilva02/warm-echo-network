@@ -17,6 +17,7 @@ import { BulkImportDialog, BulkMetric } from "@/components/bulk-import-dialog";
 import { useLatestBulkJob, chunk } from "@/lib/bulk-import";
 import { fetchAll } from "@/lib/fetch-all";
 import { ATIVOS_COLUMNS } from "@/lib/import-templates";
+import { garantirOpcoesCatalogo } from "@/lib/ativos-catalogo";
 
 
 /**
