@@ -17,7 +17,14 @@ import { useAuth } from "@/lib/auth";
 import { logAction } from "@/lib/audit";
 import { useConfirm } from "@/components/confirm-dialog";
 import { Combobox } from "@/components/combobox";
-import { ATIVO_TIPOS, ATIVO_CATEGORIAS, comValorAtual } from "@/lib/ativos-opcoes";
+import { ComboboxCreatable } from "@/components/combobox-creatable";
+import { comValorAtual } from "@/lib/ativos-opcoes";
+import {
+  useAtivoTipos,
+  useAtivoCategorias,
+  criarOpcaoCatalogo,
+  useInvalidateCatalogo,
+} from "@/lib/ativos-catalogo";
 import { useRealtimeInvalidate } from "@/hooks/use-realtime-invalidate";
 
 import { chunk } from "@/lib/bulk-import";
@@ -220,6 +227,22 @@ function AtivosPage() {
     queryFn: async () => (await supabase.from("clientes").select("id,nome").eq("ativo", true).order("nome")).data ?? [],
   });
   const { set: edrSet } = useGapEdrSet(rows?.map((row) => row.id));
+
+  const { data: tiposCatalogo = [] } = useAtivoTipos();
+  const { data: categoriasCatalogo = [] } = useAtivoCategorias();
+  const invalidateCatalogo = useInvalidateCatalogo();
+
+  async function criarOpcao(tabela: "ativos_tipos" | "ativos_categorias", nome: string) {
+    try {
+      const criado = await criarOpcaoCatalogo(tabela, nome);
+      invalidateCatalogo(tabela);
+      toast.success(`Opção "${criado}" adicionada ao catálogo`);
+      return criado;
+    } catch (e: any) {
+      toast.error(e?.message ?? "Não foi possível criar a opção.");
+      throw e;
+    }
+  }
 
   useRealtimeInvalidate({
     channel: "ativos-list-live",
@@ -544,13 +567,16 @@ function AtivosPage() {
         <div className="grid grid-cols-2 gap-3">
           <div>
             <Label>Tipo <span className="text-muted-foreground font-normal">(opcional)</span></Label>
-            <Combobox
+            <ComboboxCreatable
               placeholder="Selecione o tipo"
-              searchPlaceholder="Buscar tipo…"
+              searchPlaceholder="Buscar ou criar tipo…"
+              emptyText="Nenhum tipo encontrado."
               clearable
               value={form.tipo}
               onChange={(v) => setForm({ ...form, tipo: v })}
-              options={comValorAtual(ATIVO_TIPOS, form.tipo).map((t) => ({ value: t, label: t }))}
+              allowCreate={canWrite}
+              onCreate={(nome) => criarOpcao("ativos_tipos", nome)}
+              options={comValorAtual(tiposCatalogo, form.tipo).map((t) => ({ value: t, label: t }))}
             />
           </div>
           <div>
@@ -560,13 +586,16 @@ function AtivosPage() {
         </div>
         <div>
           <Label>Categoria <span className="text-muted-foreground font-normal">(opcional)</span></Label>
-          <Combobox
+          <ComboboxCreatable
             placeholder="Selecione a categoria"
-            searchPlaceholder="Buscar categoria…"
+            searchPlaceholder="Buscar ou criar categoria…"
+            emptyText="Nenhuma categoria encontrada."
             clearable
             value={form.categoria || null}
             onChange={(v) => setForm({ ...form, categoria: v ?? "" })}
-            options={comValorAtual(ATIVO_CATEGORIAS, form.categoria).map((c) => ({ value: c, label: c }))}
+            allowCreate={canWrite}
+            onCreate={(nome) => criarOpcao("ativos_categorias", nome)}
+            options={comValorAtual(categoriasCatalogo, form.categoria).map((c) => ({ value: c, label: c }))}
           />
         </div>
         <div className="grid grid-cols-2 gap-3">

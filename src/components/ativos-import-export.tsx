@@ -17,6 +17,7 @@ import { BulkImportDialog, BulkMetric } from "@/components/bulk-import-dialog";
 import { useLatestBulkJob, chunk } from "@/lib/bulk-import";
 import { fetchAll } from "@/lib/fetch-all";
 import { ATIVOS_COLUMNS } from "@/lib/import-templates";
+import { garantirOpcoesCatalogo } from "@/lib/ativos-catalogo";
 
 
 /**
@@ -210,6 +211,17 @@ async function importarLinhas(
     if (existenteId) updates.push({ linha, payload, id: existenteId });
     else inserts.push({ linha, payload });
   }
+
+  // Garante que tipos/categorias novos existam no catálogo (Admin/Gestão).
+  setPhase("Atualizando catálogo de tipos e categorias…");
+  const todos = [...inserts, ...updates].map((p) => p.payload);
+  await Promise.all([
+    garantirOpcoesCatalogo("ativos_tipos", todos.map((p) => p.tipo).filter(Boolean) as string[]),
+    garantirOpcoesCatalogo(
+      "ativos_categorias",
+      todos.map((p) => p.categoria).filter(Boolean) as string[],
+    ),
+  ]).catch(() => undefined);
 
   let feitos = rows.length - inserts.length - updates.length;
   onProgress(feitos);
