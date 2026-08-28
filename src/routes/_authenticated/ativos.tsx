@@ -228,6 +228,22 @@ function AtivosPage() {
   });
   const { set: edrSet } = useGapEdrSet(rows?.map((row) => row.id));
 
+  const { data: tiposCatalogo = [] } = useAtivoTipos();
+  const { data: categoriasCatalogo = [] } = useAtivoCategorias();
+  const invalidateCatalogo = useInvalidateCatalogo();
+
+  async function criarOpcao(tabela: "ativos_tipos" | "ativos_categorias", nome: string) {
+    try {
+      const criado = await criarOpcaoCatalogo(tabela, nome);
+      invalidateCatalogo(tabela);
+      toast.success(`Opção "${criado}" adicionada ao catálogo`);
+      return criado;
+    } catch (e: any) {
+      toast.error(e?.message ?? "Não foi possível criar a opção.");
+      throw e;
+    }
+  }
+
   useRealtimeInvalidate({
     channel: "ativos-list-live",
     table: "ativos",
