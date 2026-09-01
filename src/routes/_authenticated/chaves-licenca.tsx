@@ -35,11 +35,29 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Copy, Check, KeyRound, Plus, Trash2, AlertTriangle } from "lucide-react";
+import {
+  Copy,
+  Check,
+  KeyRound,
+  Plus,
+  Trash2,
+  AlertTriangle,
+  Download,
+  ClipboardCopy,
+} from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
 import { friendlyError } from "@/lib/errors";
 import { logAction } from "@/lib/audit";
+import { downloadCSV, downloadPDF, toCSV } from "@/lib/export";
 
 export const Route = createFileRoute("/_authenticated/chaves-licenca")({
   component: Page,
@@ -179,32 +197,117 @@ function Page() {
     toast.success(`${ids.length} licença(s) excluída(s).`);
   }
 
+  const EXPORT_COLS = [
+    "Software",
+    "Chave",
+    "Tipo",
+    "Status",
+    "Ativo",
+    "Colaborador",
+    "Alocação",
+    "Expiração",
+  ];
+
+  function exportRows(): (string | number | null)[][] {
+    return filtered.map((r) => [
+      r.software,
+      maskTail(r.chave_ativacao),
+      r.tipo_licenca,
+      STATUS_LABEL[r.status],
+      r.ativos?.hostname ?? "—",
+      r.usuarios?.nome ?? "—",
+      r.data_alocacao ?? "—",
+      r.data_expiracao ?? "—",
+    ]);
+  }
+
+  const filtroResumo = [
+    software === "todos" ? "Todos os softwares" : software,
+    status === "todos" ? "Todos os status" : STATUS_LABEL[status as StatusLicenca],
+  ].join(" · ");
+
+  function exportarCSV() {
+    if (filtered.length === 0) return toast.error("Nenhuma licença para exportar.");
+    downloadCSV(`chaves-licenca-${new Date().toISOString().slice(0, 10)}`, EXPORT_COLS, exportRows());
+    void logAction("EXPORT", "licenses", { formato: "csv", total: filtered.length, filtroResumo });
+    toast.success(`${filtered.length} licença(s) exportada(s) em CSV.`);
+  }
+
+  async function exportarPDF() {
+    if (filtered.length === 0) return toast.error("Nenhuma licença para exportar.");
+    await downloadPDF({
+      filename: `chaves-licenca-${new Date().toISOString().slice(0, 10)}.pdf`,
+      title: "Chaves de Licença",
+      subtitle: `${filtered.length} registro(s) · ${filtroResumo}`,
+      columns: EXPORT_COLS,
+      rows: exportRows(),
+    });
+    void logAction("EXPORT", "licenses", { formato: "pdf", total: filtered.length, filtroResumo });
+    toast.success(`${filtered.length} licença(s) exportada(s) em PDF.`);
+  }
+
+  async function copiarLista() {
+    if (filtered.length === 0) return toast.error("Nenhuma licença para copiar.");
+    try {
+      await navigator.clipboard.writeText(toCSV(EXPORT_COLS, exportRows()));
+      toast.success(`${filtered.length} linha(s) copiada(s) para a área de transferência.`);
+    } catch {
+      toast.error("Não foi possível copiar a lista.");
+    }
+  }
+
   return (
     <div className="space-y-4">
       <PageHeader
         title="Chaves de Licença"
         description="Inventário de chaves de ativação vinculadas a ativos e colaboradores."
         actions={
-          isAdmin ? (
-            <div className="flex flex-wrap gap-2">
-              <Button size="sm" onClick={() => setBulkOpen(true)}>
-                <Plus className="h-4 w-4" /> Inserção em massa
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={selected.size === 0}
-                onClick={() => void excluirSelecionadas()}
-              >
-                <Trash2 className="h-4 w-4" /> Excluir selecionadas ({selected.size})
-              </Button>
-              <Button size="sm" variant="destructive" onClick={() => setWipeOpen(true)}>
-                <AlertTriangle className="h-4 w-4" /> Excluir todas as licenças
-              </Button>
-            </div>
-          ) : undefined
+          <div className="flex flex-wrap gap-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="sm" variant="outline">
+                  <Download className="h-4 w-4" /> Exportar
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
+                  {filtered.length} registro(s) · chave mascarada
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={() => exportarCSV()}>
+                  <Download className="h-4 w-4" /> Exportar CSV
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => void exportarPDF()}>
+                  <Download className="h-4 w-4" /> Exportar PDF
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={() => void copiarLista()}>
+                  <ClipboardCopy className="h-4 w-4" /> Copiar lista
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            {isAdmin ? (
+              <>
+                <Button size="sm" onClick={() => setBulkOpen(true)}>
+                  <Plus className="h-4 w-4" /> Inserção em massa
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={selected.size === 0}
+                  onClick={() => void excluirSelecionadas()}
+                >
+                  <Trash2 className="h-4 w-4" /> Excluir selecionadas ({selected.size})
+                </Button>
+                <Button size="sm" variant="destructive" onClick={() => setWipeOpen(true)}>
+                  <AlertTriangle className="h-4 w-4" /> Excluir todas as licenças
+                </Button>
+              </>
+            ) : null}
+          </div>
         }
       />
+
 
       <Card>
         <CardHeader className="pb-3">

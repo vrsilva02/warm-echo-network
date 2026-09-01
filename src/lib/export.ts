@@ -24,7 +24,34 @@ export async function downloadXLSX(
   setTimeout(() => URL.revokeObjectURL(url), 10000);
 }
 
+export function toCSV(
+  columns: string[],
+  rows: (string | number | null | undefined)[][],
+): string {
+  const esc = (v: string | number | null | undefined) => {
+    const s = v == null ? "" : String(v);
+    return /[";\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  return [columns, ...rows].map((r) => r.map(esc).join(";")).join("\r\n");
+}
 
+export function downloadCSV(
+  filename: string,
+  columns: string[],
+  rows: (string | number | null | undefined)[][],
+) {
+  const name = filename.replace(/\.(csv|xlsx?)$/i, "") + ".csv";
+  // BOM para o Excel reconhecer acentuação
+  const blob = new Blob(["\uFEFF" + toCSV(columns, rows)], {
+    type: "text/csv;charset=utf-8;",
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = name;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+}
 
 
 export async function downloadPDF(opts: {
