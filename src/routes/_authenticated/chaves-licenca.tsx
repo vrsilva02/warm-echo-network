@@ -35,11 +35,29 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Copy, Check, KeyRound, Plus, Trash2, AlertTriangle } from "lucide-react";
+import {
+  Copy,
+  Check,
+  KeyRound,
+  Plus,
+  Trash2,
+  AlertTriangle,
+  Download,
+  ClipboardCopy,
+} from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
 import { friendlyError } from "@/lib/errors";
 import { logAction } from "@/lib/audit";
+import { downloadCSV, downloadPDF, toCSV } from "@/lib/export";
 
 export const Route = createFileRoute("/_authenticated/chaves-licenca")({
   component: Page,
