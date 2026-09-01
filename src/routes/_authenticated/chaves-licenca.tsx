@@ -247,7 +247,7 @@ function Page() {
             </div>
           ) : filtered.length === 0 ? (
             <EmptyState
-              icon={KeyRound}
+              icon={<KeyRound className="h-6 w-6" />}
               title="Nenhuma licença encontrada"
               description="Ajuste os filtros ou faça uma inserção em massa de chaves."
             />
