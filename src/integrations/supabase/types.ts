@@ -1028,6 +1028,77 @@ export type Database = {
           },
         ]
       }
+      licenses: {
+        Row: {
+          ativo_id: string | null
+          chave_ativacao: string
+          created_at: string
+          data_alocacao: string | null
+          data_expiracao: string | null
+          id: string
+          software: string
+          status: Database["public"]["Enums"]["license_status"]
+          tipo_licenca: Database["public"]["Enums"]["license_tipo"]
+          updated_at: string
+          usuario_id: string | null
+        }
+        Insert: {
+          ativo_id?: string | null
+          chave_ativacao: string
+          created_at?: string
+          data_alocacao?: string | null
+          data_expiracao?: string | null
+          id?: string
+          software: string
+          status?: Database["public"]["Enums"]["license_status"]
+          tipo_licenca: Database["public"]["Enums"]["license_tipo"]
+          updated_at?: string
+          usuario_id?: string | null
+        }
+        Update: {
+          ativo_id?: string | null
+          chave_ativacao?: string
+          created_at?: string
+          data_alocacao?: string | null
+          data_expiracao?: string | null
+          id?: string
+          software?: string
+          status?: Database["public"]["Enums"]["license_status"]
+          tipo_licenca?: Database["public"]["Enums"]["license_tipo"]
+          updated_at?: string
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "licenses_ativo_id_fkey"
+            columns: ["ativo_id"]
+            isOneToOne: false
+            referencedRelation: "ativos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "licenses_ativo_id_fkey"
+            columns: ["ativo_id"]
+            isOneToOne: false
+            referencedRelation: "vw_gap_edr"
+            referencedColumns: ["ativo_id"]
+          },
+          {
+            foreignKeyName: "licenses_ativo_id_fkey"
+            columns: ["ativo_id"]
+            isOneToOne: false
+            referencedRelation: "vw_tco_ativo"
+            referencedColumns: ["ativo_id"]
+          },
+          {
+            foreignKeyName: "licenses_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ordens_servico: {
         Row: {
           aberto_por: string | null
@@ -1883,6 +1954,8 @@ export type Database = {
         | "padrao"
         | "visitante"
         | "tecnico"
+      license_status: "disponivel" | "alocada" | "expirada"
+      license_tipo: "OEM" | "Retail" | "Volume" | "CSP"
       mov_tipo: "entrada" | "saida" | "ajuste"
       os_prioridade: "baixa" | "media" | "alta" | "critica"
       os_status:
@@ -2029,6 +2102,8 @@ export const Constants = {
         "visitante",
         "tecnico",
       ],
+      license_status: ["disponivel", "alocada", "expirada"],
+      license_tipo: ["OEM", "Retail", "Volume", "CSP"],
       mov_tipo: ["entrada", "saida", "ajuste"],
       os_prioridade: ["baixa", "media", "alta", "critica"],
       os_status: [
