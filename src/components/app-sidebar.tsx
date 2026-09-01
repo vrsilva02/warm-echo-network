@@ -49,6 +49,7 @@ const main = [
   { title: "Catálogo", url: "/produtos", icon: Package },
   { title: "Contratos", url: "/contratos", icon: FileText },
   { title: "Licenças", url: "/licencas", icon: KeySquare },
+  { title: "Chaves de licença", url: "/chaves-licenca", icon: KeySquare },
   { title: "Alocações", url: "/alocacoes", icon: Link2 },
   { title: "Solicitações", url: "/solicitacoes", icon: ClipboardList },
   { title: "Serviços", url: "/servicos", icon: Network },
