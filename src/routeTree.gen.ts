@@ -36,6 +36,7 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedContratosRouteImport } from './routes/_authenticated/contratos'
 import { Route as AuthenticatedColaboradoresRouteImport } from './routes/_authenticated/colaboradores'
 import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticated/clientes'
+import { Route as AuthenticatedChavesLicencaRouteImport } from './routes/_authenticated/chaves-licenca'
 import { Route as AuthenticatedCentrosCustoRouteImport } from './routes/_authenticated/centros-custo'
 import { Route as AuthenticatedAuditoriaRouteImport } from './routes/_authenticated/auditoria'
 import { Route as AuthenticatedAtivosRouteImport } from './routes/_authenticated/ativos'
@@ -190,6 +191,12 @@ const AuthenticatedClientesRoute = AuthenticatedClientesRouteImport.update({
   path: '/clientes',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedChavesLicencaRoute =
+  AuthenticatedChavesLicencaRouteImport.update({
+    id: '/chaves-licenca',
+    path: '/chaves-licenca',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedCentrosCustoRoute =
   AuthenticatedCentrosCustoRouteImport.update({
     id: '/centros-custo',
@@ -280,6 +287,7 @@ export interface FileRoutesByFullPath {
   '/ativos': typeof AuthenticatedAtivosRoute
   '/auditoria': typeof AuthenticatedAuditoriaRoute
   '/centros-custo': typeof AuthenticatedCentrosCustoRoute
+  '/chaves-licenca': typeof AuthenticatedChavesLicencaRoute
   '/clientes': typeof AuthenticatedClientesRoute
   '/colaboradores': typeof AuthenticatedColaboradoresRoute
   '/contratos': typeof AuthenticatedContratosRoute
@@ -322,6 +330,7 @@ export interface FileRoutesByTo {
   '/ativos': typeof AuthenticatedAtivosRoute
   '/auditoria': typeof AuthenticatedAuditoriaRoute
   '/centros-custo': typeof AuthenticatedCentrosCustoRoute
+  '/chaves-licenca': typeof AuthenticatedChavesLicencaRoute
   '/clientes': typeof AuthenticatedClientesRoute
   '/colaboradores': typeof AuthenticatedColaboradoresRoute
   '/contratos': typeof AuthenticatedContratosRoute
@@ -366,6 +375,7 @@ export interface FileRoutesById {
   '/_authenticated/ativos': typeof AuthenticatedAtivosRoute
   '/_authenticated/auditoria': typeof AuthenticatedAuditoriaRoute
   '/_authenticated/centros-custo': typeof AuthenticatedCentrosCustoRoute
+  '/_authenticated/chaves-licenca': typeof AuthenticatedChavesLicencaRoute
   '/_authenticated/clientes': typeof AuthenticatedClientesRoute
   '/_authenticated/colaboradores': typeof AuthenticatedColaboradoresRoute
   '/_authenticated/contratos': typeof AuthenticatedContratosRoute
@@ -410,6 +420,7 @@ export interface FileRouteTypes {
     | '/ativos'
     | '/auditoria'
     | '/centros-custo'
+    | '/chaves-licenca'
     | '/clientes'
     | '/colaboradores'
     | '/contratos'
@@ -452,6 +463,7 @@ export interface FileRouteTypes {
     | '/ativos'
     | '/auditoria'
     | '/centros-custo'
+    | '/chaves-licenca'
     | '/clientes'
     | '/colaboradores'
     | '/contratos'
@@ -495,6 +507,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ativos'
     | '/_authenticated/auditoria'
     | '/_authenticated/centros-custo'
+    | '/_authenticated/chaves-licenca'
     | '/_authenticated/clientes'
     | '/_authenticated/colaboradores'
     | '/_authenticated/contratos'
@@ -727,6 +740,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClientesRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/chaves-licenca': {
+      id: '/_authenticated/chaves-licenca'
+      path: '/chaves-licenca'
+      fullPath: '/chaves-licenca'
+      preLoaderRoute: typeof AuthenticatedChavesLicencaRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/centros-custo': {
       id: '/_authenticated/centros-custo'
       path: '/centros-custo'
@@ -836,6 +856,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAtivosRoute: typeof AuthenticatedAtivosRoute
   AuthenticatedAuditoriaRoute: typeof AuthenticatedAuditoriaRoute
   AuthenticatedCentrosCustoRoute: typeof AuthenticatedCentrosCustoRoute
+  AuthenticatedChavesLicencaRoute: typeof AuthenticatedChavesLicencaRoute
   AuthenticatedClientesRoute: typeof AuthenticatedClientesRoute
   AuthenticatedColaboradoresRoute: typeof AuthenticatedColaboradoresRoute
   AuthenticatedContratosRoute: typeof AuthenticatedContratosRoute
@@ -867,6 +888,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAtivosRoute: AuthenticatedAtivosRoute,
   AuthenticatedAuditoriaRoute: AuthenticatedAuditoriaRoute,
   AuthenticatedCentrosCustoRoute: AuthenticatedCentrosCustoRoute,
+  AuthenticatedChavesLicencaRoute: AuthenticatedChavesLicencaRoute,
   AuthenticatedClientesRoute: AuthenticatedClientesRoute,
   AuthenticatedColaboradoresRoute: AuthenticatedColaboradoresRoute,
   AuthenticatedContratosRoute: AuthenticatedContratosRoute,
