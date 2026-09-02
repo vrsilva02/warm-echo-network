@@ -7,7 +7,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Download, Upload, FileSpreadsheet, ChevronDown, Loader2 } from "lucide-react";
+import { Download, Upload, FileSpreadsheet, ChevronDown, Loader2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { downloadXLSX } from "@/lib/export";
@@ -17,6 +17,7 @@ import { BulkImportDialog, BulkMetric } from "@/components/bulk-import-dialog";
 import { useLatestBulkJob, chunk } from "@/lib/bulk-import";
 import { fetchAll } from "@/lib/fetch-all";
 import { LICENCAS_COLUMNS } from "@/lib/import-templates";
+import { LicencasBulkDeleteDialog } from "@/components/licencas-bulk-delete-dialog";
 
 
 /**
@@ -321,6 +322,7 @@ async function importarLinhas(
 
 export function LicencasImportExport({ canWrite, onImported }: { canWrite: boolean; onImported: () => void }) {
   const [open, setOpen] = React.useState(false);
+  const [bulkOpen, setBulkOpen] = React.useState(false);
   const job = useLatestBulkJob<Report>("licencas");
   const running = job?.status === "running";
   const unread = !!job && job.status !== "running" && !job.acknowledged;
@@ -347,6 +349,14 @@ export function LicencasImportExport({ canWrite, onImported }: { canWrite: boole
           <DropdownMenuItem onClick={() => downloadTemplate()}>
             <FileSpreadsheet className="h-4 w-4" /> Baixar template
           </DropdownMenuItem>
+          {canWrite && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setBulkOpen(true)}>
+                <Trash2 className="h-4 w-4 text-destructive" /> Apagar licenças em massa…
+              </DropdownMenuItem>
+            </>
+          )}
           {canWrite && (
             <>
               <DropdownMenuSeparator />
@@ -413,6 +423,12 @@ export function LicencasImportExport({ canWrite, onImported }: { canWrite: boole
             )}
           </>
         )}
+      />
+
+      <LicencasBulkDeleteDialog
+        open={bulkOpen}
+        onOpenChange={setBulkOpen}
+        onDeleted={onImported}
       />
     </>
   );
