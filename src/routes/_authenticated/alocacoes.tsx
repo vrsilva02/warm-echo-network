@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/page-header";
 import { AdvancedTable, type Column, type SavedView } from "@/components/advanced-table";
@@ -13,12 +13,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Combobox } from "@/components/combobox";
-import { Trash2, Link2 } from "lucide-react";
+import { Trash2, Link2, KeyRound } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
-import { logAction } from "@/lib/audit";
 import { useConfirm } from "@/components/confirm-dialog";
 import { MaskedKey } from "@/components/masked-key";
+import { criarAlocacao, encerrarAlocacao, encerrarAlocacoes } from "@/lib/licencas";
 
 export const Route = createFileRoute("/_authenticated/alocacoes")({
   component: Page,
@@ -39,6 +39,7 @@ type Row = {
   data_fim: string | null;
   observacao: string | null;
   chave_individual: string | null;
+  chave_id: string | null;
   licencas?: {
     id: string;
     chave_ativacao: string | null;
@@ -53,15 +54,34 @@ type Row = {
   ativos?: { hostname: string } | null;
 };
 
+type ChaveDisponivel = {
+  id: string;
+  software: string;
+  chave_ativacao: string;
+  tipo_licenca: string | null;
+};
+
+type ChaveAssoc = {
+  id: string;
+  software: string;
+  chave_ativacao: string;
+};
+
 const initial = {
   licenca_id: "",
   usuario_id: null as string | null,
   ativo_id: null as string | null,
   data_inicio: new Date().toISOString().slice(0, 10),
   data_fim: "",
-  chave_individual: "",
+  chave_id: null as string | null,
   observacao: "",
 };
+
+function mascaraChave(chave: string): string {
+  const limpa = (chave ?? "").trim();
+  if (limpa.length <= 8) return limpa;
+  return `${"•".repeat(6)}${limpa.slice(-4)}`;
+}
 
 function Page() {
   const { canWrite } = useAuth();
@@ -89,6 +109,7 @@ function Page() {
       return data as unknown as Row[];
     },
   });
+
   const { data: licencas } = useQuery({
     queryKey: ["licencas-lite"],
     queryFn: async () =>
@@ -97,34 +118,87 @@ function Page() {
         .select("id, produtos_catalogo(id, nome_oficial, modelo_licenciamento, tipo_licenciamento)")
       ).data ?? [],
   });
+
+  const { data: chavesDisponiveis = [] } = useQuery({
+    queryKey: ["chaves-disponiveis-alocacao"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("licenses")
+        .select("id, software, chave_ativacao, tipo_licenca")
+        .eq("status", "disponivel")
+        .order("software", { ascending: true });
+      return (data ?? []) as unknown as ChaveDisponivel[];
+    },
+  });
+
   const { data: usuarios } = useQuery({
     queryKey: ["usuarios-lite"],
     queryFn: async () => (await supabase.from("usuarios").select("id,nome").eq("status", "ativo").order("nome")).data ?? [],
   });
+
   const { data: ativos } = useQuery({
     queryKey: ["ativos-lite"],
     queryFn: async () => (await supabase.from("ativos").select("id,hostname").neq("status_ciclo_vida", "baixado").order("hostname")).data ?? [],
   });
 
-  const { criarAlocacao } = { criarAlocacao: async (input: any) => (await import("@/lib/licencas")).criarAlocacao(input) };
-  const licencaSel = (licencas ?? []).find((l: any) => l.id === form.licenca_id) as any | undefined;
-  const chaveObrigatoria = false; // Removido por refatoração de negócio
+  const licencaSelecionada = useMemo<{ produtos_catalogo?: { nome_oficial: string } | null } | undefined>(
+    () => (licencas ?? []).find((l: any) => l.id === form.licenca_id) as any,
+    [licencas, form.licenca_id],
+  );
 
-  function openNew() { setForm(initial); setOpen(true); }
+  const produtoSelecionado = licencaSelecionada?.produtos_catalogo?.nome_oficial?.trim().toLowerCase() ?? "";
+
+  const chavesCompativeis = useMemo(
+    () =>
+      produtoSelecionado
+        ? chavesDisponiveis.filter((c) => c.software.trim().toLowerCase() === produtoSelecionado)
+        : [],
+    [chavesDisponiveis, produtoSelecionado],
+  );
+
+  const chaveIds = useMemo(() => {
+    const set = new Set<string>();
+    (rows ?? []).forEach((r) => {
+      if (r.chave_id) set.add(r.chave_id);
+    });
+    return Array.from(set);
+  }, [rows]);
+
+  const { data: chavesAssociadas = [] } = useQuery({
+    queryKey: ["licenses-assoc", chaveIds],
+    queryFn: async () => {
+      if (chaveIds.length === 0) return [];
+      const { data } = await supabase
+        .from("licenses")
+        .select("id, software, chave_ativacao")
+        .in("id", chaveIds);
+      return (data ?? []) as unknown as ChaveAssoc[];
+    },
+    enabled: chaveIds.length > 0,
+  });
+
+  const chavesById = useMemo(
+    () => new Map(chavesAssociadas.map((c) => [c.id, c])),
+    [chavesAssociadas],
+  );
+
+  function openNew() {
+    setForm({ ...initial });
+    setOpen(true);
+  }
+
   async function save() {
     if (!form.licenca_id) return toast.error("Selecione a licença");
     if (!form.usuario_id && !form.ativo_id) return toast.error("Vincule a um colaborador ou ativo");
-    if (chaveObrigatoria && !form.chave_individual.trim()) {
-      return toast.error("Produto OEM/Retail: informe a chave individual desta alocação.");
-    }
-    // Validação agora feita no backend via índice UNIQUE e lógica centralizada em criarAlocacao
+
     const r = await criarAlocacao({
       licenca_id: form.licenca_id,
-      ativo_id: form.ativo_id!, 
+      ativo_id: form.ativo_id ?? null,
       usuario_id: form.usuario_id,
-      observacao: form.observacao
+      observacao: form.observacao,
+      chave_id: form.chave_id,
     });
-    
+
     if (!r.ok) {
       if (r.error === "ALREADY_ALLOCATED") {
         return toast.error("Este ativo já possui esta licença atribuída.");
@@ -132,15 +206,21 @@ function Page() {
       return toast.error(r.error || "Erro ao criar alocação");
     }
 
-    toast.success("Alocação criada");
+    toast.success(form.chave_id ? "Alocação criada com a chave vinculada ao ativo" : "Alocação criada");
     setOpen(false);
     qc.invalidateQueries({ queryKey: ["alocacoes"] });
     qc.invalidateQueries({ queryKey: ["dashboard"] });
+    if (form.chave_id) {
+      qc.invalidateQueries({ queryKey: ["chaves-disponiveis-alocacao"] });
+      qc.invalidateQueries({ queryKey: ["licenses"] });
+      qc.invalidateQueries({ queryKey: ["licenses-assoc"] });
+    }
   }
+
   async function encerrar(row: Row) {
     const ok = await confirm({
       title: "Encerrar alocação?",
-      description: "A licença ficará livre para reuso a partir de hoje.",
+      description: "A licença ficará livre para reuso a partir de hoje. Se houver chave vinculada, ela volta para as chaves disponíveis.",
       tone: "warn",
       impact: [
         { label: "Produto", value: row.licencas?.produtos_catalogo?.nome_oficial ?? "—" },
@@ -150,18 +230,23 @@ function Page() {
       confirmLabel: "Encerrar",
     });
     if (!ok) return;
-    const { error } = await supabase.from("alocacoes").update({ data_fim: new Date().toISOString().slice(0, 10) }).eq("id", row.id);
-    if (error) return toast.error(error.message);
+
+    const r = await encerrarAlocacao(row.id, "Encerrado via módulo de Alocações");
+    if (!r.ok) return toast.error(r.error || "Erro ao encerrar");
     toast.success("Alocação encerrada");
     qc.invalidateQueries({ queryKey: ["alocacoes"] });
     qc.invalidateQueries({ queryKey: ["dashboard"] });
+    qc.invalidateQueries({ queryKey: ["licenses"] });
+    qc.invalidateQueries({ queryKey: ["licenses-assoc"] });
+    qc.invalidateQueries({ queryKey: ["chaves-disponiveis-alocacao"] });
   }
+
   async function bulkEncerrar(sel: Row[], clear: () => void) {
     const ativas = sel.filter((r) => !r.data_fim);
     if (ativas.length === 0) return toast.info("Nenhuma alocação ativa na seleção");
     const ok = await confirm({
       title: `Encerrar ${ativas.length} alocação(ões)?`,
-      description: "As licenças correspondentes ficarão livres para reuso.",
+      description: "As licenças correspondentes ficarão livres para reuso. Chaves vinculadas voltam automaticamente para disponíveis.",
       tone: "warn",
       impact: [
         { label: "Alocações a encerrar", value: ativas.length },
@@ -171,15 +256,18 @@ function Page() {
       confirmLabel: "Encerrar todas",
     });
     if (!ok) return;
-    const today = new Date().toISOString().slice(0, 10);
+
     const ids = ativas.map((r) => r.id);
-    const { error } = await supabase.from("alocacoes").update({ data_fim: today }).in("id", ids);
-    if (error) return toast.error(error.message);
-    void logAction("BULK_UPDATE", "alocacoes", { operacao: "encerrar", ids, total: ids.length, data_fim: today });
-    toast.success(`${ativas.length} encerrada(s)`);
+    const r = await encerrarAlocacoes(ids, "Encerrado em massa pelo módulo de Alocações");
+    if (!r.ok) return toast.error(r.error || "Erro ao encerrar");
+
+    toast.success(`${r.total} encerrada(s)`);
     clear();
     qc.invalidateQueries({ queryKey: ["alocacoes"] });
     qc.invalidateQueries({ queryKey: ["dashboard"] });
+    qc.invalidateQueries({ queryKey: ["licenses"] });
+    qc.invalidateQueries({ queryKey: ["licenses-assoc"] });
+    qc.invalidateQueries({ queryKey: ["chaves-disponiveis-alocacao"] });
   }
 
   const columns: Column<Row>[] = [
@@ -205,17 +293,27 @@ function Page() {
     {
       id: "chave", header: "Chave",
       accessor: (r) => {
-        const usaIndividual = false;
-        const chave = usaIndividual ? r.chave_individual : r.licencas?.chave_ativacao ?? null;
+        const regAssoc = r.chave_id ? chavesById.get(r.chave_id) : undefined;
+        const chave = r.chave_id
+          ? (regAssoc?.chave_ativacao ?? null)
+          : r.chave_individual ?? r.licencas?.chave_ativacao ?? null;
         if (!chave) return <span className="text-muted-foreground text-xs">—</span>;
+        const usaChaveModule = !!r.chave_id && !!regAssoc;
+        const usaIndividual = !r.chave_id && !!r.chave_individual;
+        const tabelaOrigem = usaChaveModule
+          ? "licenses"
+          : usaIndividual
+            ? "alocacoes"
+            : "licencas";
+        const origem = usaChaveModule ? "licenses" : usaIndividual ? "chave_individual" : "chave_ativacao";
         return (
           <MaskedKey
             value={chave}
             context={{
-              tabela: usaIndividual ? "alocacoes" : "licencas",
-              registroId: usaIndividual ? r.id : (r.licencas?.id ?? r.licenca_id ?? r.id),
+              tabela: tabelaOrigem,
+              registroId: usaChaveModule ? r.chave_id : usaIndividual ? r.id : (r.licencas?.id ?? r.licenca_id ?? r.id),
               metadata: {
-                origem: usaIndividual ? "chave_individual" : "chave_ativacao",
+                origem,
                 alocacao_id: r.id,
                 licenca_id: r.licenca_id,
                 produto_id: r.licencas?.produtos_catalogo?.id ?? null,
@@ -228,7 +326,12 @@ function Page() {
           />
         );
       },
-      searchValue: () => undefined,
+      searchValue: (r) => {
+        const regAssoc = r.chave_id ? chavesById.get(r.chave_id) : undefined;
+        return r.chave_id
+          ? (regAssoc?.chave_ativacao ?? "")
+          : (r.chave_individual ?? r.licencas?.chave_ativacao ?? "");
+      },
       exportValue: () => "(protegida)",
     },
     {
@@ -288,7 +391,11 @@ function Page() {
     if (fStatus === "encerrada" && !r.data_fim) return false;
     if (fChave.trim()) {
       const q = fChave.trim().toLowerCase();
-      const chave = (r.chave_individual ?? r.licencas?.chave_ativacao ?? "").toLowerCase();
+      const regAssoc = r.chave_id ? chavesById.get(r.chave_id) : undefined;
+      const chave = (r.chave_id
+        ? (regAssoc?.chave_ativacao ?? "")
+        : (r.chave_individual ?? r.licencas?.chave_ativacao ?? "")
+      ).toLowerCase();
       if (!chave.includes(q)) return false;
     }
     if (fDataInicio || fDataFim) {
@@ -306,7 +413,7 @@ function Page() {
     <>
       <PageHeader
         title="Alocações"
-        description="Cada vínculo consome uma licença efetiva do produto até ser encerrado."
+        description="Cada vínculo consome uma licença efetiva do produto até ser encerrado. Use Chaves de Licença para alocar a chave exata ao ativo."
         actions={canWrite ? <Button size="sm" onClick={openNew}>Nova alocação</Button> : undefined}
       />
       <div className="grid gap-3 md:grid-cols-6 mb-4">
@@ -377,7 +484,7 @@ function Page() {
           <EmptyState
             icon={<Link2 className="h-6 w-6" />}
             title="Nenhuma alocação"
-            description="Vincule licenças a colaboradores ou ativos para consumir o saldo contratado."
+            description="Vincule licenças a colaboradores ou ativos para consumir o saldo contratado. Com o módulo Chaves de Licença é possível escolher a chave exata do ativo."
             action={canWrite ? <Button size="sm" onClick={openNew}>Nova alocação</Button> : undefined}
           />
         }
@@ -393,7 +500,7 @@ function Page() {
             searchPlaceholder="Buscar produto…"
             clearable={false}
             value={form.licenca_id || null}
-            onChange={(v) => setForm({ ...form, licenca_id: v ?? "" })}
+            onChange={(v) => setForm({ ...form, licenca_id: v ?? "", chave_id: null })}
             options={(licencas ?? []).map((l: any) => ({
               value: l.id,
               label: l.produtos_catalogo?.nome_oficial ?? l.id.slice(0, 8),
@@ -401,6 +508,34 @@ function Page() {
             }))}
           />
         </div>
+
+        {form.licenca_id && (
+          <div>
+            <Label>Chave (módulo Chaves de Licença)</Label>
+            <Combobox
+              placeholder="Sem chave individual"
+              searchPlaceholder="Buscar chave…"
+              clearable
+              value={form.chave_id}
+              onChange={(v) => setForm({ ...form, chave_id: v ?? null })}
+              options={chavesCompativeis.map((c) => ({
+                value: c.id,
+                label: mascaraChave(c.chave_ativacao),
+                hint: `${c.software} · ${c.tipo_licenca ?? "—"}`,
+              }))}
+            />
+            {chavesCompativeis.length > 0 ? (
+              <p className="text-[11px] text-muted-foreground mt-1">
+                Ao salvar, esta chave será marcada como alocada para o ativo/colaborador no módulo Chaves de Licença.
+              </p>
+            ) : (
+              <p className="text-[11px] text-muted-foreground mt-1">
+                Nenhuma chave disponível no Chaves de Licença com o software “{licencaSelecionada?.produtos_catalogo?.nome_oficial ?? form.licenca_id.slice(0, 8)}”. Você ainda pode salvar o vínculo de licença, ou cadastrar uma chave disponível lá primeiro.
+              </p>
+            )}
+          </div>
+        )}
+
         <div className="grid grid-cols-2 gap-3">
           <div>
             <Label>Colaborador</Label>
@@ -427,25 +562,14 @@ function Page() {
           <div><Label>Início</Label><Input type="date" value={form.data_inicio} onChange={(e) => setForm({ ...form, data_inicio: e.target.value })} /></div>
           <div><Label>Fim (opcional)</Label><Input type="date" value={form.data_fim} onChange={(e) => setForm({ ...form, data_fim: e.target.value })} /></div>
         </div>
-        <div>
-          <Label>
-            Chave individual {chaveObrigatoria && <span className="text-destructive">*</span>}
-            {!chaveObrigatoria && <span className="text-muted-foreground text-xs"> (opcional)</span>}
-          </Label>
-          <Input
-            value={form.chave_individual}
-            onChange={(e) => setForm({ ...form, chave_individual: e.target.value })}
-            placeholder={chaveObrigatoria ? "Obrigatório para produtos OEM/Retail" : "Somente se este ativo tem chave própria"}
-            autoComplete="off"
-          />
-          {chaveObrigatoria && (
-            <p className="text-[11px] text-muted-foreground mt-1">
-              Produto OEM/Retail: cada ativo recebe uma chave própria. Ela ficará mascarada e cada revelação é registrada no log de auditoria.
-            </p>
-          )}
-        </div>
         <div><Label>Observação</Label><Textarea value={form.observacao} onChange={(e) => setForm({ ...form, observacao: e.target.value })} /></div>
       </CrudDialog>
+      <div className="flex items-start gap-2 rounded-md border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+        <KeyRound className="h-4 w-4 mt-0.5 shrink-0" />
+        <span>
+          Para alocar uma licença a um ativo usando uma chave específica, selecione o produto acima e escolha a chave disponível do módulo Chaves de Licença. A alocação criada também registra a chave como alocada para o ativo.
+        </span>
+      </div>
     </>
   );
 }
