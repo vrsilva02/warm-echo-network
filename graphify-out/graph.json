@@ -1357,7 +1357,7 @@
       "file_type": "code",
       "norm_label": "alocrow",
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L517"
+      "source_location": "L518"
     },
     {
       "id": "src_routes_authenticated_licencas_elprow",
@@ -1369,7 +1369,7 @@
       "file_type": "code",
       "norm_label": "elprow",
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L58"
+      "source_location": "L59"
     },
     {
       "id": "src_routes_authenticated_licencas_produtoagg",
@@ -1381,7 +1381,7 @@
       "file_type": "code",
       "norm_label": "produtoagg",
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L69"
+      "source_location": "L70"
     },
     {
       "id": "src_routes_authenticated_licencas_statusfiltro",
@@ -1393,7 +1393,7 @@
       "file_type": "code",
       "norm_label": "statusfiltro",
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L76"
+      "source_location": "L77"
     },
     {
       "id": "src_routes_authenticated_relatorios_filters",
@@ -2385,7 +2385,7 @@
       "file_type": "code",
       "norm_label": "productdetail()",
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L529"
+      "source_location": "L530"
     },
     {
       "id": "src_routes_authenticated_licencas_productdetail_bulkdesvincular",
@@ -2396,7 +2396,7 @@
       "file_type": "code",
       "norm_label": "bulkdesvincular()",
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L595"
+      "source_location": "L598"
     },
     {
       "id": "src_routes_authenticated_licencas_productdetail_desvincular",
@@ -2407,7 +2407,7 @@
       "file_type": "code",
       "norm_label": "desvincular()",
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L574"
+      "source_location": "L577"
     },
     {
       "id": "src_routes_authenticated_licencas_productdetail_toggle",
@@ -2418,7 +2418,7 @@
       "file_type": "code",
       "norm_label": "toggle()",
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L565"
+      "source_location": "L568"
     },
     {
       "id": "src_routes_authenticated_licencas_productdetail_toggleall",
@@ -2429,7 +2429,7 @@
       "file_type": "code",
       "norm_label": "toggleall()",
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L570"
+      "source_location": "L573"
     },
     {
       "id": "src_routes_authenticated_licencas_vinculardialog",
@@ -2440,7 +2440,7 @@
       "file_type": "code",
       "norm_label": "vinculardialog()",
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L861"
+      "source_location": "L864"
     },
     {
       "id": "src_routes_authenticated_licencas_vinculardialog_submit",
@@ -2451,7 +2451,7 @@
       "file_type": "code",
       "norm_label": "submit()",
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L898"
+      "source_location": "L908"
     },
     {
       "id": "src_components_ui_dialog_dialogfooter",
@@ -4277,7 +4277,7 @@
       "file_type": "code",
       "norm_label": "licencadialog()",
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L1021"
+      "source_location": "L1031"
     },
     {
       "id": "src_routes_authenticated_licencas_licencadialog_handlesubmit",
@@ -4288,7 +4288,7 @@
       "file_type": "code",
       "norm_label": "handlesubmit()",
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L1122"
+      "source_location": "L1132"
     },
     {
       "id": "src_routes_authenticated_licencas_licencadialog_save",
@@ -4299,7 +4299,7 @@
       "file_type": "code",
       "norm_label": "save()",
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L1093"
+      "source_location": "L1103"
     },
     {
       "id": "src_routes_authenticated_licencas_licencasdoproduto",
@@ -4310,7 +4310,7 @@
       "file_type": "code",
       "norm_label": "licencasdoproduto()",
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L755"
+      "source_location": "L758"
     },
     {
       "id": "src_routes_authenticated_licencas_licencasdoproduto_remove",
@@ -4321,7 +4321,7 @@
       "file_type": "code",
       "norm_label": "remove()",
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L775"
+      "source_location": "L778"
     },
     {
       "id": "src_routes_authenticated_licencas_productcard",
@@ -4332,7 +4332,7 @@
       "file_type": "code",
       "norm_label": "productcard()",
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L343"
+      "source_location": "L344"
     },
     {
       "id": "src_routes_authenticated_licencas_productcard_removerproduto",
@@ -4343,7 +4343,7 @@
       "file_type": "code",
       "norm_label": "removerproduto()",
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L380"
+      "source_location": "L381"
     },
     {
       "id": "src_routes_authenticated_licencas_productcard_saverename",
@@ -4354,7 +4354,7 @@
       "file_type": "code",
       "norm_label": "saverename()",
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L363"
+      "source_location": "L364"
     },
     {
       "id": "src_lib_export_downloadxlsx",
@@ -4431,7 +4431,7 @@
       "file_type": "code",
       "norm_label": "page()",
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L87"
+      "source_location": "L88"
     },
     {
       "id": "src_routes_authenticated_licencas_statuslicenca",
@@ -4442,7 +4442,7 @@
       "file_type": "code",
       "norm_label": "statuslicenca()",
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L79"
+      "source_location": "L80"
     },
     {
       "id": "src_routes_authenticated_relatorios_os_page",
@@ -5707,7 +5707,7 @@
       "file_type": "code",
       "norm_label": "productgrid()",
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L309"
+      "source_location": "L310"
     },
     {
       "id": "src_routes_authenticated_relatorios_filterscard",
@@ -8101,7 +8101,7 @@
       "file_type": "code",
       "norm_label": "route",
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L47"
+      "source_location": "L48"
     },
     {
       "id": "src_routes_authenticated_ordens_servico_id_route",
@@ -10851,7 +10851,7 @@
       "file_type": "code",
       "norm_label": "licencasimportexport",
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L33"
+      "source_location": "L34"
     },
     {
       "id": "src_lib_export",
@@ -13491,7 +13491,7 @@
       "file_type": "code",
       "norm_label": "licencassearchschema",
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L40"
+      "source_location": "L41"
     },
     {
       "id": "src_routes_authenticated_perfil",
@@ -19808,7 +19808,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L1113",
+      "source_location": "L1123",
       "weight": 1.0
     },
     {
@@ -19820,7 +19820,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L1125",
+      "source_location": "L1135",
       "weight": 1.0
     },
     {
@@ -19832,7 +19832,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L1113",
+      "source_location": "L1123",
       "weight": 1.0
     },
     {
@@ -19844,7 +19844,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L756",
+      "source_location": "L759",
       "weight": 1.0
     },
     {
@@ -19856,7 +19856,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L758",
+      "source_location": "L761",
       "weight": 1.0
     },
     {
@@ -19868,7 +19868,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L785",
+      "source_location": "L788",
       "weight": 1.0
     },
     {
@@ -19880,7 +19880,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L785",
+      "source_location": "L788",
       "weight": 1.0
     },
     {
@@ -19892,7 +19892,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L115",
+      "source_location": "L116",
       "weight": 1.0
     },
     {
@@ -19904,7 +19904,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L156",
+      "source_location": "L157",
       "weight": 1.0
     },
     {
@@ -19916,7 +19916,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L266",
+      "source_location": "L267",
       "weight": 1.0
     },
     {
@@ -19928,7 +19928,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L277",
+      "source_location": "L278",
       "weight": 1.0
     },
     {
@@ -19940,7 +19940,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L88",
+      "source_location": "L89",
       "weight": 1.0
     },
     {
@@ -19952,7 +19952,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L344",
+      "source_location": "L345",
       "weight": 1.0
     },
     {
@@ -19964,7 +19964,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L346",
+      "source_location": "L347",
       "weight": 1.0
     },
     {
@@ -19976,7 +19976,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L373",
+      "source_location": "L374",
       "weight": 1.0
     },
     {
@@ -19988,7 +19988,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L375",
+      "source_location": "L376",
       "weight": 1.0
     },
     {
@@ -20000,7 +20000,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L422",
+      "source_location": "L423",
       "weight": 1.0
     },
     {
@@ -20012,7 +20012,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L425",
+      "source_location": "L426",
       "weight": 1.0
     },
     {
@@ -20024,7 +20024,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L373",
+      "source_location": "L374",
       "weight": 1.0
     },
     {
@@ -20036,7 +20036,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L375",
+      "source_location": "L376",
       "weight": 1.0
     },
     {
@@ -20048,7 +20048,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L539",
+      "source_location": "L540",
       "weight": 1.0
     },
     {
@@ -20060,7 +20060,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L587",
+      "source_location": "L590",
       "weight": 1.0
     },
     {
@@ -20072,7 +20072,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L609",
+      "source_location": "L612",
       "weight": 1.0
     },
     {
@@ -20084,7 +20084,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L609",
+      "source_location": "L612",
       "weight": 1.0
     },
     {
@@ -20096,7 +20096,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L587",
+      "source_location": "L590",
       "weight": 1.0
     },
     {
@@ -20108,7 +20108,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L869",
+      "source_location": "L872",
       "weight": 1.0
     },
     {
@@ -20120,7 +20120,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L921",
+      "source_location": "L931",
       "weight": 1.0
     },
     {
@@ -20132,7 +20132,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L921",
+      "source_location": "L931",
       "weight": 1.0
     },
     {
@@ -21488,7 +21488,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L775",
+      "source_location": "L778",
       "weight": 1.0
     },
     {
@@ -21500,7 +21500,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L380",
+      "source_location": "L381",
       "weight": 1.0
     },
     {
@@ -21512,7 +21512,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L565",
+      "source_location": "L568",
       "weight": 1.0
     },
     {
@@ -21524,7 +21524,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L574",
+      "source_location": "L577",
       "weight": 1.0
     },
     {
@@ -22631,7 +22631,7 @@
       "context": "import",
       "deferred": true,
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L34",
+      "source_location": "L35",
       "weight": 1.0
     },
     {
@@ -31997,6 +31997,18 @@
     },
     {
       "source": "src_routes_authenticated_licencas",
+      "target": "src_lib_fetch_all_fetchall",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "src/routes/_authenticated/licencas.tsx",
+      "source_location": "L32",
+      "weight": 1.0
+    },
+    {
+      "source": "src_routes_authenticated_licencas",
       "target": "src_integrations_supabase_client_supabase",
       "relation": "imports",
       "_origin": "ast",
@@ -40938,6 +40950,18 @@
       "context": "import",
       "source_file": "src/routes/_authenticated/licencas.tsx",
       "source_location": "L31",
+      "weight": 1.0
+    },
+    {
+      "source": "src_routes_authenticated_licencas",
+      "target": "src_lib_fetch_all",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "src/routes/_authenticated/licencas.tsx",
+      "source_location": "L32",
       "weight": 1.0
     },
     {
@@ -52353,7 +52377,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L1021",
+      "source_location": "L1031",
       "weight": 1.0
     },
     {
@@ -52364,7 +52388,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L309",
+      "source_location": "L310",
       "weight": 1.0
     },
     {
@@ -52375,7 +52399,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L33",
+      "source_location": "L34",
       "weight": 1.0
     },
     {
@@ -52386,7 +52410,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L343",
+      "source_location": "L344",
       "weight": 1.0
     },
     {
@@ -52397,7 +52421,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L40",
+      "source_location": "L41",
       "weight": 1.0
     },
     {
@@ -52408,7 +52432,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L47",
+      "source_location": "L48",
       "weight": 1.0
     },
     {
@@ -52419,7 +52443,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L517",
+      "source_location": "L518",
       "weight": 1.0
     },
     {
@@ -52430,7 +52454,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L529",
+      "source_location": "L530",
       "weight": 1.0
     },
     {
@@ -52441,7 +52465,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L58",
+      "source_location": "L59",
       "weight": 1.0
     },
     {
@@ -52452,7 +52476,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L69",
+      "source_location": "L70",
       "weight": 1.0
     },
     {
@@ -52463,7 +52487,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L755",
+      "source_location": "L758",
       "weight": 1.0
     },
     {
@@ -52474,7 +52498,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L76",
+      "source_location": "L77",
       "weight": 1.0
     },
     {
@@ -52485,7 +52509,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L79",
+      "source_location": "L80",
       "weight": 1.0
     },
     {
@@ -52496,7 +52520,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L861",
+      "source_location": "L864",
       "weight": 1.0
     },
     {
@@ -52507,7 +52531,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L1093",
+      "source_location": "L1103",
       "weight": 1.0
     },
     {
@@ -52518,7 +52542,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L1122",
+      "source_location": "L1132",
       "weight": 1.0
     },
     {
@@ -52529,7 +52553,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L363",
+      "source_location": "L364",
       "weight": 1.0
     },
     {
@@ -52540,7 +52564,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L570",
+      "source_location": "L573",
       "weight": 1.0
     },
     {
@@ -52551,7 +52575,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L595",
+      "source_location": "L598",
       "weight": 1.0
     },
     {
@@ -52562,7 +52586,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L898",
+      "source_location": "L908",
       "weight": 1.0
     },
     {
@@ -55054,7 +55078,7 @@
       "confidence_score": 0.85,
       "context": "collection",
       "source_file": "src/routes/_authenticated/licencas.tsx",
-      "source_location": "L49",
+      "source_location": "L50",
       "weight": 1.0
     },
     {
@@ -55359,5 +55383,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "a6949239794fc8c890ff6ccc4f3377620958d11a"
+  "built_at_commit": "f96ff267213bb69df0f65045aed75f4d39e6489b"
 }
