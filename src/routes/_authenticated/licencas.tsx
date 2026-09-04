@@ -29,6 +29,7 @@ import { encerrarAlocacao, encerrarAlocacoes, criarAlocacao } from "@/lib/licenc
 import { friendlyError } from "@/lib/errors";
 import { MaskedKey } from "@/components/masked-key";
 import { useRealtimeInvalidate } from "@/hooks/use-realtime-invalidate";
+import { fetchAll } from "@/lib/fetch-all";
 
 const LicencasImportExport = lazy(() =>
   import("@/components/licencas-import-export").then((m) => ({ default: m.LicencasImportExport })),
@@ -545,17 +546,19 @@ function ProductDetail({
   const { data, isLoading } = useQuery({
     queryKey: ["alocacoes-produto", produto.produto_id, showHistorico],
     queryFn: async () => {
-      let q = supabase
-        .from("alocacoes")
-        .select(
-          "id, data_inicio, data_fim, observacao, licenca_id, chave_individual, ativos(id, hostname), usuarios(id, nome), licencas!inner(id, produto_id, chave_ativacao, contrato_id)",
-        )
-        .eq("licencas.produto_id", produto.produto_id)
-        .order("data_inicio", { ascending: false });
-      if (!showHistorico) q = q.is("data_fim", null);
-      const { data, error } = await q;
+      const select =
+        "id, data_inicio, data_fim, observacao, licenca_id, chave_individual, ativos(id, hostname), usuarios(id, nome), licencas!inner(id, produto_id, chave_ativacao, contrato_id)";
+      const { data, error } = await fetchAll<AlocRow>(
+        "alocacoes",
+        select,
+        (q) => {
+          let r = q.eq("licencas.produto_id", produto.produto_id).order("data_inicio", { ascending: false });
+          if (!showHistorico) r = r.is("data_fim", null);
+          return r;
+        },
+      );
       if (error) throw error;
-      return (data ?? []) as unknown as AlocRow[];
+      return data;
     },
   });
 
@@ -882,7 +885,14 @@ function VincularDialog({
   });
   const { data: ativos } = useQuery({
     queryKey: ["ativos-search"],
-    queryFn: async () => (await supabase.from("ativos").select("id, hostname").neq("status_ciclo_vida", "baixado").order("hostname")).data ?? [],
+    queryFn: async () => {
+      const { data } = await fetchAll<{ id: string; hostname: string }>(
+        "ativos",
+        "id,hostname",
+        (q) => q.neq("status_ciclo_vida", "baixado").order("hostname"),
+      );
+      return data;
+    },
     enabled: open,
   });
   const { data: usuarios } = useQuery({
