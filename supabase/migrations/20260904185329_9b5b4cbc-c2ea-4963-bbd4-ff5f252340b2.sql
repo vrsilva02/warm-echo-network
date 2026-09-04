@@ -1,0 +1,1 @@
+ALTER VIEW public.vw_licencas_chaves_saldo SET (security_invoker = on);

@@ -19,6 +19,8 @@ import { useAuth } from "@/lib/auth";
 import { useConfirm } from "@/components/confirm-dialog";
 import { MaskedKey } from "@/components/masked-key";
 import { criarAlocacao, encerrarAlocacao, encerrarAlocacoes } from "@/lib/licencas";
+import { fetchAll } from "@/lib/fetch-all";
+import { AlocacaoLoteDialog } from "@/components/alocacao-lote-dialog";
 
 export const Route = createFileRoute("/_authenticated/alocacoes")({
   component: Page,
@@ -88,6 +90,7 @@ function Page() {
   const qc = useQueryClient();
   const confirm = useConfirm();
   const [open, setOpen] = useState(false);
+  const [loteOpen, setLoteOpen] = useState(false);
   const [form, setForm] = useState(initial);
   const [fProduto, setFProduto] = useState<string | null>(null);
   const [fAtivo, setFAtivo] = useState<string | null>(null);
@@ -99,46 +102,56 @@ function Page() {
   const { data: rows, isLoading } = useQuery({
     queryKey: ["alocacoes"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("alocacoes")
-        .select(
-          "*, licencas(id, chave_ativacao, produtos_catalogo(id, nome_oficial, modelo_licenciamento, tipo_licenciamento)), usuarios(nome), ativos(hostname)",
-        )
-        .order("data_inicio", { ascending: false });
+      const { data, error } = await fetchAll<Row>(
+        "alocacoes",
+        "*, licencas(id, chave_ativacao, produtos_catalogo(id, nome_oficial, modelo_licenciamento, tipo_licenciamento)), usuarios(nome), ativos(hostname)",
+        (q) => q.order("data_inicio", { ascending: false }),
+      );
       if (error) throw error;
-      return data as unknown as Row[];
+      return data;
     },
   });
 
   const { data: licencas } = useQuery({
     queryKey: ["licencas-lite"],
     queryFn: async () =>
-      (await supabase
-        .from("licencas")
-        .select("id, produtos_catalogo(id, nome_oficial, modelo_licenciamento, tipo_licenciamento)")
-      ).data ?? [],
+      (
+        await fetchAll<any>(
+          "licencas",
+          "id, quantidade, produtos_catalogo(id, nome_oficial, modelo_licenciamento, tipo_licenciamento)",
+        )
+      ).data,
   });
 
   const { data: chavesDisponiveis = [] } = useQuery({
     queryKey: ["chaves-disponiveis-alocacao"],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("licenses")
-        .select("id, software, chave_ativacao, tipo_licenca")
-        .eq("status", "disponivel")
-        .order("software", { ascending: true });
-      return (data ?? []) as unknown as ChaveDisponivel[];
-    },
+    queryFn: async () =>
+      (
+        await fetchAll<ChaveDisponivel>(
+          "licenses",
+          "id, software, chave_ativacao, tipo_licenca, licenca_id",
+          (q) => q.eq("status", "disponivel").order("software", { ascending: true }),
+        )
+      ).data,
   });
 
   const { data: usuarios } = useQuery({
     queryKey: ["usuarios-lite"],
-    queryFn: async () => (await supabase.from("usuarios").select("id,nome").eq("status", "ativo").order("nome")).data ?? [],
+    queryFn: async () =>
+      (await fetchAll<{ id: string; nome: string }>("usuarios", "id,nome", (q) => q.eq("status", "ativo").order("nome")))
+        .data,
   });
 
   const { data: ativos } = useQuery({
     queryKey: ["ativos-lite"],
-    queryFn: async () => (await supabase.from("ativos").select("id,hostname").neq("status_ciclo_vida", "baixado").order("hostname")).data ?? [],
+    queryFn: async () =>
+      (
+        await fetchAll<{ id: string; hostname: string; numero_patrimonio: string | null }>(
+          "ativos",
+          "id,hostname,numero_patrimonio",
+          (q) => q.order("hostname"),
+        )
+      ).data,
   });
 
   const licencaSelecionada = useMemo<{ produtos_catalogo?: { nome_oficial: string } | null } | undefined>(
@@ -148,13 +161,17 @@ function Page() {
 
   const produtoSelecionado = licencaSelecionada?.produtos_catalogo?.nome_oficial?.trim().toLowerCase() ?? "";
 
-  const chavesCompativeis = useMemo(
-    () =>
-      produtoSelecionado
-        ? chavesDisponiveis.filter((c) => c.software.trim().toLowerCase() === produtoSelecionado)
-        : [],
-    [chavesDisponiveis, produtoSelecionado],
-  );
+  // Chaves elegíveis: as vinculadas diretamente à licença escolhida têm
+  // prioridade; se não houver nenhuma, caímos no casamento por nome do software.
+  const chavesCompativeis = useMemo(() => {
+    if (!form.licenca_id) return [];
+    const porLicenca = chavesDisponiveis.filter((c) => (c as any).licenca_id === form.licenca_id);
+    if (porLicenca.length > 0) return porLicenca;
+    return produtoSelecionado
+      ? chavesDisponiveis.filter((c) => c.software.trim().toLowerCase() === produtoSelecionado)
+      : [];
+  }, [chavesDisponiveis, produtoSelecionado, form.licenca_id]);
+
 
   const chaveIds = useMemo(() => {
     const set = new Set<string>();
@@ -310,8 +327,9 @@ function Page() {
           <MaskedKey
             value={chave}
             context={{
-              tabela: tabelaOrigem,
-              registroId: usaChaveModule ? r.chave_id : usaIndividual ? r.id : (r.licencas?.id ?? r.licenca_id ?? r.id),
+              tabela: tabelaOrigem as any,
+              registroId: (usaChaveModule ? r.chave_id : usaIndividual ? r.id : (r.licencas?.id ?? r.licenca_id ?? r.id)) as string,
+
               metadata: {
                 origem,
                 alocacao_id: r.id,
@@ -414,7 +432,16 @@ function Page() {
       <PageHeader
         title="Alocações"
         description="Cada vínculo consome uma licença efetiva do produto até ser encerrado. Use Chaves de Licença para alocar a chave exata ao ativo."
-        actions={canWrite ? <Button size="sm" onClick={openNew}>Nova alocação</Button> : undefined}
+        actions={
+          canWrite ? (
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" onClick={() => setLoteOpen(true)}>
+                Alocação em lote
+              </Button>
+              <Button size="sm" onClick={openNew}>Nova alocação</Button>
+            </div>
+          ) : undefined
+        }
       />
       <div className="grid gap-3 md:grid-cols-6 mb-4">
         <div>
@@ -434,7 +461,11 @@ function Page() {
             searchPlaceholder="Buscar hostname…"
             value={fAtivo}
             onChange={setFAtivo}
-            options={(ativos ?? []).map((a) => ({ value: a.id, label: a.hostname }))}
+            options={(ativos ?? []).map((a) => ({
+              value: a.id,
+              label: a.hostname,
+              hint: a.numero_patrimonio ?? undefined,
+            }))}
           />
         </div>
         <div>
@@ -554,7 +585,11 @@ function Page() {
               searchPlaceholder="Buscar hostname…"
               value={form.ativo_id}
               onChange={(v) => setForm({ ...form, ativo_id: v })}
-              options={(ativos ?? []).map((a) => ({ value: a.id, label: a.hostname }))}
+              options={(ativos ?? []).map((a) => ({
+                value: a.id,
+                label: a.hostname,
+                hint: a.numero_patrimonio ?? undefined,
+              }))}
             />
           </div>
         </div>
@@ -564,6 +599,7 @@ function Page() {
         </div>
         <div><Label>Observação</Label><Textarea value={form.observacao} onChange={(e) => setForm({ ...form, observacao: e.target.value })} /></div>
       </CrudDialog>
+      <AlocacaoLoteDialog open={loteOpen} onOpenChange={setLoteOpen} />
       <div className="flex items-start gap-2 rounded-md border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
         <KeyRound className="h-4 w-4 mt-0.5 shrink-0" />
         <span>

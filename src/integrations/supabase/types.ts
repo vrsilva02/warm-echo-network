@@ -17,6 +17,7 @@ export type Database = {
       alocacoes: {
         Row: {
           ativo_id: string | null
+          chave_id: string | null
           chave_individual: string | null
           created_at: string | null
           data_fim: string | null
@@ -28,6 +29,7 @@ export type Database = {
         }
         Insert: {
           ativo_id?: string | null
+          chave_id?: string | null
           chave_individual?: string | null
           created_at?: string | null
           data_fim?: string | null
@@ -39,6 +41,7 @@ export type Database = {
         }
         Update: {
           ativo_id?: string | null
+          chave_id?: string | null
           chave_individual?: string | null
           created_at?: string | null
           data_fim?: string | null
@@ -71,11 +74,25 @@ export type Database = {
             referencedColumns: ["ativo_id"]
           },
           {
+            foreignKeyName: "alocacoes_chave_id_fkey"
+            columns: ["chave_id"]
+            isOneToOne: false
+            referencedRelation: "licenses"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "alocacoes_licenca_id_fkey"
             columns: ["licenca_id"]
             isOneToOne: false
             referencedRelation: "licencas"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alocacoes_licenca_id_fkey"
+            columns: ["licenca_id"]
+            isOneToOne: false
+            referencedRelation: "vw_licencas_chaves_saldo"
+            referencedColumns: ["licenca_id"]
           },
           {
             foreignKeyName: "alocacoes_licenca_id_fkey"
@@ -159,6 +176,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "licencas"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "asset_licenses_license_id_fkey"
+            columns: ["license_id"]
+            isOneToOne: false
+            referencedRelation: "vw_licencas_chaves_saldo"
+            referencedColumns: ["licenca_id"]
           },
           {
             foreignKeyName: "asset_licenses_license_id_fkey"
@@ -1036,6 +1060,7 @@ export type Database = {
           data_alocacao: string | null
           data_expiracao: string | null
           id: string
+          licenca_id: string | null
           software: string
           status: Database["public"]["Enums"]["license_status"]
           tipo_licenca: Database["public"]["Enums"]["license_tipo"]
@@ -1049,6 +1074,7 @@ export type Database = {
           data_alocacao?: string | null
           data_expiracao?: string | null
           id?: string
+          licenca_id?: string | null
           software: string
           status?: Database["public"]["Enums"]["license_status"]
           tipo_licenca: Database["public"]["Enums"]["license_tipo"]
@@ -1062,6 +1088,7 @@ export type Database = {
           data_alocacao?: string | null
           data_expiracao?: string | null
           id?: string
+          licenca_id?: string | null
           software?: string
           status?: Database["public"]["Enums"]["license_status"]
           tipo_licenca?: Database["public"]["Enums"]["license_tipo"]
@@ -1089,6 +1116,34 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "vw_tco_ativo"
             referencedColumns: ["ativo_id"]
+          },
+          {
+            foreignKeyName: "licenses_licenca_id_fkey"
+            columns: ["licenca_id"]
+            isOneToOne: false
+            referencedRelation: "licencas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "licenses_licenca_id_fkey"
+            columns: ["licenca_id"]
+            isOneToOne: false
+            referencedRelation: "vw_licencas_chaves_saldo"
+            referencedColumns: ["licenca_id"]
+          },
+          {
+            foreignKeyName: "licenses_licenca_id_fkey"
+            columns: ["licenca_id"]
+            isOneToOne: false
+            referencedRelation: "vw_licencas_indicadores"
+            referencedColumns: ["licenca_id"]
+          },
+          {
+            foreignKeyName: "licenses_licenca_id_fkey"
+            columns: ["licenca_id"]
+            isOneToOne: false
+            referencedRelation: "vw_licencas_ociosas"
+            referencedColumns: ["licenca_id"]
           },
           {
             foreignKeyName: "licenses_usuario_id_fkey"
@@ -1852,6 +1907,41 @@ export type Database = {
         }
         Relationships: []
       }
+      vw_licencas_chaves_saldo: {
+        Row: {
+          chaves_alocadas: number | null
+          chaves_cadastradas: number | null
+          chaves_disponiveis: number | null
+          chaves_expiradas: number | null
+          chaves_pendentes: number | null
+          licenca_id: string | null
+          produto_id: string | null
+          quantidade: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "licencas_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "produtos_catalogo"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "licencas_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "vw_elp"
+            referencedColumns: ["produto_id"]
+          },
+          {
+            foreignKeyName: "licencas_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "vw_ociosidade_financeira"
+            referencedColumns: ["produto_id"]
+          },
+        ]
+      }
       vw_licencas_indicadores: {
         Row: {
           atribuidas: number | null
@@ -1954,7 +2044,7 @@ export type Database = {
         | "padrao"
         | "visitante"
         | "tecnico"
-      license_status: "disponivel" | "alocada" | "expirada"
+      license_status: "disponivel" | "alocada" | "expirada" | "revogada"
       license_tipo: "OEM" | "Retail" | "Volume" | "CSP"
       mov_tipo: "entrada" | "saida" | "ajuste"
       os_prioridade: "baixa" | "media" | "alta" | "critica"
@@ -1981,12 +2071,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -2010,11 +2100,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -2035,11 +2125,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -2060,11 +2150,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -2077,11 +2167,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -2102,7 +2192,7 @@ export const Constants = {
         "visitante",
         "tecnico",
       ],
-      license_status: ["disponivel", "alocada", "expirada"],
+      license_status: ["disponivel", "alocada", "expirada", "revogada"],
       license_tipo: ["OEM", "Retail", "Volume", "CSP"],
       mov_tipo: ["entrada", "saida", "ajuste"],
       os_prioridade: ["baixa", "media", "alta", "critica"],
