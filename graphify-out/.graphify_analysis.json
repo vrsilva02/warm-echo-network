@@ -926,7 +926,7 @@
       "src_routes_lovable_email_auth_preview_route",
       "src_routes_lovable_email_auth_preview_sample_data",
       "src_routes_lovable_email_auth_webhook",
-      "src_routes_lovable_email_auth_webhook_handler",
+      "src_routes_lovable_email_auth_webhook_createhandler",
       "src_routes_lovable_email_auth_webhook_route"
     ],
     "31": [

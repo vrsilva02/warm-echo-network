@@ -4291,6 +4291,17 @@
       "source_location": "L20"
     },
     {
+      "id": "src_routes_lovable_email_auth_webhook_createhandler",
+      "label": "createHandler()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 30,
+      "file_type": "code",
+      "norm_label": "createhandler()",
+      "source_file": "src/routes/lovable/email/auth/webhook.ts",
+      "source_location": "L20"
+    },
+    {
       "id": "src_components_ui_carousel_usecarousel",
       "label": "useCarousel()",
       "_callable": true,
@@ -11296,16 +11307,6 @@
       "norm_label": "webhook.ts",
       "source_file": "src/routes/lovable/email/auth/webhook.ts",
       "source_location": "L1"
-    },
-    {
-      "id": "src_routes_lovable_email_auth_webhook_handler",
-      "label": "handler",
-      "_origin": "ast",
-      "community": 30,
-      "file_type": "code",
-      "norm_label": "handler",
-      "source_file": "src/routes/lovable/email/auth/webhook.ts",
-      "source_location": "L20"
     },
     {
       "id": "src_routes_lovable_email_auth_webhook_route",
@@ -20709,14 +20710,14 @@
     },
     {
       "source": "src_routes_lovable_email_auth_webhook_route",
-      "target": "src_routes_lovable_email_auth_webhook_handler",
+      "target": "src_routes_lovable_email_auth_webhook_createhandler",
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/lovable/email/auth/webhook.ts",
-      "source_location": "L83",
+      "source_location": "L87",
       "weight": 1.0
     },
     {
@@ -53452,7 +53453,7 @@
     },
     {
       "source": "src_routes_lovable_email_auth_webhook",
-      "target": "src_routes_lovable_email_auth_webhook_handler",
+      "target": "src_routes_lovable_email_auth_webhook_createhandler",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -54716,7 +54717,7 @@
       "weight": 1.0
     },
     {
-      "source": "src_routes_lovable_email_auth_webhook_handler",
+      "source": "src_routes_lovable_email_auth_webhook_createhandler",
       "target": "src_lib_email_templates_signup_signupemail",
       "relation": "indirect_call",
       "_origin": "ast",
@@ -54728,7 +54729,7 @@
       "weight": 1.0
     },
     {
-      "source": "src_routes_lovable_email_auth_webhook_handler",
+      "source": "src_routes_lovable_email_auth_webhook_createhandler",
       "target": "src_lib_email_templates_invite_inviteemail",
       "relation": "indirect_call",
       "_origin": "ast",
@@ -54740,7 +54741,7 @@
       "weight": 1.0
     },
     {
-      "source": "src_routes_lovable_email_auth_webhook_handler",
+      "source": "src_routes_lovable_email_auth_webhook_createhandler",
       "target": "src_lib_email_templates_magic_link_magiclinkemail",
       "relation": "indirect_call",
       "_origin": "ast",
@@ -54752,7 +54753,7 @@
       "weight": 1.0
     },
     {
-      "source": "src_routes_lovable_email_auth_webhook_handler",
+      "source": "src_routes_lovable_email_auth_webhook_createhandler",
       "target": "src_lib_email_templates_recovery_recoveryemail",
       "relation": "indirect_call",
       "_origin": "ast",
@@ -54764,7 +54765,7 @@
       "weight": 1.0
     },
     {
-      "source": "src_routes_lovable_email_auth_webhook_handler",
+      "source": "src_routes_lovable_email_auth_webhook_createhandler",
       "target": "src_lib_email_templates_email_change_emailchangeemail",
       "relation": "indirect_call",
       "_origin": "ast",
@@ -54776,7 +54777,7 @@
       "weight": 1.0
     },
     {
-      "source": "src_routes_lovable_email_auth_webhook_handler",
+      "source": "src_routes_lovable_email_auth_webhook_createhandler",
       "target": "src_lib_email_templates_reauthentication_reauthenticationemail",
       "relation": "indirect_call",
       "_origin": "ast",
@@ -55353,5 +55354,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "09dd288d9d4dc5152c9037dff2b0585a5c82fa71"
+  "built_at_commit": "1a1e4f1e4c971031a8b45479113beac36eac7e76"
 }
