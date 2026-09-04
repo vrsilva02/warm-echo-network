@@ -58,6 +58,7 @@ import { useAuth } from "@/lib/auth";
 import { friendlyError } from "@/lib/errors";
 import { logAction } from "@/lib/audit";
 import { downloadCSV, downloadPDF, toCSV } from "@/lib/export";
+import { Combobox } from "@/components/combobox";
 import { fetchAll } from "@/lib/fetch-all";
 import {
   fetchChaves,
