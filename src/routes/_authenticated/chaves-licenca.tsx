@@ -526,140 +526,188 @@ function BulkInsertDialog({
   open,
   onOpenChange,
   onDone,
+  licencas,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   onDone: () => void;
+  licencas: any[];
 }) {
   const [software, setSoftware] = React.useState("");
   const [tipo, setTipo] = React.useState<TipoLicenca>("Volume");
-  const [quantidade, setQuantidade] = React.useState("");
-  const [chaves, setChaves] = React.useState("");
-  const [saving, setSaving] = React.useState(false);
+  const [licencaId, setLicencaId] = React.useState<string | null>(null);
+  const [texto, setTexto] = React.useState("");
+  const [salvando, setSalvando] = React.useState(false);
+  const [rep, setRep] = React.useState<RelatorioLote | null>(null);
 
-  const linhas = React.useMemo(
-    () =>
-      chaves
-        .split(/\r?\n/)
-        .map((l) => l.trim())
-        .filter(Boolean),
-    [chaves],
-  );
-  const qtd = parseInt(quantidade, 10);
+  const licenca = licencas.find((l: any) => l.id === licencaId);
+  const limite: number | null = licenca?.quantidade ?? null;
 
-  function reset() {
-    setSoftware("");
-    setTipo("Volume");
-    setQuantidade("");
-    setChaves("");
+  const linhas: LinhaLote[] = React.useMemo(() => {
+    return texto
+      .split(/\r?\n/)
+      .map((l) => l.trim())
+      .filter(Boolean)
+      .map((l) => {
+        // aceita CSV: chave;software;tipo;expiracao (separadores , ou ;)
+        const p = l.split(/[;,\t]/).map((x) => x.trim());
+        return {
+          chave: p[0],
+          software: p[1] || null,
+          tipo_licenca: p[2] || null,
+          data_expiracao: p[3] || null,
+        };
+      })
+      .filter((r) => r.chave && r.chave.toLowerCase() !== "chave" && r.chave.toLowerCase() !== "chave_ativacao");
+  }, [texto]);
+
+  async function onFile(f: File | null) {
+    if (!f) return;
+    setTexto(await f.text());
   }
 
   async function salvar() {
-    if (!software.trim()) return toast.error("Informe o software.");
-    if (!Number.isFinite(qtd) || qtd <= 0) return toast.error("Informe uma quantidade válida.");
-    if (linhas.length !== qtd)
-      return toast.error(
-        `A quantidade informada (${qtd}) não bate com o número de chaves coladas (${linhas.length}).`,
-      );
-    const unicas = new Set(linhas);
-    if (unicas.size !== linhas.length)
-      return toast.error("Existem chaves duplicadas no texto colado.");
-
-    setSaving(true);
-    const payload = linhas.map((chave) => ({
-      software: software.trim(),
-      chave_ativacao: chave,
-      tipo_licenca: tipo,
-      status: "disponivel" as const,
-    }));
-    const { error } = await supabase.from("licenses").insert(payload);
-    setSaving(false);
-    if (error) return toast.error(friendlyError(error));
-    void logAction("BULK_UPDATE", "licenses", {
-      operacao: "insercao_massa",
-      software: software.trim(),
-      tipo_licenca: tipo,
-      total: payload.length,
+    if (linhas.length === 0) return toast.error("Cole ao menos uma chave.");
+    if (!software.trim() && !licencaId) return toast.error("Informe o software ou selecione a licença.");
+    setSalvando(true);
+    const r = await inserirChavesEmLote({
+      licencaId,
+      softwarePadrao: software.trim() || licenca?.produtos_catalogo?.nome_oficial || "",
+      tipoPadrao: tipo,
+      linhas,
     });
-    toast.success(`${payload.length} licença(s) criada(s).`);
-    reset();
-    onOpenChange(false);
+    setSalvando(false);
+    setRep(r);
+    if (r.inseridas > 0) toast.success(`${r.inseridas} chave(s) cadastrada(s).`);
+    if (r.falhas.length > 0) toast.error(`${r.falhas.length} linha(s) não importada(s).`);
     onDone();
   }
 
+  function fechar() {
+    onOpenChange(false);
+    setRep(null);
+    setTexto("");
+  }
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-xl">
+    <Dialog open={open} onOpenChange={(v) => (v ? onOpenChange(true) : fechar())}>
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Inserção em massa de licenças</DialogTitle>
+          <DialogTitle>Inserir chaves em lote</DialogTitle>
           <DialogDescription>
-            Cole uma chave de ativação por linha. Todas serão criadas com status “Disponível”.
+            Cole uma chave por linha (ou envie um CSV com chave;software;tipo;expiração). A importação é
+            parcial: linhas inválidas são reportadas e as demais são gravadas.
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-3">
-          <div className="grid gap-3 sm:grid-cols-3">
-            <div className="sm:col-span-2 space-y-1.5">
-              <Label htmlFor="bl-software">Software</Label>
+
+        {rep ? (
+          <div className="space-y-3 text-sm">
+            <div className="grid grid-cols-2 gap-2">
+              <div className="rounded-md border p-3">
+                <p className="text-xs text-muted-foreground">Linhas enviadas</p>
+                <p className="text-xl font-semibold tabular-nums">{rep.total}</p>
+              </div>
+              <div className="rounded-md border p-3">
+                <p className="text-xs text-muted-foreground">Cadastradas</p>
+                <p className="text-xl font-semibold tabular-nums">{rep.inseridas}</p>
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Saldo de chaves: {rep.saldoDepois}
+              {rep.limite != null ? ` de ${rep.limite} · ${Math.max(0, rep.limite - rep.saldoDepois)} pendente(s)` : ""}
+            </p>
+            {rep.falhas.length > 0 && (
+              <div className="rounded-md border p-2 max-h-56 overflow-auto">
+                <div className="font-medium mb-1">Não importadas</div>
+                <ul className="space-y-1 text-xs">
+                  {rep.falhas.map((f, i) => (
+                    <li key={i}>
+                      <span className="font-mono">{f.chave}</span> —{" "}
+                      <span className="text-destructive">{f.motivo}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Licença do produto (opcional)</Label>
+                <Combobox
+                  placeholder="Sem vínculo"
+                  searchPlaceholder="Buscar produto…"
+                  clearable
+                  value={licencaId}
+                  onChange={(v) => setLicencaId(v)}
+                  options={licencas.map((l: any) => ({
+                    value: l.id,
+                    label: l.produtos_catalogo?.nome_oficial ?? l.id.slice(0, 8),
+                    hint: `${l.quantidade ?? 0} licença(s)`,
+                  }))}
+                />
+              </div>
+              <div>
+                <Label>Tipo de licença</Label>
+                <Select value={tipo} onValueChange={(v) => setTipo(v as TipoLicenca)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {TIPOS.map((t) => (
+                      <SelectItem key={t} value={t}>{t}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div>
+              <Label>Software</Label>
               <Input
-                id="bl-software"
                 value={software}
-                maxLength={120}
                 onChange={(e) => setSoftware(e.target.value)}
-                placeholder="Windows 11 Pro"
+                placeholder={licenca?.produtos_catalogo?.nome_oficial ?? "Ex.: Windows 11 Pro"}
               />
             </div>
-            <div className="space-y-1.5">
-              <Label>Tipo de licença</Label>
-              <Select value={tipo} onValueChange={(v) => setTipo(v as TipoLicenca)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {TIPOS.map((t) => (
-                    <SelectItem key={t} value={t}>
-                      {t}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div>
+              <Label>Chaves</Label>
+              <Textarea
+                rows={8}
+                className="font-mono text-xs"
+                value={texto}
+                onChange={(e) => setTexto(e.target.value)}
+                placeholder={"XXXXX-XXXXX-XXXXX\nYYYYY-YYYYY-YYYYY"}
+              />
+              <div className="mt-2 flex items-center gap-3">
+                <Input
+                  type="file"
+                  accept=".csv,.txt"
+                  className="max-w-xs"
+                  onChange={(e) => void onFile(e.target.files?.[0] ?? null)}
+                />
+                <span className="text-xs text-muted-foreground">
+                  {linhas.length} chave(s) detectada(s)
+                  {limite != null ? ` · limite da licença: ${limite}` : ""}
+                </span>
+              </div>
             </div>
+            {linhas.length > 0 && (
+              <div className="rounded-md border max-h-40 overflow-auto p-2 text-xs font-mono space-y-0.5">
+                {linhas.slice(0, 30).map((l, i) => (
+                  <div key={i}>{l.chave}</div>
+                ))}
+                {linhas.length > 30 && <div className="text-muted-foreground">…</div>}
+              </div>
+            )}
           </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="bl-qtd">Quantidade total</Label>
-            <Input
-              id="bl-qtd"
-              type="number"
-              min={1}
-              value={quantidade}
-              onChange={(e) => setQuantidade(e.target.value)}
-              className="w-40 tabular-nums"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="bl-chaves">Chaves de ativação (uma por linha)</Label>
-            <Textarea
-              id="bl-chaves"
-              rows={8}
-              className="font-mono text-xs"
-              value={chaves}
-              onChange={(e) => setChaves(e.target.value)}
-              placeholder={"XXXXX-XXXXX-XXXXX\nYYYYY-YYYYY-YYYYY"}
-            />
-            <p className="text-xs text-muted-foreground">
-              {linhas.length} chave(s) detectada(s)
-              {Number.isFinite(qtd) && qtd > 0 && linhas.length !== qtd ? (
-                <span className="text-destructive"> — esperado {qtd}</span>
-              ) : null}
-            </p>
-          </div>
-        </div>
+        )}
+
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancelar
-          </Button>
-          <Button onClick={() => void salvar()} disabled={saving}>
-            {saving ? "Salvando…" : "Criar licenças"}
-          </Button>
+          <Button variant="outline" onClick={fechar}>{rep ? "Fechar" : "Cancelar"}</Button>
+          {!rep && (
+            <Button onClick={() => void salvar()} disabled={salvando}>
+              {salvando ? "Cadastrando…" : `Cadastrar ${linhas.length} chave(s)`}
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
