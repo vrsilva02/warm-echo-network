@@ -58,6 +58,18 @@ import { useAuth } from "@/lib/auth";
 import { friendlyError } from "@/lib/errors";
 import { logAction } from "@/lib/audit";
 import { downloadCSV, downloadPDF, toCSV } from "@/lib/export";
+import { fetchAll } from "@/lib/fetch-all";
+import {
+  fetchChaves,
+  inserirChavesEmLote,
+  desvincularChave,
+  STATUS_CHAVE_LABEL,
+  TIPOS_LICENCA,
+  type LinhaLote,
+  type RelatorioLote,
+  type StatusChave,
+  type TipoLicenca,
+} from "@/lib/chaves-licenca";
 
 export const Route = createFileRoute("/_authenticated/chaves-licenca")({
   component: Page,
@@ -80,8 +92,7 @@ export const Route = createFileRoute("/_authenticated/chaves-licenca")({
   }),
 });
 
-type TipoLicenca = "OEM" | "Retail" | "Volume" | "CSP";
-type StatusLicenca = "disponivel" | "alocada" | "expirada";
+type StatusLicenca = StatusChave;
 
 type LicenseRow = {
   id: string;
@@ -93,16 +104,13 @@ type LicenseRow = {
   usuario_id: string | null;
   data_alocacao: string | null;
   data_expiracao: string | null;
+  licenca_id: string | null;
   ativos?: { hostname: string } | null;
   usuarios?: { nome: string } | null;
 };
 
-const TIPOS: TipoLicenca[] = ["OEM", "Retail", "Volume", "CSP"];
-const STATUS_LABEL: Record<StatusLicenca, string> = {
-  disponivel: "Disponível",
-  alocada: "Alocada",
-  expirada: "Expirada",
-};
+const TIPOS = TIPOS_LICENCA;
+const STATUS_LABEL = STATUS_CHAVE_LABEL;
 
 /** Exibe apenas os 5 últimos caracteres da chave. */
 function maskTail(key: string): string {
@@ -148,17 +156,18 @@ function Page() {
 
   const { data, isLoading } = useQuery({
     queryKey: ["licenses"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("licenses")
-        .select(
-          "id, software, chave_ativacao, tipo_licenca, status, ativo_id, usuario_id, data_alocacao, data_expiracao, ativos(hostname), usuarios(nome)",
-        )
-        .order("software", { ascending: true })
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return (data ?? []) as unknown as LicenseRow[];
-    },
+    queryFn: async () => (await fetchChaves()) as unknown as LicenseRow[],
+  });
+
+  const { data: licencasRef = [] } = useQuery({
+    queryKey: ["licencas-lite"],
+    queryFn: async () =>
+      (await fetchAll<any>("licencas", "id, quantidade, produtos_catalogo(id, nome_oficial)")).data,
+  });
+
+  const { data: saldos = [] } = useQuery({
+    queryKey: ["chaves-saldo"],
+    queryFn: async () => (await fetchAll<any>("vw_licencas_chaves_saldo", "*")).data,
   });
 
   const rows = data ?? [];
@@ -184,6 +193,22 @@ function Page() {
       next.has(id) ? next.delete(id) : next.add(id);
       return next;
     });
+  }
+
+  function licencaLabel(licencaId: string | null): string {
+    if (!licencaId) return "—";
+    const l = licencasRef.find((x: any) => x.id === licencaId);
+    return l?.produtos_catalogo?.nome_oficial ?? licencaId.slice(0, 8);
+  }
+
+  async function desvincular(r: LicenseRow) {
+    const res = await desvincularChave(r.id);
+    if (!res.ok) return toast.error(res.error ?? "Não foi possível desvincular.");
+    toast.success("Chave desvinculada e disponível novamente.");
+    await qc.invalidateQueries({ queryKey: ["licenses"] });
+    void qc.invalidateQueries({ queryKey: ["chaves-saldo"] });
+    void qc.invalidateQueries({ queryKey: ["alocacoes"] });
+    void qc.invalidateQueries({ queryKey: ["chaves-disponiveis-alocacao"] });
   }
 
   async function excluirSelecionadas() {
@@ -309,6 +334,29 @@ function Page() {
       />
 
 
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        {[
+          { label: "Chaves cadastradas", value: rows.length },
+          { label: "Disponíveis", value: rows.filter((r) => r.status === "disponivel").length },
+          { label: "Alocadas", value: rows.filter((r) => r.status === "alocada").length },
+          {
+            label: "Licenças adquiridas",
+            value: saldos.reduce((a: number, s: any) => a + (s.quantidade ?? 0), 0),
+          },
+          {
+            label: "Pendentes de cadastro",
+            value: saldos.reduce((a: number, s: any) => a + (s.chaves_pendentes ?? 0), 0),
+          },
+        ].map((k) => (
+          <Card key={k.label}>
+            <CardContent className="p-4">
+              <p className="text-xs text-muted-foreground">{k.label}</p>
+              <p className="text-2xl font-semibold tabular-nums">{k.value}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
@@ -337,6 +385,7 @@ function Page() {
                 <SelectItem value="disponivel">Disponível</SelectItem>
                 <SelectItem value="alocada">Alocada</SelectItem>
                 <SelectItem value="expirada">Expirada</SelectItem>
+                <SelectItem value="revogada">Revogada</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -369,6 +418,7 @@ function Page() {
                       />
                     </TableHead>
                     <TableHead>Software</TableHead>
+                    <TableHead>Licença (produto)</TableHead>
                     <TableHead>Chave</TableHead>
                     <TableHead>Tipo</TableHead>
                     <TableHead>Status</TableHead>
@@ -376,6 +426,7 @@ function Page() {
                     <TableHead>Colaborador</TableHead>
                     <TableHead>Alocação</TableHead>
                     <TableHead>Expiração</TableHead>
+                    <TableHead className="w-28">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -389,6 +440,9 @@ function Page() {
                         />
                       </TableCell>
                       <TableCell className="font-medium">{r.software}</TableCell>
+                      <TableCell className="text-muted-foreground text-xs">
+                        {licencaLabel(r.licenca_id)}
+                      </TableCell>
                       <TableCell>
                         <span className="inline-flex items-center gap-1">
                           <span className="font-mono text-xs tabular-nums">
@@ -419,6 +473,20 @@ function Page() {
                       </TableCell>
                       <TableCell className="tabular-nums">{r.data_alocacao ?? "—"}</TableCell>
                       <TableCell className="tabular-nums">{r.data_expiracao ?? "—"}</TableCell>
+                      <TableCell>
+                        {r.status === "alocada" ? (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => void desvincular(r)}
+                            title="Devolver a chave para o pool de disponíveis"
+                          >
+                            Desvincular
+                          </Button>
+                        ) : (
+                          <span className="text-muted-foreground text-xs">—</span>
+                        )}
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -433,7 +501,11 @@ function Page() {
           <BulkInsertDialog
             open={bulkOpen}
             onOpenChange={setBulkOpen}
-            onDone={() => void qc.invalidateQueries({ queryKey: ["licenses"] })}
+            licencas={licencasRef}
+            onDone={() => {
+              void qc.invalidateQueries({ queryKey: ["licenses"] });
+              void qc.invalidateQueries({ queryKey: ["chaves-saldo"] });
+            }}
           />
           <WipeDialog
             open={wipeOpen}
