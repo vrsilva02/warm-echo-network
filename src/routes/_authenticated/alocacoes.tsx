@@ -327,8 +327,9 @@ function Page() {
           <MaskedKey
             value={chave}
             context={{
-              tabela: tabelaOrigem,
-              registroId: usaChaveModule ? r.chave_id : usaIndividual ? r.id : (r.licencas?.id ?? r.licenca_id ?? r.id),
+              tabela: tabelaOrigem as any,
+              registroId: (usaChaveModule ? r.chave_id : usaIndividual ? r.id : (r.licencas?.id ?? r.licenca_id ?? r.id)) as string,
+
               metadata: {
                 origem,
                 alocacao_id: r.id,
