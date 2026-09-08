@@ -890,7 +890,7 @@ function VincularDialog({
       (
         await fetchAll<any>(
           "licenses",
-          "id, software, chave_ativacao, tipo_licenca, licenca_id",
+          "id, software, chave_ativacao, tipo_licenca, licenca_id, status",
           (q) => q.eq("status", "disponivel").order("software", { ascending: true }),
         )
       ).data,
@@ -922,7 +922,11 @@ function VincularDialog({
     if (chavesDisponiveis.length === 0) return [];
     const pNome = produto.nome_oficial.trim().toLowerCase();
 
-    return [...chavesDisponiveis].sort((a: any, b: any) => {
+    const apenasLivres = chavesDisponiveis.filter(
+      (c: any) => (c.status ?? "disponivel") === "disponivel",
+    );
+
+    return apenasLivres.sort((a: any, b: any) => {
       const aLic = effectiveLic && a.licenca_id === effectiveLic;
       const bLic = effectiveLic && b.licenca_id === effectiveLic;
       if (aLic && !bLic) return -1;

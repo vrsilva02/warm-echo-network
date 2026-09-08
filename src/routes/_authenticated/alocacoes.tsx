@@ -131,7 +131,7 @@ function Page() {
       (
         await fetchAll<ChaveDisponivel>(
           "licenses",
-          "id, software, chave_ativacao, tipo_licenca, licenca_id",
+          "id, software, chave_ativacao, tipo_licenca, licenca_id, status",
           (q) => q.eq("status", "disponivel").order("software", { ascending: true }),
         )
       ).data,
@@ -163,10 +163,26 @@ function Page() {
 
   const produtoSelecionado = licencaSelecionada?.produtos_catalogo?.nome_oficial?.trim().toLowerCase() ?? "";
 
+  // IDs de chaves atualmente associadas a alocações em aberto (ativas)
+  const chavesEmUsoSet = useMemo(() => {
+    const set = new Set<string>();
+    (rows ?? []).forEach((r) => {
+      if (!r.data_fim && r.chave_id) {
+        set.add(r.chave_id);
+      }
+    });
+    return set;
+  }, [rows]);
+
   const chavesOptions = useMemo(() => {
     if (chavesDisponiveis.length === 0) return [];
+
+    // Filtra estritamente as chaves com status "disponivel" E que não estejam com alocação ativa aberta
+    const apenasLivres = chavesDisponiveis.filter(
+      (c) => (c.status ?? "disponivel") === "disponivel" && !chavesEmUsoSet.has(c.id),
+    );
     
-    return [...chavesDisponiveis].sort((a, b) => {
+    return apenasLivres.sort((a, b) => {
       const aMatchLicenca = form.licenca_id && a.licenca_id === form.licenca_id;
       const bMatchLicenca = form.licenca_id && b.licenca_id === form.licenca_id;
       if (aMatchLicenca && !bMatchLicenca) return -1;
@@ -179,7 +195,7 @@ function Page() {
 
       return a.software.localeCompare(b.software);
     });
-  }, [chavesDisponiveis, form.licenca_id, produtoSelecionado]);
+  }, [chavesDisponiveis, chavesEmUsoSet, form.licenca_id, produtoSelecionado]);
 
 
   const chaveIds = useMemo(() => {
