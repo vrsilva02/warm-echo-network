@@ -873,6 +873,7 @@ function VincularDialog({
   const [licencaId, setLicencaId] = useState<string | null>(null);
   const [ativoId, setAtivoId] = useState<string | null>(null);
   const [usuarioId, setUsuarioId] = useState<string | null>(null);
+  const [chaveId, setChaveId] = useState<string | null>(null);
   const [chaveIndividual, setChaveIndividual] = useState("");
   const [obs, setObs] = useState("");
   const [busy, setBusy] = useState(false);
@@ -881,6 +882,18 @@ function VincularDialog({
   const { data: licencas } = useQuery({
     queryKey: ["licencas-do-produto", produto.produto_id],
     queryFn: async () => (await supabase.from("licencas").select("id, quantidade, chave_ativacao, contratos(fornecedor)").eq("produto_id", produto.produto_id)).data ?? [],
+    enabled: open,
+  });
+  const { data: chavesDisponiveis = [] } = useQuery({
+    queryKey: ["chaves-disponiveis-vincular", produto.produto_id],
+    queryFn: async () =>
+      (
+        await fetchAll<any>(
+          "licenses",
+          "id, software, chave_ativacao, tipo_licenca, licenca_id",
+          (q) => q.eq("status", "disponivel").order("software", { ascending: true }),
+        )
+      ).data,
     enabled: open,
   });
   const { data: ativos } = useQuery({
@@ -905,11 +918,24 @@ function VincularDialog({
   const autoLic = licencas && licencas.length === 1 ? licencas[0].id : null;
   const effectiveLic = licencaId ?? autoLic;
 
+  const chavesCompativeis = useMemo(() => {
+    const pNome = produto.nome_oficial.trim().toLowerCase();
+    const porLicenca = effectiveLic
+      ? chavesDisponiveis.filter((c: any) => c.licenca_id === effectiveLic)
+      : [];
+    if (porLicenca.length > 0) return porLicenca;
+    return chavesDisponiveis.filter(
+      (c: any) =>
+        c.software.trim().toLowerCase() === pNome &&
+        (!c.licenca_id || c.licenca_id === effectiveLic),
+    );
+  }, [chavesDisponiveis, effectiveLic, produto.nome_oficial]);
+
   async function submit() {
     if (!effectiveLic) return toast.error("Selecione o bloco de licença");
     if (!ativoId && !usuarioId) return toast.error("Selecione ao menos um ativo ou colaborador");
-    if (chaveObrigatoria && !chaveIndividual.trim()) {
-      return toast.error("Este produto é OEM/Retail: informe a chave individual desta alocação.");
+    if (chaveObrigatoria && !chaveIndividual.trim() && !chaveId) {
+      return toast.error("Este produto é OEM/Retail: informe ou selecione a chave desta alocação.");
     }
 
     const saldo = produto.saldo;
@@ -933,6 +959,7 @@ function VincularDialog({
       ativo_id: ativoId!,
       usuario_id: usuarioId,
       observacao: obs || null,
+      chave_id: chaveId || null,
     });
     setBusy(false);
     if (!r.ok) {
@@ -945,7 +972,7 @@ function VincularDialog({
     }
     toast.success("Vinculado com sucesso");
     onOpenChange(false);
-    setLicencaId(null); setAtivoId(null); setUsuarioId(null); setObs("");
+    setLicencaId(null); setAtivoId(null); setUsuarioId(null); setChaveId(null); setChaveIndividual(""); setObs("");
     onDone();
   }
 
@@ -992,19 +1019,26 @@ function VincularDialog({
             />
           </div>
           <div>
-            <Label>
-              Chave individual {chaveObrigatoria && <span className="text-destructive">*</span>}
-              {!chaveObrigatoria && <span className="text-muted-foreground text-xs"> (opcional)</span>}
-            </Label>
-            <Input
-              value={chaveIndividual}
-              onChange={(e) => setChaveIndividual(e.target.value)}
-              placeholder={chaveObrigatoria ? "Obrigatório para OEM/Retail" : "Somente se este ativo tem chave própria"}
-              autoComplete="off"
+            <Label>Chave (módulo Chaves de Licença)</Label>
+            <Combobox
+              placeholder="Sem chave individual ou selecione..."
+              searchPlaceholder="Buscar chave…"
+              clearable
+              value={chaveId}
+              onChange={(v) => setChaveId(v ?? null)}
+              options={chavesCompativeis.map((c: any) => ({
+                value: c.id,
+                label: (c.chave_ativacao ?? "").trim().length <= 8 ? c.chave_ativacao : `${"•".repeat(6)}${(c.chave_ativacao ?? "").trim().slice(-4)}`,
+                hint: `${c.software} · ${c.tipo_licenca ?? "—"}`,
+              }))}
             />
-            {chaveObrigatoria && (
+            {chavesCompativeis.length > 0 ? (
               <p className="text-[11px] text-muted-foreground mt-1">
-                Produto OEM/Retail: cada ativo recebe uma chave própria; ficará mascarada e cada revelação é registrada no log de auditoria.
+                Ao vincular, esta chave será alocada para o ativo/colaborador no módulo Chaves de Licença e associada a esta licença.
+              </p>
+            ) : (
+              <p className="text-[11px] text-muted-foreground mt-1">
+                Nenhuma chave disponível no módulo Chaves de Licença compatível com “{produto.nome_oficial}”.
               </p>
             )}
           </div>

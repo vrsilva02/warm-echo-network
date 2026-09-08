@@ -200,6 +200,7 @@ export async function criarAlocacao(input: {
       .from("licenses")
       .update({
         status: "alocada",
+        licenca_id: input.licenca_id,
         ativo_id: input.ativo_id ?? null,
         usuario_id: input.usuario_id ?? null,
         data_alocacao: hoje,

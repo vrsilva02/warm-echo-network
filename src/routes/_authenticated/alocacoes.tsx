@@ -165,10 +165,16 @@ function Page() {
   // prioridade; se não houver nenhuma, caímos no casamento por nome do software.
   const chavesCompativeis = useMemo(() => {
     if (!form.licenca_id) return [];
+    // Prioridade 1: Chaves que já apontam explicitamente para esta licença
     const porLicenca = chavesDisponiveis.filter((c) => (c as any).licenca_id === form.licenca_id);
     if (porLicenca.length > 0) return porLicenca;
+    // Prioridade 2: Chaves disponíveis do mesmo software que não estejam vinculadas a outra licença
     return produtoSelecionado
-      ? chavesDisponiveis.filter((c) => c.software.trim().toLowerCase() === produtoSelecionado)
+      ? chavesDisponiveis.filter(
+          (c) =>
+            c.software.trim().toLowerCase() === produtoSelecionado &&
+            (!(c as any).licenca_id || (c as any).licenca_id === form.licenca_id),
+        )
       : [];
   }, [chavesDisponiveis, produtoSelecionado, form.licenca_id]);
 
