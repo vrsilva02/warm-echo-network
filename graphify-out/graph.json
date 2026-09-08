@@ -2605,7 +2605,7 @@
       "file_type": "code",
       "norm_label": "ativospage()",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L200"
+      "source_location": "L199"
     },
     {
       "id": "src_routes_authenticated_ativos_ativospage_bulkbaixar",
@@ -2616,7 +2616,7 @@
       "file_type": "code",
       "norm_label": "bulkbaixar()",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L382"
+      "source_location": "L374"
     },
     {
       "id": "src_routes_authenticated_ativos_ativospage_bulkdelete",
@@ -2627,7 +2627,7 @@
       "file_type": "code",
       "norm_label": "bulkdelete()",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L407"
+      "source_location": "L399"
     },
     {
       "id": "src_routes_authenticated_ativos_ativospage_criaropcao",
@@ -2638,7 +2638,7 @@
       "file_type": "code",
       "norm_label": "criaropcao()",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L244"
+      "source_location": "L238"
     },
     {
       "id": "src_routes_authenticated_ativos_ativospage_openedit",
@@ -2649,7 +2649,7 @@
       "file_type": "code",
       "norm_label": "openedit()",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L272"
+      "source_location": "L266"
     },
     {
       "id": "src_routes_authenticated_ativos_ativospage_opennew",
@@ -2660,7 +2660,7 @@
       "file_type": "code",
       "norm_label": "opennew()",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L266"
+      "source_location": "L260"
     },
     {
       "id": "src_routes_authenticated_ativos_ativospage_remove",
@@ -2671,7 +2671,7 @@
       "file_type": "code",
       "norm_label": "remove()",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L360"
+      "source_location": "L352"
     },
     {
       "id": "src_routes_authenticated_ativos_ativospage_save",
@@ -2682,7 +2682,7 @@
       "file_type": "code",
       "norm_label": "save()",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L294"
+      "source_location": "L287"
     },
     {
       "id": "src_routes_authenticated_ativos_ativospagequery",
@@ -2726,7 +2726,7 @@
       "file_type": "code",
       "norm_label": "statusbadge()",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L187"
+      "source_location": "L186"
     },
     {
       "id": "src_components_ativos_import_export_ativosimportexport",
@@ -18766,7 +18766,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L201",
+      "source_location": "L200",
       "weight": 1.0
     },
     {
@@ -18778,7 +18778,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L203",
+      "source_location": "L202",
       "weight": 1.0
     },
     {
@@ -18790,7 +18790,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L211",
+      "source_location": "L210",
       "weight": 1.0
     },
     {
@@ -18802,7 +18802,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L215",
+      "source_location": "L214",
       "weight": 1.0
     },
     {
@@ -18814,7 +18814,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L238",
+      "source_location": "L232",
       "weight": 1.0
     },
     {
@@ -18826,7 +18826,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L240",
+      "source_location": "L234",
       "weight": 1.0
     },
     {
@@ -18838,7 +18838,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L241",
+      "source_location": "L235",
       "weight": 1.0
     },
     {
@@ -18850,7 +18850,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L242",
+      "source_location": "L236",
       "weight": 1.0
     },
     {
@@ -18862,7 +18862,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L246",
+      "source_location": "L240",
       "weight": 1.0
     },
     {
@@ -18874,7 +18874,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L256",
+      "source_location": "L250",
       "weight": 1.0
     },
     {
@@ -18886,7 +18886,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L352",
+      "source_location": "L344",
       "weight": 1.0
     },
     {
@@ -18898,7 +18898,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L400",
+      "source_location": "L392",
       "weight": 1.0
     },
     {
@@ -18910,7 +18910,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L421",
+      "source_location": "L413",
       "weight": 1.0
     },
     {
@@ -18922,7 +18922,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L524",
+      "source_location": "L509",
       "weight": 1.0
     },
     {
@@ -18934,7 +18934,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L638",
+      "source_location": "L623",
       "weight": 1.0
     },
     {
@@ -18946,7 +18946,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L400",
+      "source_location": "L392",
       "weight": 1.0
     },
     {
@@ -18958,7 +18958,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L421",
+      "source_location": "L413",
       "weight": 1.0
     },
     {
@@ -18970,7 +18970,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L430",
+      "source_location": "L422",
       "weight": 1.0
     },
     {
@@ -18982,7 +18982,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L246",
+      "source_location": "L240",
       "weight": 1.0
     },
     {
@@ -18994,7 +18994,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L273",
+      "source_location": "L267",
       "weight": 1.0
     },
     {
@@ -19006,7 +19006,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L335",
+      "source_location": "L328",
       "weight": 1.0
     },
     {
@@ -19018,7 +19018,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L352",
+      "source_location": "L344",
       "weight": 1.0
     },
     {
@@ -21166,7 +21166,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L244",
+      "source_location": "L238",
       "weight": 1.0
     },
     {
@@ -21178,7 +21178,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L272",
+      "source_location": "L266",
       "weight": 1.0
     },
     {
@@ -21190,7 +21190,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L360",
+      "source_location": "L352",
       "weight": 1.0
     },
     {
@@ -21202,7 +21202,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L382",
+      "source_location": "L374",
       "weight": 1.0
     },
     {
@@ -21214,7 +21214,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L407",
+      "source_location": "L399",
       "weight": 1.0
     },
     {
@@ -56276,7 +56276,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L187",
+      "source_location": "L186",
       "weight": 1.0
     },
     {
@@ -56353,7 +56353,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L266",
+      "source_location": "L260",
       "weight": 1.0
     },
     {
@@ -56364,7 +56364,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L294",
+      "source_location": "L287",
       "weight": 1.0
     },
     {
@@ -59608,7 +59608,7 @@
       "confidence_score": 0.85,
       "context": "argument",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L208",
+      "source_location": "L207",
       "weight": 1.0
     },
     {
@@ -60249,5 +60249,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "a980daa2a2d84d848164ed6a9d88862c72ea3a5e"
+  "built_at_commit": "9bc70ab41d451c2c3d49288765a8d06de314c3a2"
 }
