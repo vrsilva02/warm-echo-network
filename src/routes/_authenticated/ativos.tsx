@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState, lazy, Suspense } from "react";
+import { useEffect, useState, useMemo, lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/page-header";
 import { AdvancedTable, type Column, type SavedView } from "@/components/advanced-table";
@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Pencil, Trash2, Laptop, ExternalLink, HelpCircle } from "lucide-react";
+import { Pencil, Trash2, Laptop, ExternalLink, HelpCircle, Building2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
 import { logAction } from "@/lib/audit";
@@ -80,12 +80,20 @@ type Ativo = {
 const STATUS = ["solicitado", "estoque", "em_uso", "manutencao", "baixado"];
 
 function loadAtivosListState() {
-  const fallback = { page: 1, pageSize: 50, query: "", view: null as string | null, sort: null as { id: string; dir: "asc" | "desc" } | null };
+  const fallback = {
+    page: 1,
+    pageSize: 50,
+    query: "",
+    view: null as string | null,
+    clienteId: null as string | null,
+    sort: null as { id: string; dir: "asc" | "desc" } | null,
+  };
   try {
     const raw = localStorage.getItem("tbl:ativos");
-    if (!raw) return fallback;
+    const savedCliente = localStorage.getItem("tbl:ativos:clienteId");
+    if (!raw) return { ...fallback, clienteId: savedCliente || null };
     const saved = JSON.parse(raw) as { view?: string | null; sort?: { id: string; dir: "asc" | "desc" } | null };
-    return { ...fallback, view: saved.view ?? null, sort: saved.sort ?? null };
+    return { ...fallback, view: saved.view ?? null, sort: saved.sort ?? null, clienteId: savedCliente || null };
   } catch {
     return fallback;
   }
@@ -103,6 +111,11 @@ function applyAtivosFilters(query: any, s: ListState) {
     query = query.or(
       `hostname.ilike.%${term}%,numero_patrimonio.ilike.%${term}%,numero_serie.ilike.%${term}%,tipo.ilike.%${term}%,categoria.ilike.%${term}%,marca.ilike.%${term}%,modelo.ilike.%${term}%,setor.ilike.%${term}%,status_ciclo_vida.ilike.%${term}%`,
     );
+  }
+  if (s.clienteId === "sem_cliente") {
+    query = query.is("cliente_id", null);
+  } else if (s.clienteId) {
+    query = query.eq("cliente_id", s.clienteId);
   }
   if (s.view === "em_uso") query = query.eq("status_ciclo_vida", "em_uso");
   if (s.view === "estoque") query = query.in("status_ciclo_vida", ["estoque", "em_estoque"]);
@@ -141,7 +154,7 @@ function ativosPageQuery(s: ListState) {
 
 /** COUNT em paralelo: não bloqueia a exibição das linhas. */
 function ativosCountQuery(s: ListState) {
-  const key = { query: s.query, view: s.view };
+  const key = { query: s.query, view: s.view, clienteId: s.clienteId };
   return {
     queryKey: ["ativos", "count", key] as const,
     staleTime: 5 * 60_000,
@@ -229,6 +242,24 @@ function AtivosPage() {
     queryKey: ["clientes-lite"],
     queryFn: async () => (await supabase.from("clientes").select("id,nome").eq("ativo", true).order("nome")).data ?? [],
   });
+
+  const clienteOptions = useMemo(() => [
+    ...(clientes ?? []).map((c: any) => ({ value: c.id, label: c.nome })),
+    { value: "sem_cliente", label: "(Sem cliente vinculado)" },
+  ], [clientes]);
+
+  function handleClienteChange(val: string | null) {
+    const clienteId = val || null;
+    try {
+      if (clienteId) {
+        localStorage.setItem("tbl:ativos:clienteId", clienteId);
+      } else {
+        localStorage.removeItem("tbl:ativos:clienteId");
+      }
+    } catch {}
+    setListState((prev) => ({ ...prev, page: 1, clienteId }));
+  }
+
   const { set: edrSet } = useGapEdrSet(rows?.map((row) => row.id));
 
   const { data: tiposCatalogo = [] } = useAtivoTipos();
@@ -581,12 +612,45 @@ function AtivosPage() {
         getRowId={(r) => r.id}
         savedViews={views}
         exportFilename="ativos"
+        toolbarExtras={
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs text-muted-foreground font-medium flex items-center gap-1">
+              <Building2 className="h-3.5 w-3.5" />
+              <span className="hidden md:inline">Cliente:</span>
+            </span>
+            <div className="w-48 sm:w-60">
+              <Combobox
+                placeholder="Todos os clientes"
+                searchPlaceholder="Filtrar por cliente…"
+                clearable
+                value={listState.clienteId}
+                onChange={handleClienteChange}
+                options={clienteOptions}
+                className="h-9 text-xs sm:text-sm"
+              />
+            </div>
+          </div>
+        }
         emptyState={
           <EmptyState
             icon={<Laptop className="h-6 w-6" />}
-            title="Nenhum ativo cadastrado"
-            description="Registre notebooks, desktops, servidores e VDIs para controlar o ciclo de vida."
-            action={canWrite ? <Button size="sm" onClick={openNew}>Novo ativo</Button> : undefined}
+            title={listState.clienteId ? "Nenhum ativo para este cliente" : "Nenhum ativo cadastrado"}
+            description={
+              listState.clienteId
+                ? "Não foram encontrados ativos vinculados ao cliente selecionado com os filtros atuais."
+                : "Registre notebooks, desktops, servidores e VDIs para controlar o ciclo de vida."
+            }
+            action={
+              listState.clienteId ? (
+                <Button size="sm" variant="outline" onClick={() => handleClienteChange(null)}>
+                  Limpar filtro de cliente
+                </Button>
+              ) : canWrite ? (
+                <Button size="sm" onClick={openNew}>
+                  Novo ativo
+                </Button>
+              ) : undefined
+            }
           />
         }
         bulkActions={canWrite ? (sel, clear) => (
