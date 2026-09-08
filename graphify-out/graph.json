@@ -1117,7 +1117,7 @@
       "file_type": "code",
       "norm_label": "compositetypes",
       "source_file": "src/integrations/supabase/types.ts",
-      "source_location": "L2166"
+      "source_location": "L2169"
     },
     {
       "id": "src_integrations_supabase_types_databasewithoutinternals",
@@ -1129,7 +1129,7 @@
       "file_type": "code",
       "norm_label": "databasewithoutinternals",
       "source_file": "src/integrations/supabase/types.ts",
-      "source_location": "L2066"
+      "source_location": "L2069"
     },
     {
       "id": "src_integrations_supabase_types_defaultschema",
@@ -1141,7 +1141,7 @@
       "file_type": "code",
       "norm_label": "defaultschema",
       "source_file": "src/integrations/supabase/types.ts",
-      "source_location": "L2068"
+      "source_location": "L2071"
     },
     {
       "id": "src_integrations_supabase_types_enums",
@@ -1153,7 +1153,7 @@
       "file_type": "code",
       "norm_label": "enums",
       "source_file": "src/integrations/supabase/types.ts",
-      "source_location": "L2149"
+      "source_location": "L2152"
     },
     {
       "id": "src_integrations_supabase_types_json",
@@ -1177,7 +1177,7 @@
       "file_type": "code",
       "norm_label": "tables",
       "source_file": "src/integrations/supabase/types.ts",
-      "source_location": "L2070"
+      "source_location": "L2073"
     },
     {
       "id": "src_integrations_supabase_types_tablesinsert",
@@ -1189,7 +1189,7 @@
       "file_type": "code",
       "norm_label": "tablesinsert",
       "source_file": "src/integrations/supabase/types.ts",
-      "source_location": "L2099"
+      "source_location": "L2102"
     },
     {
       "id": "src_integrations_supabase_types_tablesupdate",
@@ -1201,7 +1201,7 @@
       "file_type": "code",
       "norm_label": "tablesupdate",
       "source_file": "src/integrations/supabase/types.ts",
-      "source_location": "L2124"
+      "source_location": "L2127"
     },
     {
       "id": "src_lib_email_templates_reauthentication_reauthenticationemailprops",
@@ -1261,7 +1261,7 @@
       "file_type": "code",
       "norm_label": "chaveassoc",
       "source_file": "src/routes/_authenticated/alocacoes.tsx",
-      "source_location": "L69"
+      "source_location": "L74"
     },
     {
       "id": "src_routes_authenticated_alocacoes_chavedisponivel",
@@ -1273,7 +1273,7 @@
       "file_type": "code",
       "norm_label": "chavedisponivel",
       "source_file": "src/routes/_authenticated/alocacoes.tsx",
-      "source_location": "L60"
+      "source_location": "L65"
     },
     {
       "id": "src_routes_authenticated_alocacoes_row",
@@ -1453,7 +1453,7 @@
       "file_type": "code",
       "norm_label": "ativo",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L58"
+      "source_location": "L59"
     },
     {
       "id": "src_routes_authenticated_ativos_liststate",
@@ -1465,7 +1465,7 @@
       "file_type": "code",
       "norm_label": "liststate",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L91"
+      "source_location": "L94"
     },
     {
       "id": "src_routes_authenticated_auditoria_logrow",
@@ -2583,7 +2583,7 @@
       "file_type": "code",
       "norm_label": "applyativosfilters()",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L97"
+      "source_location": "L100"
     },
     {
       "id": "src_routes_authenticated_ativos_ativoscountquery",
@@ -2594,7 +2594,7 @@
       "file_type": "code",
       "norm_label": "ativoscountquery()",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L140"
+      "source_location": "L143"
     },
     {
       "id": "src_routes_authenticated_ativos_ativospage",
@@ -2605,7 +2605,7 @@
       "file_type": "code",
       "norm_label": "ativospage()",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L196"
+      "source_location": "L200"
     },
     {
       "id": "src_routes_authenticated_ativos_ativospage_bulkbaixar",
@@ -2616,7 +2616,7 @@
       "file_type": "code",
       "norm_label": "bulkbaixar()",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L330"
+      "source_location": "L382"
     },
     {
       "id": "src_routes_authenticated_ativos_ativospage_bulkdelete",
@@ -2627,7 +2627,7 @@
       "file_type": "code",
       "norm_label": "bulkdelete()",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L355"
+      "source_location": "L407"
     },
     {
       "id": "src_routes_authenticated_ativos_ativospage_criaropcao",
@@ -2638,7 +2638,7 @@
       "file_type": "code",
       "norm_label": "criaropcao()",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L235"
+      "source_location": "L244"
     },
     {
       "id": "src_routes_authenticated_ativos_ativospage_openedit",
@@ -2649,7 +2649,7 @@
       "file_type": "code",
       "norm_label": "openedit()",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L263"
+      "source_location": "L272"
     },
     {
       "id": "src_routes_authenticated_ativos_ativospage_opennew",
@@ -2660,7 +2660,7 @@
       "file_type": "code",
       "norm_label": "opennew()",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L257"
+      "source_location": "L266"
     },
     {
       "id": "src_routes_authenticated_ativos_ativospage_remove",
@@ -2671,7 +2671,7 @@
       "file_type": "code",
       "norm_label": "remove()",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L308"
+      "source_location": "L360"
     },
     {
       "id": "src_routes_authenticated_ativos_ativospage_save",
@@ -2682,7 +2682,7 @@
       "file_type": "code",
       "norm_label": "save()",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L284"
+      "source_location": "L294"
     },
     {
       "id": "src_routes_authenticated_ativos_ativospagequery",
@@ -2693,7 +2693,7 @@
       "file_type": "code",
       "norm_label": "ativospagequery()",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L114"
+      "source_location": "L117"
     },
     {
       "id": "src_routes_authenticated_ativos_loadativosliststate",
@@ -2704,7 +2704,7 @@
       "file_type": "code",
       "norm_label": "loadativosliststate()",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L79"
+      "source_location": "L82"
     },
     {
       "id": "src_routes_authenticated_ativos_normalizestatus",
@@ -2715,7 +2715,7 @@
       "file_type": "code",
       "norm_label": "normalizestatus()",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L160"
+      "source_location": "L163"
     },
     {
       "id": "src_routes_authenticated_ativos_statusbadge",
@@ -2726,7 +2726,7 @@
       "file_type": "code",
       "norm_label": "statusbadge()",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L183"
+      "source_location": "L187"
     },
     {
       "id": "src_components_ativos_import_export_ativosimportexport",
@@ -2737,7 +2737,7 @@
       "file_type": "code",
       "norm_label": "ativosimportexport()",
       "source_file": "src/components/ativos-import-export.tsx",
-      "source_location": "L282"
+      "source_location": "L290"
     },
     {
       "id": "src_components_ativos_import_export_downloadtemplate",
@@ -4024,7 +4024,7 @@
       "file_type": "code",
       "norm_label": "mascarachave()",
       "source_file": "src/routes/_authenticated/alocacoes.tsx",
-      "source_location": "L85"
+      "source_location": "L90"
     },
     {
       "id": "src_routes_authenticated_alocacoes_page",
@@ -4035,7 +4035,7 @@
       "file_type": "code",
       "norm_label": "page()",
       "source_file": "src/routes/_authenticated/alocacoes.tsx",
-      "source_location": "L91"
+      "source_location": "L96"
     },
     {
       "id": "src_routes_authenticated_alocacoes_page_bulkencerrar",
@@ -4046,7 +4046,7 @@
       "file_type": "code",
       "norm_label": "bulkencerrar()",
       "source_file": "src/routes/_authenticated/alocacoes.tsx",
-      "source_location": "L375"
+      "source_location": "L380"
     },
     {
       "id": "src_routes_authenticated_alocacoes_page_encerrar",
@@ -4057,7 +4057,7 @@
       "file_type": "code",
       "norm_label": "encerrar()",
       "source_file": "src/routes/_authenticated/alocacoes.tsx",
-      "source_location": "L351"
+      "source_location": "L356"
     },
     {
       "id": "src_routes_authenticated_alocacoes_page_opennew",
@@ -4068,7 +4068,7 @@
       "file_type": "code",
       "norm_label": "opennew()",
       "source_file": "src/routes/_authenticated/alocacoes.tsx",
-      "source_location": "L316"
+      "source_location": "L321"
     },
     {
       "id": "src_routes_authenticated_licencas_productdetail",
@@ -5333,7 +5333,7 @@
       "file_type": "code",
       "norm_label": "save()",
       "source_file": "src/routes/_authenticated/alocacoes.tsx",
-      "source_location": "L321"
+      "source_location": "L326"
     },
     {
       "id": "src_routes_authenticated_licencas_vinculardialog",
@@ -8475,7 +8475,7 @@
       "file_type": "code",
       "norm_label": "route",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L40"
+      "source_location": "L41"
     },
     {
       "id": "src_components_ativos_import_export",
@@ -8615,7 +8615,7 @@
       "file_type": "code",
       "norm_label": "ativosimportexport",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L36"
+      "source_location": "L37"
     },
     {
       "id": "ref_radix_ui_react_dropdown_menu",
@@ -12105,7 +12105,7 @@
       "file_type": "code",
       "norm_label": "constants",
       "source_file": "src/integrations/supabase/types.ts",
-      "source_location": "L2183"
+      "source_location": "L2186"
     },
     {
       "id": "src_lib_sanitize",
@@ -12435,7 +12435,7 @@
       "file_type": "code",
       "norm_label": "initial",
       "source_file": "src/routes/_authenticated/alocacoes.tsx",
-      "source_location": "L75"
+      "source_location": "L80"
     },
     {
       "id": "src_routes_authenticated_centros_custo",
@@ -13155,7 +13155,7 @@
       "file_type": "code",
       "norm_label": "initial",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L168"
+      "source_location": "L171"
     },
     {
       "id": "src_routes_authenticated_ativos_status",
@@ -13165,7 +13165,7 @@
       "file_type": "code",
       "norm_label": "status",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L77"
+      "source_location": "L80"
     },
     {
       "id": "src_routes_authenticated_auditoria",
@@ -14698,7 +14698,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/components/ativos-import-export.tsx",
-      "source_location": "L284",
+      "source_location": "L292",
       "weight": 1.0
     },
     {
@@ -14710,7 +14710,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/components/ativos-import-export.tsx",
-      "source_location": "L304",
+      "source_location": "L312",
       "weight": 1.0
     },
     {
@@ -14722,7 +14722,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/components/ativos-import-export.tsx",
-      "source_location": "L307",
+      "source_location": "L315",
       "weight": 1.0
     },
     {
@@ -14806,7 +14806,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/components/ativos-import-export.tsx",
-      "source_location": "L219",
+      "source_location": "L227",
       "weight": 1.0
     },
     {
@@ -14818,7 +14818,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/components/ativos-import-export.tsx",
-      "source_location": "L231",
+      "source_location": "L239",
       "weight": 1.0
     },
     {
@@ -14830,7 +14830,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/components/ativos-import-export.tsx",
-      "source_location": "L237",
+      "source_location": "L245",
       "weight": 1.0
     },
     {
@@ -14842,7 +14842,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/components/ativos-import-export.tsx",
-      "source_location": "L267",
+      "source_location": "L275",
       "weight": 1.0
     },
     {
@@ -18634,7 +18634,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/alocacoes.tsx",
-      "source_location": "L105",
+      "source_location": "L110",
       "weight": 1.0
     },
     {
@@ -18646,7 +18646,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/alocacoes.tsx",
-      "source_location": "L311",
+      "source_location": "L316",
       "weight": 1.0
     },
     {
@@ -18658,7 +18658,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/alocacoes.tsx",
-      "source_location": "L325",
+      "source_location": "L330",
       "weight": 1.0
     },
     {
@@ -18670,7 +18670,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/alocacoes.tsx",
-      "source_location": "L365",
+      "source_location": "L370",
       "weight": 1.0
     },
     {
@@ -18682,7 +18682,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/alocacoes.tsx",
-      "source_location": "L392",
+      "source_location": "L397",
       "weight": 1.0
     },
     {
@@ -18694,7 +18694,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/alocacoes.tsx",
-      "source_location": "L92",
+      "source_location": "L97",
       "weight": 1.0
     },
     {
@@ -18706,7 +18706,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/alocacoes.tsx",
-      "source_location": "L94",
+      "source_location": "L99",
       "weight": 1.0
     },
     {
@@ -18718,7 +18718,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/alocacoes.tsx",
-      "source_location": "L392",
+      "source_location": "L397",
       "weight": 1.0
     },
     {
@@ -18730,7 +18730,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/alocacoes.tsx",
-      "source_location": "L365",
+      "source_location": "L370",
       "weight": 1.0
     },
     {
@@ -18742,7 +18742,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/alocacoes.tsx",
-      "source_location": "L325",
+      "source_location": "L330",
       "weight": 1.0
     },
     {
@@ -18754,7 +18754,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L147",
+      "source_location": "L150",
       "weight": 1.0
     },
     {
@@ -18766,7 +18766,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L197",
+      "source_location": "L201",
       "weight": 1.0
     },
     {
@@ -18778,7 +18778,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L199",
+      "source_location": "L203",
       "weight": 1.0
     },
     {
@@ -18790,7 +18790,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L207",
+      "source_location": "L211",
       "weight": 1.0
     },
     {
@@ -18802,7 +18802,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L211",
+      "source_location": "L215",
       "weight": 1.0
     },
     {
@@ -18814,7 +18814,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L229",
+      "source_location": "L238",
       "weight": 1.0
     },
     {
@@ -18826,7 +18826,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L231",
+      "source_location": "L240",
       "weight": 1.0
     },
     {
@@ -18838,7 +18838,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L232",
+      "source_location": "L241",
       "weight": 1.0
     },
     {
@@ -18850,7 +18850,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L233",
+      "source_location": "L242",
       "weight": 1.0
     },
     {
@@ -18862,7 +18862,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L237",
+      "source_location": "L246",
       "weight": 1.0
     },
     {
@@ -18874,7 +18874,19 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L247",
+      "source_location": "L256",
+      "weight": 1.0
+    },
+    {
+      "source": "src_routes_authenticated_ativos_ativospage",
+      "target": "src_lib_errors_friendlyerror",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "src/routes/_authenticated/ativos.tsx",
+      "source_location": "L352",
       "weight": 1.0
     },
     {
@@ -18886,7 +18898,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L348",
+      "source_location": "L400",
       "weight": 1.0
     },
     {
@@ -18898,7 +18910,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L369",
+      "source_location": "L421",
       "weight": 1.0
     },
     {
@@ -18910,7 +18922,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L465",
+      "source_location": "L524",
       "weight": 1.0
     },
     {
@@ -18922,7 +18934,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L579",
+      "source_location": "L638",
       "weight": 1.0
     },
     {
@@ -18934,7 +18946,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L348",
+      "source_location": "L400",
       "weight": 1.0
     },
     {
@@ -18946,7 +18958,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L369",
+      "source_location": "L421",
       "weight": 1.0
     },
     {
@@ -18958,7 +18970,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L378",
+      "source_location": "L430",
       "weight": 1.0
     },
     {
@@ -18970,7 +18982,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L237",
+      "source_location": "L246",
       "weight": 1.0
     },
     {
@@ -18982,7 +18994,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L264",
+      "source_location": "L273",
       "weight": 1.0
     },
     {
@@ -18994,7 +19006,19 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L294",
+      "source_location": "L335",
+      "weight": 1.0
+    },
+    {
+      "source": "src_routes_authenticated_ativos_ativospage_save",
+      "target": "src_lib_errors_friendlyerror",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "src/routes/_authenticated/ativos.tsx",
+      "source_location": "L352",
       "weight": 1.0
     },
     {
@@ -19006,7 +19030,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L126",
+      "source_location": "L129",
       "weight": 1.0
     },
     {
@@ -19090,7 +19114,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L45",
+      "source_location": "L46",
       "weight": 1.0
     },
     {
@@ -19102,7 +19126,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L46",
+      "source_location": "L47",
       "weight": 1.0
     },
     {
@@ -19114,7 +19138,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L47",
+      "source_location": "L48",
       "weight": 1.0
     },
     {
@@ -21118,7 +21142,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/alocacoes.tsx",
-      "source_location": "L351",
+      "source_location": "L356",
       "weight": 1.0
     },
     {
@@ -21130,7 +21154,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/alocacoes.tsx",
-      "source_location": "L375",
+      "source_location": "L380",
       "weight": 1.0
     },
     {
@@ -21142,7 +21166,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L235",
+      "source_location": "L244",
       "weight": 1.0
     },
     {
@@ -21154,7 +21178,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L263",
+      "source_location": "L272",
       "weight": 1.0
     },
     {
@@ -21166,7 +21190,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L308",
+      "source_location": "L360",
       "weight": 1.0
     },
     {
@@ -21178,7 +21202,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L330",
+      "source_location": "L382",
       "weight": 1.0
     },
     {
@@ -21190,7 +21214,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L355",
+      "source_location": "L407",
       "weight": 1.0
     },
     {
@@ -22608,7 +22632,7 @@
       "context": "import",
       "deferred": true,
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L37",
+      "source_location": "L38",
       "weight": 1.0
     },
     {
@@ -28897,7 +28921,7 @@
     },
     {
       "source": "src_routes_authenticated_ativos",
-      "target": "src_components_confirm_dialog_useconfirm",
+      "target": "src_lib_errors_friendlyerror",
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -28909,7 +28933,7 @@
     },
     {
       "source": "src_routes_authenticated_ativos",
-      "target": "src_components_combobox_combobox",
+      "target": "src_components_confirm_dialog_useconfirm",
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -28921,7 +28945,7 @@
     },
     {
       "source": "src_routes_authenticated_ativos",
-      "target": "src_components_combobox_creatable_comboboxcreatable",
+      "target": "src_components_combobox_combobox",
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -28933,7 +28957,7 @@
     },
     {
       "source": "src_routes_authenticated_ativos",
-      "target": "src_lib_ativos_opcoes_comvaloratual",
+      "target": "src_components_combobox_creatable_comboboxcreatable",
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -28945,7 +28969,7 @@
     },
     {
       "source": "src_routes_authenticated_ativos",
-      "target": "src_lib_ativos_catalogo_criaropcaocatalogo",
+      "target": "src_lib_ativos_opcoes_comvaloratual",
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -28953,6 +28977,18 @@
       "context": "import",
       "source_file": "src/routes/_authenticated/ativos.tsx",
       "source_location": "L22",
+      "weight": 1.0
+    },
+    {
+      "source": "src_routes_authenticated_ativos",
+      "target": "src_lib_ativos_catalogo_criaropcaocatalogo",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "src/routes/_authenticated/ativos.tsx",
+      "source_location": "L23",
       "weight": 1.0
     },
     {
@@ -28964,7 +29000,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L22",
+      "source_location": "L23",
       "weight": 1.0
     },
     {
@@ -28976,7 +29012,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L22",
+      "source_location": "L23",
       "weight": 1.0
     },
     {
@@ -28988,7 +29024,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L22",
+      "source_location": "L23",
       "weight": 1.0
     },
     {
@@ -29000,7 +29036,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L28",
+      "source_location": "L29",
       "weight": 1.0
     },
     {
@@ -29012,7 +29048,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L30",
+      "source_location": "L31",
       "weight": 1.0
     },
     {
@@ -29024,7 +29060,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L31",
+      "source_location": "L32",
       "weight": 1.0
     },
     {
@@ -29036,7 +29072,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L33",
+      "source_location": "L34",
       "weight": 1.0
     },
     {
@@ -29048,7 +29084,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L33",
+      "source_location": "L34",
       "weight": 1.0
     },
     {
@@ -42072,7 +42108,7 @@
     },
     {
       "source": "src_routes_authenticated_ativos",
-      "target": "src_components_confirm_dialog",
+      "target": "src_lib_errors",
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -42084,7 +42120,7 @@
     },
     {
       "source": "src_routes_authenticated_ativos",
-      "target": "src_components_combobox",
+      "target": "src_components_confirm_dialog",
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -42108,7 +42144,7 @@
     },
     {
       "source": "src_routes_authenticated_ativos",
-      "target": "src_components_combobox_creatable",
+      "target": "src_components_combobox",
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -42120,7 +42156,7 @@
     },
     {
       "source": "src_routes_authenticated_ativos",
-      "target": "src_lib_ativos_opcoes",
+      "target": "src_components_combobox_creatable",
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -42132,7 +42168,7 @@
     },
     {
       "source": "src_routes_authenticated_ativos",
-      "target": "src_lib_ativos_catalogo",
+      "target": "src_lib_ativos_opcoes",
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -42144,6 +42180,18 @@
     },
     {
       "source": "src_routes_authenticated_ativos",
+      "target": "src_lib_ativos_catalogo",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "src/routes/_authenticated/ativos.tsx",
+      "source_location": "L23",
+      "weight": 1.0
+    },
+    {
+      "source": "src_routes_authenticated_ativos",
       "target": "src_hooks_use_realtime_invalidate",
       "relation": "imports_from",
       "_origin": "ast",
@@ -42151,7 +42199,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L28",
+      "source_location": "L29",
       "weight": 1.0
     },
     {
@@ -42175,7 +42223,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L30",
+      "source_location": "L31",
       "weight": 1.0
     },
     {
@@ -42187,7 +42235,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L31",
+      "source_location": "L32",
       "weight": 1.0
     },
     {
@@ -42199,7 +42247,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L33",
+      "source_location": "L34",
       "weight": 1.0
     },
     {
@@ -42211,7 +42259,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L34",
+      "source_location": "L35",
       "weight": 1.0
     },
     {
@@ -49958,7 +50006,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/ativos-import-export.tsx",
-      "source_location": "L282",
+      "source_location": "L290",
       "weight": 1.0
     },
     {
@@ -53764,7 +53812,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/integrations/supabase/types.ts",
-      "source_location": "L2066",
+      "source_location": "L2069",
       "weight": 1.0
     },
     {
@@ -53775,7 +53823,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/integrations/supabase/types.ts",
-      "source_location": "L2068",
+      "source_location": "L2071",
       "weight": 1.0
     },
     {
@@ -53786,7 +53834,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/integrations/supabase/types.ts",
-      "source_location": "L2070",
+      "source_location": "L2073",
       "weight": 1.0
     },
     {
@@ -53797,7 +53845,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/integrations/supabase/types.ts",
-      "source_location": "L2099",
+      "source_location": "L2102",
       "weight": 1.0
     },
     {
@@ -53808,7 +53856,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/integrations/supabase/types.ts",
-      "source_location": "L2124",
+      "source_location": "L2127",
       "weight": 1.0
     },
     {
@@ -53819,7 +53867,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/integrations/supabase/types.ts",
-      "source_location": "L2149",
+      "source_location": "L2152",
       "weight": 1.0
     },
     {
@@ -53830,7 +53878,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/integrations/supabase/types.ts",
-      "source_location": "L2166",
+      "source_location": "L2169",
       "weight": 1.0
     },
     {
@@ -53841,7 +53889,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/integrations/supabase/types.ts",
-      "source_location": "L2183",
+      "source_location": "L2186",
       "weight": 1.0
     },
     {
@@ -56107,7 +56155,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/routes/_authenticated/alocacoes.tsx",
-      "source_location": "L60",
+      "source_location": "L65",
       "weight": 1.0
     },
     {
@@ -56118,7 +56166,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/routes/_authenticated/alocacoes.tsx",
-      "source_location": "L69",
+      "source_location": "L74",
       "weight": 1.0
     },
     {
@@ -56129,7 +56177,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/routes/_authenticated/alocacoes.tsx",
-      "source_location": "L75",
+      "source_location": "L80",
       "weight": 1.0
     },
     {
@@ -56140,7 +56188,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/routes/_authenticated/alocacoes.tsx",
-      "source_location": "L85",
+      "source_location": "L90",
       "weight": 1.0
     },
     {
@@ -56151,7 +56199,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/routes/_authenticated/alocacoes.tsx",
-      "source_location": "L316",
+      "source_location": "L321",
       "weight": 1.0
     },
     {
@@ -56162,128 +56210,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/routes/_authenticated/alocacoes.tsx",
-      "source_location": "L321",
-      "weight": 1.0
-    },
-    {
-      "source": "src_routes_authenticated_ativos",
-      "target": "src_routes_authenticated_ativos_ativospagequery",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L114",
-      "weight": 1.0
-    },
-    {
-      "source": "src_routes_authenticated_ativos",
-      "target": "src_routes_authenticated_ativos_ativoscountquery",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L140",
-      "weight": 1.0
-    },
-    {
-      "source": "src_routes_authenticated_ativos",
-      "target": "src_routes_authenticated_ativos_normalizestatus",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L160",
-      "weight": 1.0
-    },
-    {
-      "source": "src_routes_authenticated_ativos",
-      "target": "src_routes_authenticated_ativos_initial",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L168",
-      "weight": 1.0
-    },
-    {
-      "source": "src_routes_authenticated_ativos",
-      "target": "src_routes_authenticated_ativos_statusbadge",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L183",
-      "weight": 1.0
-    },
-    {
-      "source": "src_routes_authenticated_ativos",
-      "target": "src_routes_authenticated_ativos_ativosimportexport",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L36",
-      "weight": 1.0
-    },
-    {
-      "source": "src_routes_authenticated_ativos",
-      "target": "src_routes_authenticated_ativos_route",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L40",
-      "weight": 1.0
-    },
-    {
-      "source": "src_routes_authenticated_ativos",
-      "target": "src_routes_authenticated_ativos_ativo",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L58",
-      "weight": 1.0
-    },
-    {
-      "source": "src_routes_authenticated_ativos",
-      "target": "src_routes_authenticated_ativos_status",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L77",
-      "weight": 1.0
-    },
-    {
-      "source": "src_routes_authenticated_ativos",
-      "target": "src_routes_authenticated_ativos_loadativosliststate",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L79",
-      "weight": 1.0
-    },
-    {
-      "source": "src_routes_authenticated_ativos",
-      "target": "src_routes_authenticated_ativos_liststate",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L91",
+      "source_location": "L326",
       "weight": 1.0
     },
     {
@@ -56294,7 +56221,128 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L97",
+      "source_location": "L100",
+      "weight": 1.0
+    },
+    {
+      "source": "src_routes_authenticated_ativos",
+      "target": "src_routes_authenticated_ativos_ativospagequery",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/routes/_authenticated/ativos.tsx",
+      "source_location": "L117",
+      "weight": 1.0
+    },
+    {
+      "source": "src_routes_authenticated_ativos",
+      "target": "src_routes_authenticated_ativos_ativoscountquery",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/routes/_authenticated/ativos.tsx",
+      "source_location": "L143",
+      "weight": 1.0
+    },
+    {
+      "source": "src_routes_authenticated_ativos",
+      "target": "src_routes_authenticated_ativos_normalizestatus",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/routes/_authenticated/ativos.tsx",
+      "source_location": "L163",
+      "weight": 1.0
+    },
+    {
+      "source": "src_routes_authenticated_ativos",
+      "target": "src_routes_authenticated_ativos_initial",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/routes/_authenticated/ativos.tsx",
+      "source_location": "L171",
+      "weight": 1.0
+    },
+    {
+      "source": "src_routes_authenticated_ativos",
+      "target": "src_routes_authenticated_ativos_statusbadge",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/routes/_authenticated/ativos.tsx",
+      "source_location": "L187",
+      "weight": 1.0
+    },
+    {
+      "source": "src_routes_authenticated_ativos",
+      "target": "src_routes_authenticated_ativos_ativosimportexport",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/routes/_authenticated/ativos.tsx",
+      "source_location": "L37",
+      "weight": 1.0
+    },
+    {
+      "source": "src_routes_authenticated_ativos",
+      "target": "src_routes_authenticated_ativos_route",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/routes/_authenticated/ativos.tsx",
+      "source_location": "L41",
+      "weight": 1.0
+    },
+    {
+      "source": "src_routes_authenticated_ativos",
+      "target": "src_routes_authenticated_ativos_ativo",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/routes/_authenticated/ativos.tsx",
+      "source_location": "L59",
+      "weight": 1.0
+    },
+    {
+      "source": "src_routes_authenticated_ativos",
+      "target": "src_routes_authenticated_ativos_status",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/routes/_authenticated/ativos.tsx",
+      "source_location": "L80",
+      "weight": 1.0
+    },
+    {
+      "source": "src_routes_authenticated_ativos",
+      "target": "src_routes_authenticated_ativos_loadativosliststate",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/routes/_authenticated/ativos.tsx",
+      "source_location": "L82",
+      "weight": 1.0
+    },
+    {
+      "source": "src_routes_authenticated_ativos",
+      "target": "src_routes_authenticated_ativos_liststate",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/routes/_authenticated/ativos.tsx",
+      "source_location": "L94",
       "weight": 1.0
     },
     {
@@ -56305,7 +56353,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L257",
+      "source_location": "L266",
       "weight": 1.0
     },
     {
@@ -56316,7 +56364,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L284",
+      "source_location": "L294",
       "weight": 1.0
     },
     {
@@ -59560,7 +59608,7 @@
       "confidence_score": 0.85,
       "context": "argument",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L204",
+      "source_location": "L208",
       "weight": 1.0
     },
     {
@@ -59752,7 +59800,7 @@
       "confidence_score": 0.85,
       "context": "collection",
       "source_file": "src/routes/_authenticated/ativos.tsx",
-      "source_location": "L41",
+      "source_location": "L42",
       "weight": 1.0
     },
     {
@@ -60201,5 +60249,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "f76f2304fc59bb31f5d4051ee587dd0b68805e2a"
+  "built_at_commit": "a980daa2a2d84d848164ed6a9d88862c72ea3a5e"
 }
