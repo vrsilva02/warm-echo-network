@@ -918,17 +918,23 @@ function VincularDialog({
   const autoLic = licencas && licencas.length === 1 ? licencas[0].id : null;
   const effectiveLic = licencaId ?? autoLic;
 
-  const chavesCompativeis = useMemo(() => {
+  const chavesOptions = useMemo(() => {
+    if (chavesDisponiveis.length === 0) return [];
     const pNome = produto.nome_oficial.trim().toLowerCase();
-    const porLicenca = effectiveLic
-      ? chavesDisponiveis.filter((c: any) => c.licenca_id === effectiveLic)
-      : [];
-    if (porLicenca.length > 0) return porLicenca;
-    return chavesDisponiveis.filter(
-      (c: any) =>
-        c.software.trim().toLowerCase() === pNome &&
-        (!c.licenca_id || c.licenca_id === effectiveLic),
-    );
+
+    return [...chavesDisponiveis].sort((a: any, b: any) => {
+      const aLic = effectiveLic && a.licenca_id === effectiveLic;
+      const bLic = effectiveLic && b.licenca_id === effectiveLic;
+      if (aLic && !bLic) return -1;
+      if (!aLic && bLic) return 1;
+
+      const aSoft = a.software?.trim().toLowerCase() === pNome;
+      const bSoft = b.software?.trim().toLowerCase() === pNome;
+      if (aSoft && !bSoft) return -1;
+      if (!aSoft && bSoft) return 1;
+
+      return (a.software ?? "").localeCompare(b.software ?? "");
+    });
   }, [chavesDisponiveis, effectiveLic, produto.nome_oficial]);
 
   async function submit() {
@@ -1026,19 +1032,19 @@ function VincularDialog({
               clearable
               value={chaveId}
               onChange={(v) => setChaveId(v ?? null)}
-              options={chavesCompativeis.map((c: any) => ({
+              options={chavesOptions.map((c: any) => ({
                 value: c.id,
                 label: (c.chave_ativacao ?? "").trim().length <= 8 ? c.chave_ativacao : `${"•".repeat(6)}${(c.chave_ativacao ?? "").trim().slice(-4)}`,
-                hint: `${c.software} · ${c.tipo_licenca ?? "—"}`,
+                hint: `${c.software} · ${c.tipo_licenca ?? "—"}${effectiveLic && c.licenca_id === effectiveLic ? " (deste produto)" : ""}`,
               }))}
             />
-            {chavesCompativeis.length > 0 ? (
+            {chavesOptions.length > 0 ? (
               <p className="text-[11px] text-muted-foreground mt-1">
                 Ao vincular, esta chave será alocada para o ativo/colaborador no módulo Chaves de Licença e associada a esta licença.
               </p>
             ) : (
               <p className="text-[11px] text-muted-foreground mt-1">
-                Nenhuma chave disponível no módulo Chaves de Licença compatível com “{produto.nome_oficial}”.
+                Nenhuma chave disponível no módulo Chaves de Licença.
               </p>
             )}
           </div>

@@ -61,6 +61,8 @@ type ChaveDisponivel = {
   software: string;
   chave_ativacao: string;
   tipo_licenca: string | null;
+  licenca_id: string | null;
+  status?: string | null;
 };
 
 type ChaveAssoc = {
@@ -161,22 +163,23 @@ function Page() {
 
   const produtoSelecionado = licencaSelecionada?.produtos_catalogo?.nome_oficial?.trim().toLowerCase() ?? "";
 
-  // Chaves elegíveis: as vinculadas diretamente à licença escolhida têm
-  // prioridade; se não houver nenhuma, caímos no casamento por nome do software.
-  const chavesCompativeis = useMemo(() => {
-    if (!form.licenca_id) return [];
-    // Prioridade 1: Chaves que já apontam explicitamente para esta licença
-    const porLicenca = chavesDisponiveis.filter((c) => (c as any).licenca_id === form.licenca_id);
-    if (porLicenca.length > 0) return porLicenca;
-    // Prioridade 2: Chaves disponíveis do mesmo software que não estejam vinculadas a outra licença
-    return produtoSelecionado
-      ? chavesDisponiveis.filter(
-          (c) =>
-            c.software.trim().toLowerCase() === produtoSelecionado &&
-            (!(c as any).licenca_id || (c as any).licenca_id === form.licenca_id),
-        )
-      : [];
-  }, [chavesDisponiveis, produtoSelecionado, form.licenca_id]);
+  const chavesOptions = useMemo(() => {
+    if (chavesDisponiveis.length === 0) return [];
+    
+    return [...chavesDisponiveis].sort((a, b) => {
+      const aMatchLicenca = form.licenca_id && a.licenca_id === form.licenca_id;
+      const bMatchLicenca = form.licenca_id && b.licenca_id === form.licenca_id;
+      if (aMatchLicenca && !bMatchLicenca) return -1;
+      if (!aMatchLicenca && bMatchLicenca) return 1;
+
+      const aMatchSoftware = produtoSelecionado && a.software.trim().toLowerCase() === produtoSelecionado;
+      const bMatchSoftware = produtoSelecionado && b.software.trim().toLowerCase() === produtoSelecionado;
+      if (aMatchSoftware && !bMatchSoftware) return -1;
+      if (!aMatchSoftware && bMatchSoftware) return 1;
+
+      return a.software.localeCompare(b.software);
+    });
+  }, [chavesDisponiveis, form.licenca_id, produtoSelecionado]);
 
 
   const chaveIds = useMemo(() => {
@@ -555,19 +558,19 @@ function Page() {
               clearable
               value={form.chave_id}
               onChange={(v) => setForm({ ...form, chave_id: v ?? null })}
-              options={chavesCompativeis.map((c) => ({
+              options={chavesOptions.map((c) => ({
                 value: c.id,
                 label: mascaraChave(c.chave_ativacao),
-                hint: `${c.software} · ${c.tipo_licenca ?? "—"}`,
+                hint: `${c.software} · ${c.tipo_licenca ?? "—"}${form.licenca_id && c.licenca_id === form.licenca_id ? " (vinculada a este produto)" : ""}`,
               }))}
             />
-            {chavesCompativeis.length > 0 ? (
+            {chavesOptions.length > 0 ? (
               <p className="text-[11px] text-muted-foreground mt-1">
-                Ao salvar, esta chave será marcada como alocada para o ativo/colaborador no módulo Chaves de Licença.
+                Ao salvar, esta chave será associada a esta licença e alocada para o ativo/colaborador no módulo Chaves de Licença.
               </p>
             ) : (
               <p className="text-[11px] text-muted-foreground mt-1">
-                Nenhuma chave disponível no Chaves de Licença com o software “{licencaSelecionada?.produtos_catalogo?.nome_oficial ?? form.licenca_id.slice(0, 8)}”. Você ainda pode salvar o vínculo de licença, ou cadastrar uma chave disponível lá primeiro.
+                Nenhuma chave disponível no módulo Chaves de Licença. Você ainda pode salvar o vínculo de licença sem chave, ou cadastrar uma chave disponível lá primeiro.
               </p>
             )}
           </div>
