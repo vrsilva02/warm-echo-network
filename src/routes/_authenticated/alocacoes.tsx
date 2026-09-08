@@ -21,6 +21,7 @@ import { MaskedKey } from "@/components/masked-key";
 import { criarAlocacao, encerrarAlocacao, encerrarAlocacoes } from "@/lib/licencas";
 import { fetchAll } from "@/lib/fetch-all";
 import { AlocacaoLoteDialog } from "@/components/alocacao-lote-dialog";
+import { useRealtimeInvalidate } from "@/hooks/use-realtime-invalidate";
 
 export const Route = createFileRoute("/_authenticated/alocacoes")({
   component: Page,
@@ -101,12 +102,25 @@ function Page() {
   const [fDataInicio, setFDataInicio] = useState("");
   const [fDataFim, setFDataFim] = useState("");
 
+  useRealtimeInvalidate({
+    channel: "alocacoes-live",
+    table: "alocacoes",
+    queryKeys: [["alocacoes"], ["dashboard"]],
+  });
+  useRealtimeInvalidate({
+    channel: "alocacoes-licenses-live",
+    table: "licenses",
+    queryKeys: [["chaves-disponiveis-alocacao"], ["licenses-assoc"]],
+  });
+
   const { data: rows, isLoading } = useQuery({
     queryKey: ["alocacoes"],
+    staleTime: 60_000,
+    gcTime: 300_000,
     queryFn: async () => {
       const { data, error } = await fetchAll<Row>(
         "alocacoes",
-        "*, licencas(id, chave_ativacao, produtos_catalogo(id, nome_oficial, modelo_licenciamento, tipo_licenciamento)), usuarios(nome), ativos(hostname)",
+        "id, licenca_id, usuario_id, ativo_id, data_inicio, data_fim, observacao, chave_individual, chave_id, licencas(id, chave_ativacao, produtos_catalogo(id, nome_oficial, modelo_licenciamento, tipo_licenciamento)), usuarios(nome), ativos(hostname)",
         (q) => q.order("data_inicio", { ascending: false }),
       );
       if (error) throw error;
@@ -114,8 +128,11 @@ function Page() {
     },
   });
 
+  // Catálogo de licenças (muda pouco: staleTime 2 minutos)
   const { data: licencas } = useQuery({
     queryKey: ["licencas-lite"],
+    staleTime: 120_000,
+    gcTime: 600_000,
     queryFn: async () =>
       (
         await fetchAll<any>(
@@ -127,6 +144,7 @@ function Page() {
 
   const { data: chavesDisponiveis = [] } = useQuery({
     queryKey: ["chaves-disponiveis-alocacao"],
+    staleTime: 30_000,
     queryFn: async () =>
       (
         await fetchAll<ChaveDisponivel>(
@@ -139,6 +157,7 @@ function Page() {
 
   const { data: usuarios } = useQuery({
     queryKey: ["usuarios-lite"],
+    staleTime: 120_000,
     queryFn: async () =>
       (await fetchAll<{ id: string; nome: string }>("usuarios", "id,nome", (q) => q.eq("status", "ativo").order("nome")))
         .data,
@@ -146,12 +165,13 @@ function Page() {
 
   const { data: ativos } = useQuery({
     queryKey: ["ativos-lite"],
+    staleTime: 60_000,
     queryFn: async () =>
       (
         await fetchAll<{ id: string; hostname: string; numero_patrimonio: string | null }>(
           "ativos",
           "id,hostname,numero_patrimonio",
-          (q) => q.order("hostname"),
+          (q) => q.neq("status_ciclo_vida", "baixado").order("hostname"),
         )
       ).data,
   });
@@ -223,6 +243,75 @@ function Page() {
     () => new Map(chavesAssociadas.map((c) => [c.id, c])),
     [chavesAssociadas],
   );
+
+  // Busca indexada no servidor para ATIVOS com debounce de 250ms
+  const searchAtivosServer = async (term: string) => {
+    const q = term.trim().replace(/[%_,()]/g, " ");
+    let query = supabase
+      .from("ativos")
+      .select("id, hostname, numero_patrimonio")
+      .neq("status_ciclo_vida", "baixado");
+
+    if (q) {
+      query = query.or(`hostname.ilike.%${q}%,numero_patrimonio.ilike.%${q}%`);
+    }
+
+    const { data, error } = await query.order("hostname").limit(100);
+    if (error || !data) return [];
+    return data.map((a) => ({
+      value: a.id,
+      label: a.hostname,
+      hint: a.numero_patrimonio ?? undefined,
+    }));
+  };
+
+  // Busca indexada no servidor para LICENÇAS com debounce de 250ms
+  const searchLicencasServer = async (term: string) => {
+    const q = term.trim().replace(/[%_,()]/g, " ");
+    let query = supabase
+      .from("licencas")
+      .select("id, quantidade, produtos_catalogo!inner(id, nome_oficial)");
+
+    if (q) {
+      query = query.ilike("produtos_catalogo.nome_oficial", `%${q}%`);
+    }
+
+    const { data, error } = await query.limit(100);
+    if (error || !data) return [];
+    return data.map((l: any) => ({
+      value: l.id,
+      label: l.produtos_catalogo?.nome_oficial ?? l.id.slice(0, 8),
+      hint: l.id.slice(0, 8),
+    }));
+  };
+
+  // Busca indexada no servidor para CHAVES DISPONÍVEIS com debounce de 250ms
+  const searchChavesServer = async (term: string) => {
+    const q = term.trim().replace(/[%_,()]/g, " ");
+    let query = supabase
+      .from("licenses")
+      .select("id, software, chave_ativacao, tipo_licenca, licenca_id, status")
+      .eq("status", "disponivel");
+
+    if (form.licenca_id) {
+      // Se houver licença selecionada, prioriza ou filtra
+      query = query.or(`licenca_id.eq.${form.licenca_id},software.ilike.%${q || produtoSelecionado || ""}%`);
+    }
+
+    if (q) {
+      query = query.or(`software.ilike.%${q}%,chave_ativacao.ilike.%${q}%`);
+    }
+
+    const { data, error } = await query.order("software").limit(100);
+    if (error || !data) return [];
+
+    const livres = data.filter((c) => !chavesEmUsoSet.has(c.id));
+    return livres.map((c) => ({
+      value: c.id,
+      label: mascaraChave(c.chave_ativacao),
+      hint: `${c.software} · ${c.tipo_licenca ?? "—"}${form.licenca_id && c.licenca_id === form.licenca_id ? " (vinculada a este produto)" : ""}`,
+    }));
+  };
 
   function openNew() {
     setForm({ ...initial });
@@ -553,7 +642,7 @@ function Page() {
           <Label>Licença *</Label>
           <Combobox
             placeholder="Selecione uma licença…"
-            searchPlaceholder="Buscar produto…"
+            searchPlaceholder="Buscar produto ou licença…"
             clearable={false}
             value={form.licenca_id || null}
             onChange={(v) => setForm({ ...form, licenca_id: v ?? "", chave_id: null })}
@@ -562,6 +651,7 @@ function Page() {
               label: l.produtos_catalogo?.nome_oficial ?? l.id.slice(0, 8),
               hint: l.id.slice(0, 8),
             }))}
+            onSearch={searchLicencasServer}
           />
         </div>
 
@@ -570,7 +660,7 @@ function Page() {
             <Label>Chave (módulo Chaves de Licença)</Label>
             <Combobox
               placeholder="Sem chave individual"
-              searchPlaceholder="Buscar chave…"
+              searchPlaceholder="Buscar chave ou software…"
               clearable
               value={form.chave_id}
               onChange={(v) => setForm({ ...form, chave_id: v ?? null })}
@@ -579,6 +669,7 @@ function Page() {
                 label: mascaraChave(c.chave_ativacao),
                 hint: `${c.software} · ${c.tipo_licenca ?? "—"}${form.licenca_id && c.licenca_id === form.licenca_id ? " (vinculada a este produto)" : ""}`,
               }))}
+              onSearch={searchChavesServer}
             />
             {chavesOptions.length > 0 ? (
               <p className="text-[11px] text-muted-foreground mt-1">
@@ -607,7 +698,7 @@ function Page() {
             <Label>Ativo</Label>
             <Combobox
               placeholder="Nenhum"
-              searchPlaceholder="Buscar hostname…"
+              searchPlaceholder="Buscar hostname ou patrimônio…"
               value={form.ativo_id}
               onChange={(v) => setForm({ ...form, ativo_id: v })}
               options={(ativos ?? []).map((a) => ({
@@ -615,6 +706,7 @@ function Page() {
                 label: a.hostname,
                 hint: a.numero_patrimonio ?? undefined,
               }))}
+              onSearch={searchAtivosServer}
             />
           </div>
         </div>

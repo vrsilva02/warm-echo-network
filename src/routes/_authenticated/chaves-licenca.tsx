@@ -8,9 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/empty-state";
 import {
   Select,
@@ -27,14 +25,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   Copy,
   Check,
@@ -60,6 +50,8 @@ import { logAction } from "@/lib/audit";
 import { downloadCSV, downloadPDF, toCSV } from "@/lib/export";
 import { Combobox } from "@/components/combobox";
 import { fetchAll } from "@/lib/fetch-all";
+import { AdvancedTable, type Column, type SavedView } from "@/components/advanced-table";
+import { useRealtimeInvalidate } from "@/hooks/use-realtime-invalidate";
 import {
   fetchChaves,
   inserirChavesEmLote,
@@ -150,25 +142,36 @@ function Page() {
   const qc = useQueryClient();
 
   const [software, setSoftware] = React.useState("todos");
-  const [status, setStatus] = React.useState("todos");
-  const [selected, setSelected] = React.useState<Set<string>>(new Set());
   const [bulkOpen, setBulkOpen] = React.useState(false);
   const [wipeOpen, setWipeOpen] = React.useState(false);
+
+  // Sincronização em tempo real para invalidar caches quando chaves forem alteradas
+  useRealtimeInvalidate({
+    channel: "licenses-chaves-live",
+    table: "licenses",
+    queryKeys: [["licenses"], ["chaves-saldo"]],
+  });
 
   const { data, isLoading } = useQuery({
     queryKey: ["licenses"],
     queryFn: async () => (await fetchChaves()) as unknown as LicenseRow[],
+    staleTime: 60_000,
+    gcTime: 10 * 60_000,
   });
 
   const { data: licencasRef = [] } = useQuery({
     queryKey: ["licencas-lite"],
     queryFn: async () =>
       (await fetchAll<any>("licencas", "id, quantidade, produtos_catalogo(id, nome_oficial)")).data,
+    staleTime: 120_000,
+    gcTime: 10 * 60_000,
   });
 
   const { data: saldos = [] } = useQuery({
     queryKey: ["chaves-saldo"],
     queryFn: async () => (await fetchAll<any>("vw_licencas_chaves_saldo", "*")).data,
+    staleTime: 60_000,
+    gcTime: 10 * 60_000,
   });
 
   const rows = data ?? [];
@@ -176,25 +179,11 @@ function Page() {
     () => Array.from(new Set(rows.map((r) => r.software))).sort(),
     [rows],
   );
-  const filtered = React.useMemo(
-    () =>
-      rows.filter(
-        (r) =>
-          (software === "todos" || r.software === software) &&
-          (status === "todos" || r.status === status),
-      ),
-    [rows, software, status],
+
+  const filteredBySoftware = React.useMemo(
+    () => (software === "todos" ? rows : rows.filter((r) => r.software === software)),
+    [rows, software],
   );
-
-  const allSelected = filtered.length > 0 && filtered.every((r) => selected.has(r.id));
-
-  function toggle(id: string) {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
-  }
 
   function licencaLabel(licencaId: string | null): string {
     if (!licencaId) return "—";
@@ -212,16 +201,165 @@ function Page() {
     void qc.invalidateQueries({ queryKey: ["chaves-disponiveis-alocacao"] });
   }
 
-  async function excluirSelecionadas() {
-    const ids = Array.from(selected);
-    if (ids.length === 0) return;
+  async function excluirLote(sel: LicenseRow[], clear: () => void) {
+    if (sel.length === 0) return;
+    const ids = sel.map((r) => r.id);
     const { error } = await supabase.from("licenses").delete().in("id", ids);
     if (error) return toast.error(friendlyError(error));
     void logAction("BULK_DELETE", "licenses", { total: ids.length, ids });
-    setSelected(new Set());
+    clear();
     await qc.invalidateQueries({ queryKey: ["licenses"] });
+    void qc.invalidateQueries({ queryKey: ["chaves-saldo"] });
     toast.success(`${ids.length} licença(s) excluída(s).`);
   }
+
+  const columns: Column<LicenseRow>[] = React.useMemo(
+    () => [
+      {
+        id: "software",
+        header: "Software",
+        accessor: (r) => <span className="font-medium">{r.software}</span>,
+        sortValue: (r) => r.software,
+        searchValue: (r) => r.software,
+        exportValue: (r) => r.software,
+      },
+      {
+        id: "licenca",
+        header: "Licença (produto)",
+        accessor: (r) => (
+          <span className="text-muted-foreground text-xs">{licencaLabel(r.licenca_id)}</span>
+        ),
+        sortValue: (r) => licencaLabel(r.licenca_id),
+        searchValue: (r) => licencaLabel(r.licenca_id),
+        exportValue: (r) => licencaLabel(r.licenca_id),
+      },
+      {
+        id: "chave",
+        header: "Chave",
+        accessor: (r) => (
+          <span className="inline-flex items-center gap-1">
+            <span className="font-mono text-xs tabular-nums">{maskTail(r.chave_ativacao)}</span>
+            <CopyKeyButton value={r.chave_ativacao} />
+          </span>
+        ),
+        sortValue: (r) => r.chave_ativacao,
+        searchValue: (r) => r.chave_ativacao,
+        exportValue: (r) => r.chave_ativacao,
+      },
+      {
+        id: "tipo",
+        header: "Tipo",
+        accessor: (r) => <span>{r.tipo_licenca}</span>,
+        sortValue: (r) => r.tipo_licenca,
+        searchValue: (r) => r.tipo_licenca,
+        exportValue: (r) => r.tipo_licenca,
+      },
+      {
+        id: "status",
+        header: "Status",
+        accessor: (r) => (
+          <Badge
+            variant={
+              r.status === "disponivel"
+                ? "secondary"
+                : r.status === "alocada"
+                  ? "default"
+                  : "destructive"
+            }
+          >
+            {STATUS_LABEL[r.status]}
+          </Badge>
+        ),
+        sortValue: (r) => STATUS_LABEL[r.status],
+        searchValue: (r) => STATUS_LABEL[r.status],
+        exportValue: (r) => STATUS_LABEL[r.status],
+      },
+      {
+        id: "ativo",
+        header: "Ativo",
+        accessor: (r) => (
+          <span className="text-muted-foreground">{r.ativos?.hostname ?? "—"}</span>
+        ),
+        sortValue: (r) => r.ativos?.hostname ?? "",
+        searchValue: (r) => r.ativos?.hostname,
+        exportValue: (r) => r.ativos?.hostname,
+      },
+      {
+        id: "usuario",
+        header: "Colaborador",
+        accessor: (r) => (
+          <span className="text-muted-foreground">{r.usuarios?.nome ?? "—"}</span>
+        ),
+        sortValue: (r) => r.usuarios?.nome ?? "",
+        searchValue: (r) => r.usuarios?.nome,
+        exportValue: (r) => r.usuarios?.nome,
+      },
+      {
+        id: "alocacao",
+        header: "Alocação",
+        accessor: (r) => <span className="tabular-nums">{r.data_alocacao ?? "—"}</span>,
+        sortValue: (r) => r.data_alocacao ?? "",
+        exportValue: (r) => r.data_alocacao,
+      },
+      {
+        id: "expiracao",
+        header: "Expiração",
+        accessor: (r) => <span className="tabular-nums">{r.data_expiracao ?? "—"}</span>,
+        sortValue: (r) => r.data_expiracao ?? "",
+        exportValue: (r) => r.data_expiracao,
+      },
+      {
+        id: "acoes",
+        header: "Ações",
+        alwaysVisible: true,
+        className: "w-28",
+        accessor: (r) =>
+          r.status === "alocada" ? (
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => void desvincular(r)}
+              title="Devolver a chave para o pool de disponíveis"
+            >
+              Desvincular
+            </Button>
+          ) : (
+            <span className="text-muted-foreground text-xs">—</span>
+          ),
+      },
+    ],
+    [licencasRef],
+  );
+
+  const views: SavedView<LicenseRow>[] = React.useMemo(
+    () => [
+      { id: "todas", label: "Todas", filter: (l) => l },
+      {
+        id: "disponiveis",
+        label: "Disponíveis",
+        filter: (l) => l.filter((r) => r.status === "disponivel"),
+        tone: "ok",
+      },
+      {
+        id: "alocadas",
+        label: "Alocadas",
+        filter: (l) => l.filter((r) => r.status === "alocada"),
+      },
+      {
+        id: "expiradas",
+        label: "Expiradas",
+        filter: (l) => l.filter((r) => r.status === "expirada"),
+        tone: "critical",
+      },
+      {
+        id: "revogadas",
+        label: "Revogadas",
+        filter: (l) => l.filter((r) => r.status === "revogada"),
+        tone: "warn",
+      },
+    ],
+    [],
+  );
 
   const EXPORT_COLS = [
     "Software",
@@ -235,7 +373,7 @@ function Page() {
   ];
 
   function exportRows(): (string | number | null)[][] {
-    return filtered.map((r) => [
+    return filteredBySoftware.map((r) => [
       r.software,
       maskTail(r.chave_ativacao),
       r.tipo_licenca,
@@ -247,36 +385,33 @@ function Page() {
     ]);
   }
 
-  const filtroResumo = [
-    software === "todos" ? "Todos os softwares" : software,
-    status === "todos" ? "Todos os status" : STATUS_LABEL[status as StatusLicenca],
-  ].join(" · ");
+  const filtroResumo = software === "todos" ? "Todos os softwares" : software;
 
   function exportarCSV() {
-    if (filtered.length === 0) return toast.error("Nenhuma licença para exportar.");
+    if (filteredBySoftware.length === 0) return toast.error("Nenhuma licença para exportar.");
     downloadCSV(`chaves-licenca-${new Date().toISOString().slice(0, 10)}`, EXPORT_COLS, exportRows());
-    void logAction("EXPORT", "licenses", { formato: "csv", total: filtered.length, filtroResumo });
-    toast.success(`${filtered.length} licença(s) exportada(s) em CSV.`);
+    void logAction("EXPORT", "licenses", { formato: "csv", total: filteredBySoftware.length, filtroResumo });
+    toast.success(`${filteredBySoftware.length} licença(s) exportada(s) em CSV.`);
   }
 
   async function exportarPDF() {
-    if (filtered.length === 0) return toast.error("Nenhuma licença para exportar.");
+    if (filteredBySoftware.length === 0) return toast.error("Nenhuma licença para exportar.");
     await downloadPDF({
       filename: `chaves-licenca-${new Date().toISOString().slice(0, 10)}.pdf`,
       title: "Chaves de Licença",
-      subtitle: `${filtered.length} registro(s) · ${filtroResumo}`,
+      subtitle: `${filteredBySoftware.length} registro(s) · ${filtroResumo}`,
       columns: EXPORT_COLS,
       rows: exportRows(),
     });
-    void logAction("EXPORT", "licenses", { formato: "pdf", total: filtered.length, filtroResumo });
-    toast.success(`${filtered.length} licença(s) exportada(s) em PDF.`);
+    void logAction("EXPORT", "licenses", { formato: "pdf", total: filteredBySoftware.length, filtroResumo });
+    toast.success(`${filteredBySoftware.length} licença(s) exportada(s) em PDF.`);
   }
 
   async function copiarLista() {
-    if (filtered.length === 0) return toast.error("Nenhuma licença para copiar.");
+    if (filteredBySoftware.length === 0) return toast.error("Nenhuma licença para copiar.");
     try {
       await navigator.clipboard.writeText(toCSV(EXPORT_COLS, exportRows()));
-      toast.success(`${filtered.length} linha(s) copiada(s) para a área de transferência.`);
+      toast.success(`${filteredBySoftware.length} linha(s) copiada(s) para a área de transferência.`);
     } catch {
       toast.error("Não foi possível copiar a lista.");
     }
@@ -297,7 +432,7 @@ function Page() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
-                  {filtered.length} registro(s) · chave mascarada
+                  {filteredBySoftware.length} registro(s) · chave mascarada
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onSelect={() => exportarCSV()}>
@@ -317,14 +452,6 @@ function Page() {
                 <Button size="sm" onClick={() => setBulkOpen(true)}>
                   <Plus className="h-4 w-4" /> Inserção em massa
                 </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  disabled={selected.size === 0}
-                  onClick={() => void excluirSelecionadas()}
-                >
-                  <Trash2 className="h-4 w-4" /> Excluir selecionadas ({selected.size})
-                </Button>
                 <Button size="sm" variant="destructive" onClick={() => setWipeOpen(true)}>
                   <AlertTriangle className="h-4 w-4" /> Excluir todas as licenças
                 </Button>
@@ -333,7 +460,6 @@ function Page() {
           </div>
         }
       />
-
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         {[
@@ -358,14 +484,20 @@ function Page() {
         ))}
       </div>
 
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2">
-            <KeyRound className="h-4 w-4" /> Licenças ({filtered.length})
-          </CardTitle>
-          <div className="flex flex-wrap gap-2 pt-2">
+      <AdvancedTable<LicenseRow>
+        storageKey="chaves-licenca"
+        rows={filteredBySoftware}
+        isLoading={isLoading}
+        columns={columns}
+        getRowId={(r) => r.id}
+        searchable={true}
+        searchPlaceholder="Buscar por chave, software, hostname ou colaborador…"
+        savedViews={views}
+        exportFilename="chaves-licenca"
+        toolbarExtras={
+          <div className="flex items-center gap-2">
             <Select value={software} onValueChange={setSoftware}>
-              <SelectTrigger className="w-56">
+              <SelectTrigger className="w-56 h-9">
                 <SelectValue placeholder="Software" />
               </SelectTrigger>
               <SelectContent>
@@ -377,125 +509,34 @@ function Page() {
                 ))}
               </SelectContent>
             </Select>
-            <Select value={status} onValueChange={setStatus}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todos">Todos os status</SelectItem>
-                <SelectItem value="disponivel">Disponível</SelectItem>
-                <SelectItem value="alocada">Alocada</SelectItem>
-                <SelectItem value="expirada">Expirada</SelectItem>
-                <SelectItem value="revogada">Revogada</SelectItem>
-              </SelectContent>
-            </Select>
+            {software !== "todos" && (
+              <Button size="sm" variant="ghost" className="h-9 px-2 text-xs" onClick={() => setSoftware("todos")}>
+                Limpar software
+              </Button>
+            )}
           </div>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="space-y-2">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <Skeleton key={i} className="h-10 w-full" />
-              ))}
-            </div>
-          ) : filtered.length === 0 ? (
-            <EmptyState
-              icon={<KeyRound className="h-6 w-6" />}
-              title="Nenhuma licença encontrada"
-              description="Ajuste os filtros ou faça uma inserção em massa de chaves."
-            />
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-10">
-                      <Checkbox
-                        checked={allSelected}
-                        onCheckedChange={(v) =>
-                          setSelected(v ? new Set(filtered.map((r) => r.id)) : new Set())
-                        }
-                        aria-label="Selecionar todas"
-                      />
-                    </TableHead>
-                    <TableHead>Software</TableHead>
-                    <TableHead>Licença (produto)</TableHead>
-                    <TableHead>Chave</TableHead>
-                    <TableHead>Tipo</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Ativo</TableHead>
-                    <TableHead>Colaborador</TableHead>
-                    <TableHead>Alocação</TableHead>
-                    <TableHead>Expiração</TableHead>
-                    <TableHead className="w-28">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filtered.map((r) => (
-                    <TableRow key={r.id} data-state={selected.has(r.id) ? "selected" : undefined}>
-                      <TableCell>
-                        <Checkbox
-                          checked={selected.has(r.id)}
-                          onCheckedChange={() => toggle(r.id)}
-                          aria-label="Selecionar linha"
-                        />
-                      </TableCell>
-                      <TableCell className="font-medium">{r.software}</TableCell>
-                      <TableCell className="text-muted-foreground text-xs">
-                        {licencaLabel(r.licenca_id)}
-                      </TableCell>
-                      <TableCell>
-                        <span className="inline-flex items-center gap-1">
-                          <span className="font-mono text-xs tabular-nums">
-                            {maskTail(r.chave_ativacao)}
-                          </span>
-                          <CopyKeyButton value={r.chave_ativacao} />
-                        </span>
-                      </TableCell>
-                      <TableCell>{r.tipo_licenca}</TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={
-                            r.status === "disponivel"
-                              ? "secondary"
-                              : r.status === "alocada"
-                                ? "default"
-                                : "destructive"
-                          }
-                        >
-                          {STATUS_LABEL[r.status]}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {r.ativos?.hostname ?? "—"}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {r.usuarios?.nome ?? "—"}
-                      </TableCell>
-                      <TableCell className="tabular-nums">{r.data_alocacao ?? "—"}</TableCell>
-                      <TableCell className="tabular-nums">{r.data_expiracao ?? "—"}</TableCell>
-                      <TableCell>
-                        {r.status === "alocada" ? (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => void desvincular(r)}
-                            title="Devolver a chave para o pool de disponíveis"
-                          >
-                            Desvincular
-                          </Button>
-                        ) : (
-                          <span className="text-muted-foreground text-xs">—</span>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+        }
+        emptyState={
+          <EmptyState
+            icon={<KeyRound className="h-6 w-6" />}
+            title="Nenhuma licença encontrada"
+            description="Ajuste os filtros ou faça uma inserção em massa de chaves."
+          />
+        }
+        bulkActions={
+          isAdmin
+            ? (sel, clear) => (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => void excluirLote(sel, clear)}
+                >
+                  <Trash2 className="h-4 w-4 mr-1.5" /> Excluir selecionadas ({sel.length})
+                </Button>
+              )
+            : undefined
+        }
+      />
 
       {isAdmin && (
         <>
@@ -513,8 +554,8 @@ function Page() {
             onOpenChange={setWipeOpen}
             total={rows.length}
             onDone={() => {
-              setSelected(new Set());
               void qc.invalidateQueries({ queryKey: ["licenses"] });
+              void qc.invalidateQueries({ queryKey: ["chaves-saldo"] });
             }}
           />
         </>

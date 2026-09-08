@@ -22,6 +22,9 @@ type Props = {
   disabled?: boolean;
   clearable?: boolean;
   className?: string;
+  /** Busca assíncrona opcional (no banco com debounce de 250ms) */
+  onSearch?: (query: string) => Promise<ComboboxOption[]>;
+  loading?: boolean;
 };
 
 const ITEM_HEIGHT = 36; // px — altura fixa de cada item da lista
@@ -37,15 +40,22 @@ export function Combobox({
   disabled,
   clearable = true,
   className,
+  onSearch,
+  loading: externalLoading,
 }: Props) {
   const [open, setOpen] = React.useState(false);
   const [search, setSearch] = React.useState("");
+  const [asyncOptions, setAsyncOptions] = React.useState<ComboboxOption[] | null>(null);
+  const [searching, setSearching] = React.useState(false);
   const parentRef = React.useRef<HTMLDivElement>(null);
+  const timerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const selected = options.find((o) => o.value === value) ?? null;
+  const activeOptions = asyncOptions ?? options;
+  const selected = (options.find((o) => o.value === value) || asyncOptions?.find((o) => o.value === value)) ?? null;
 
-  // Filtragem local por label e hint — case-insensitive, sem acentuação
+  // Filtragem local quando não houver onSearch assíncrono customizado
   const filtered = React.useMemo(() => {
+    if (onSearch) return activeOptions;
     const q = search.trim().toLowerCase().normalize("NFD").replace(/\p{Mn}/gu, "");
     if (!q) return options;
     return options.filter((o) => {
@@ -53,7 +63,7 @@ export function Combobox({
       const hint = (o.hint ?? "").toLowerCase().normalize("NFD").replace(/\p{Mn}/gu, "");
       return label.includes(q) || hint.includes(q);
     });
-  }, [options, search]);
+  }, [options, activeOptions, onSearch, search]);
 
   const listHeight = Math.min(filtered.length * ITEM_HEIGHT, LIST_MAX_HEIGHT);
 
@@ -64,10 +74,35 @@ export function Combobox({
     overscan: 8,
   });
 
+  // Debounce da busca assíncrona (250ms)
+  React.useEffect(() => {
+    if (!onSearch || !open) return;
+    if (timerRef.current) clearTimeout(timerRef.current);
+
+    timerRef.current = setTimeout(async () => {
+      setSearching(true);
+      try {
+        const res = await onSearch(search);
+        setAsyncOptions(res);
+      } catch (err) {
+        console.error("Erro na busca do combobox:", err);
+      } finally {
+        setSearching(false);
+      }
+    }, 250);
+
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, [search, open, onSearch]);
+
   // Limpa busca ao fechar
   function handleOpenChange(v: boolean) {
     setOpen(v);
-    if (!v) setSearch("");
+    if (!v) {
+      setSearch("");
+      setAsyncOptions(null);
+    }
   }
 
   function handleSelect(opt: ComboboxOption) {
@@ -111,14 +146,17 @@ export function Combobox({
         align="start"
       >
         {/* Campo de busca local — não depende do cmdk */}
-        <div className="flex items-center border-b px-3 py-2">
+        <div className="flex items-center border-b px-3 py-2 gap-2">
           <Input
             autoFocus
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={searchPlaceholder}
-            className="h-7 border-0 shadow-none focus-visible:ring-0 p-0 text-sm"
+            className="h-7 border-0 shadow-none focus-visible:ring-0 p-0 text-sm flex-1"
           />
+          {(searching || externalLoading) && (
+            <span className="text-[10px] text-muted-foreground animate-pulse shrink-0">Buscando…</span>
+          )}
         </div>
 
         {filtered.length === 0 ? (
