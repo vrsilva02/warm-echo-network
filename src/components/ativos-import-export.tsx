@@ -30,7 +30,7 @@ const COLUMNS = ATIVOS_COLUMNS;
 type Col = (typeof COLUMNS)[number];
 type RawRow = Partial<Record<Col, string>> & Record<string, string>;
 
-const REQUIRED: Col[] = ["hostname"];
+const REQUIRED: Col[] = ["hostname", "cliente"];
 const STATUS_VALIDOS = new Set(["estoque", "em_uso", "manutencao", "baixado", "solicitado"]);
 /** Aceita rótulos antigos usados em planilhas anteriores. */
 const STATUS_ALIAS: Record<string, string> = { em_estoque: "estoque", em_manutencao: "manutencao" };
@@ -130,7 +130,7 @@ async function importarLinhas(
   const [{ data: usuarios }, { data: clientes }, { data: existentes }] = await Promise.all([
     fetchAll<any>("usuarios", "id, email", (q) => q.not("email", "is", null)),
     fetchAll<any>("clientes", "id, nome", (q) => q.not("nome", "is", null)),
-    fetchAll<any>("ativos", "id, hostname"),
+    fetchAll<any>("ativos", "id, hostname, cliente_id"),
   ]);
   const userByEmail = new Map<string, string>(
     (usuarios ?? []).filter((u: any) => u.email).map((u: any) => [u.email.toLowerCase(), u.id]),
@@ -138,8 +138,8 @@ async function importarLinhas(
   const clienteByNome = new Map<string, string>(
     (clientes ?? []).filter((c: any) => c.nome).map((c: any) => [c.nome.trim().toLowerCase(), c.id]),
   );
-  const ativoByHost = new Map<string, string>(
-    (existentes ?? []).map((a: any) => [a.hostname.toLowerCase(), a.id]),
+  const ativoByClienteAndHost = new Map<string, string>(
+    (existentes ?? []).map((a: any) => [`${a.cliente_id ?? ""}:::${a.hostname.toLowerCase()}`, a.id]),
   );
 
   setPhase("Validando linhas…");
@@ -182,8 +182,16 @@ async function importarLinhas(
     const clienteNome = nz(r.cliente);
     if (clienteNome) {
       const found = clienteByNome.get(clienteNome.toLowerCase());
-      if (found) clienteId = found;
-      else rep.clientesNaoEncontrados++;
+      if (found) {
+        clienteId = found;
+      } else {
+        rep.clientesNaoEncontrados++;
+        rep.erros.push({ linha, motivo: `Cliente não encontrado no sistema: "${clienteNome}"` });
+        continue;
+      }
+    } else {
+      rep.erros.push({ linha, motivo: "Cliente é obrigatório para cadastrar o ativo." });
+      continue;
     }
 
     const payload = {
@@ -200,14 +208,14 @@ async function importarLinhas(
       cliente_id: clienteId,
     };
 
-    const key = hostname.toLowerCase();
+    const key = `${clienteId}:::${hostname.toLowerCase()}`;
     if (vistos.has(key)) {
-      rep.erros.push({ linha, motivo: `hostname duplicado no arquivo: ${hostname}` });
+      rep.erros.push({ linha, motivo: `hostname duplicado no arquivo para este cliente: ${hostname}` });
       continue;
     }
     vistos.add(key);
 
-    const existenteId = ativoByHost.get(key);
+    const existenteId = ativoByClienteAndHost.get(key);
     if (existenteId) updates.push({ linha, payload, id: existenteId });
     else inserts.push({ linha, payload });
   }

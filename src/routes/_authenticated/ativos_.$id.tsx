@@ -57,7 +57,7 @@ function Page() {
     queryFn: async () => {
       const { data } = await supabase
         .from("ativos")
-        .select("*, usuarios(nome), centros_custo(nome), unidades(nome)")
+        .select("*, usuarios(nome), centros_custo(nome), unidades(nome), clientes(nome), contratos(numero_contrato, fornecedor)")
         .eq("id", id).maybeSingle();
       return data as any;
     },
@@ -187,6 +187,8 @@ function Page() {
             {ativoStatus(ativo?.status_ciclo_vida)}
             <span className="text-muted-foreground">
               {ativo?.tipo} · Patrimônio: <span className="font-mono">{ativo?.numero_patrimonio ?? "—"}</span> · Setor: {ativo?.setor ?? "—"}
+              {ativo?.clientes?.nome && <> · Cliente: <span className="font-medium text-foreground">{ativo.clientes.nome}</span></>}
+              {ativo?.contratos?.numero_contrato && <> · Contrato: {ativo.contratos.numero_contrato}</>}
               {ativo?.centros_custo?.nome && <> · Centro: {ativo.centros_custo.nome}</>}
               {ativo?.usuarios?.nome && <> · Responsável: {ativo.usuarios.nome}</>}
             </span>

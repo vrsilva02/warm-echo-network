@@ -16,6 +16,13 @@ export function friendlyError(err: unknown, fallback = "Ocorreu um erro. Tente n
   if (code === "23503" || msg.includes("foreign key")) {
     return "Não é possível concluir: existem registros vinculados a este item.";
   }
+  if (
+    msg.includes("idx_ativos_cliente") ||
+    msg.includes("ativos_numero_patrimonio_key") ||
+    (code === "23505" && (msg.includes("numero_patrimonio") || msg.includes("hostname") || msg.includes("numero_serie")))
+  ) {
+    return "Já existe um ativo com este código cadastrado para este cliente.";
+  }
   if (code === "23505" || msg.includes("duplicate key") || msg.includes("unique constraint")) {
     return "Já existe um registro com esses dados.";
   }

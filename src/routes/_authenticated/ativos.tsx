@@ -15,6 +15,7 @@ import { Pencil, Trash2, Laptop, ExternalLink, HelpCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
 import { logAction } from "@/lib/audit";
+import { friendlyError } from "@/lib/errors";
 import { useConfirm } from "@/components/confirm-dialog";
 import { Combobox } from "@/components/combobox";
 import { ComboboxCreatable } from "@/components/combobox-creatable";
@@ -69,9 +70,11 @@ type Ativo = {
   usuario_responsavel_id: string | null;
   centro_custo_id: string | null;
   cliente_id: string | null;
+  contrato_id?: string | null;
   usuarios?: { nome: string } | null;
   centros_custo?: { nome: string } | null;
   clientes?: { nome: string } | null;
+  contratos?: { id: string; numero_contrato: string | null; fornecedor: string } | null;
 };
 
 const STATUS = ["solicitado", "estoque", "em_uso", "manutencao", "baixado"];
@@ -91,7 +94,7 @@ function loadAtivosListState() {
 type ListState = ReturnType<typeof loadAtivosListState>;
 
 const ATIVO_SELECT =
-  "id,hostname,tipo,categoria,marca,modelo,numero_serie,numero_patrimonio,setor,status_ciclo_vida,usuario_responsavel_id,centro_custo_id,cliente_id,usuarios(nome),centros_custo(nome),clientes(nome)";
+  "id,hostname,tipo,categoria,marca,modelo,numero_serie,numero_patrimonio,setor,status_ciclo_vida,usuario_responsavel_id,centro_custo_id,cliente_id,contrato_id,usuarios(nome),centros_custo(nome),clientes(nome),contratos(id,numero_contrato,fornecedor)";
 
 /** Aplica busca e visão salva na query do Supabase. */
 function applyAtivosFilters(query: any, s: ListState) {
@@ -178,6 +181,7 @@ const initial = {
   usuario_responsavel_id: null as string | null,
   centro_custo_id: null as string | null,
   cliente_id: null as string | null,
+  contrato_id: null as string | null,
 };
 
 function statusBadge(s: string) {
@@ -225,6 +229,11 @@ function AtivosPage() {
   const { data: clientes } = useQuery({
     queryKey: ["clientes-lite"],
     queryFn: async () => (await supabase.from("clientes").select("id,nome").eq("ativo", true).order("nome")).data ?? [],
+  });
+  const { data: contratos = [] } = useQuery({
+    queryKey: ["contratos-lite"],
+    queryFn: async () => (await supabase.from("contratos").select("id,numero_contrato,fornecedor,cliente_id").order("numero_contrato")).data ?? [],
+    staleTime: 120_000,
   });
   const { set: edrSet } = useGapEdrSet(rows?.map((row) => row.id));
 
@@ -277,30 +286,73 @@ function AtivosPage() {
       usuario_responsavel_id: r.usuario_responsavel_id,
       centro_custo_id: r.centro_custo_id,
       cliente_id: r.cliente_id,
+      contrato_id: r.contrato_id ?? null,
     });
     setOpen(true);
   }
 
   async function save() {
+    const hostname = form.hostname.trim();
+    if (!hostname) return toast.error("Informe o hostname do ativo");
+    if (!form.cliente_id) return toast.error("Selecione o cliente do ativo antes de salvar");
+
+    // 1. Validação de duplicidade de Hostname no escopo do Cliente
+    let checkHost = supabase
+      .from("ativos")
+      .select("id")
+      .eq("cliente_id", form.cliente_id)
+      .ilike("hostname", hostname);
+    if (editing) checkHost = checkHost.neq("id", editing.id);
+    const { data: dupHost } = await checkHost.limit(1);
+    if (dupHost && dupHost.length > 0) {
+      return toast.error("Já existe um ativo com este código cadastrado para este cliente");
+    }
+
+    // 2. Validação de duplicidade de Patrimônio no escopo do Cliente
+    const patrimonio = form.numero_patrimonio.trim();
+    if (patrimonio) {
+      let checkPat = supabase
+        .from("ativos")
+        .select("id")
+        .eq("cliente_id", form.cliente_id)
+        .ilike("numero_patrimonio", patrimonio);
+      if (editing) checkPat = checkPat.neq("id", editing.id);
+      const { data: dupPat } = await checkPat.limit(1);
+      if (dupPat && dupPat.length > 0) {
+        return toast.error("Já existe um ativo com este código cadastrado para este cliente");
+      }
+    }
+
     const payload = {
-      hostname: form.hostname.trim(),
+      hostname,
       tipo: form.tipo?.trim() || null,
       categoria: form.categoria.trim() || null,
       marca: form.marca.trim() || null,
       modelo: form.modelo.trim() || null,
-      numero_serie: form.numero_serie || null,
-      numero_patrimonio: form.numero_patrimonio.trim() || null,
-      setor: form.setor || null,
+      numero_serie: form.numero_serie.trim() || null,
+      numero_patrimonio: patrimonio || null,
+      setor: form.setor.trim() || null,
       status_ciclo_vida: normalizeStatus(form.status_ciclo_vida),
       usuario_responsavel_id: form.usuario_responsavel_id,
       centro_custo_id: form.centro_custo_id,
       cliente_id: form.cliente_id,
+      contrato_id: form.contrato_id || null,
     };
     const { error } = editing
-      ? await supabase.from("ativos").update(payload).eq("id", editing.id)
-      : await supabase.from("ativos").insert(payload);
-    if (error) return toast.error(error.message);
+      ? await supabase.from("ativos").update(payload as any).eq("id", editing.id)
+      : await supabase.from("ativos").insert(payload as any);
+    if (error) {
+      if (
+        error.code === "23505" ||
+        error.message?.includes("idx_ativos_cliente") ||
+        error.message?.includes("duplicate key")
+      ) {
+        return toast.error("Já existe um ativo com este código cadastrado para este cliente");
+      }
+      return toast.error(friendlyError(error));
+    }
     toast.success(editing ? "Ativo atualizado" : "Ativo criado");
+    setOpen(false);
     qc.invalidateQueries({ queryKey: ["ativos"] });
     qc.invalidateQueries({ queryKey: ["dashboard"] });
   }
@@ -444,9 +496,16 @@ function AtivosPage() {
     },
     {
       id: "cliente", header: "Cliente",
-      accessor: (r) => r.clientes?.nome ?? "—",
+      accessor: (r) => r.clientes?.nome ? <span className="font-medium">{r.clientes.nome}</span> : <span className="text-muted-foreground">—</span>,
       sortValue: (r) => r.clientes?.nome ?? "",
       searchValue: (r) => r.clientes?.nome, exportValue: (r) => r.clientes?.nome,
+    },
+    {
+      id: "contrato", header: "Contrato",
+      accessor: (r) => r.contratos?.numero_contrato ?? r.contratos?.fornecedor ?? <span className="text-muted-foreground">—</span>,
+      sortValue: (r) => r.contratos?.numero_contrato ?? r.contratos?.fornecedor ?? "",
+      searchValue: (r) => `${r.contratos?.numero_contrato ?? ""} ${r.contratos?.fornecedor ?? ""}`,
+      exportValue: (r) => r.contratos?.numero_contrato ?? r.contratos?.fornecedor ?? "",
     },
     {
       id: "centro", header: "Centro de custo", defaultHidden: true,
@@ -688,15 +747,55 @@ function AtivosPage() {
           </div>
 
         </div>
-        <div>
-          <Label>Cliente</Label>
-          <Combobox
-            placeholder="Nenhum"
-            searchPlaceholder="Buscar cliente…"
-            value={form.cliente_id}
-            onChange={(v) => setForm({ ...form, cliente_id: v })}
-            options={(clientes ?? []).map((c: any) => ({ value: c.id, label: c.nome }))}
-          />
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <Label>Cliente *</Label>
+            <Combobox
+              placeholder="Selecione o cliente…"
+              searchPlaceholder="Buscar cliente…"
+              clearable={false}
+              value={form.cliente_id}
+              onChange={(v) => {
+                const contratoValido = contratos.some(
+                  (c: any) => c.id === form.contrato_id && c.cliente_id === v,
+                );
+                setForm({
+                  ...form,
+                  cliente_id: v,
+                  contrato_id: contratoValido ? form.contrato_id : null,
+                });
+              }}
+              options={(clientes ?? []).map((c: any) => ({ value: c.id, label: c.nome }))}
+            />
+          </div>
+          <div>
+            <Label>Contrato <span className="text-muted-foreground font-normal">(opcional)</span></Label>
+            <Combobox
+              placeholder="Selecione o contrato…"
+              searchPlaceholder="Buscar contrato…"
+              clearable
+              value={form.contrato_id}
+              onChange={(v) => {
+                if (!v) {
+                  setForm({ ...form, contrato_id: null });
+                  return;
+                }
+                const c = contratos.find((x: any) => x.id === v);
+                setForm({
+                  ...form,
+                  contrato_id: v,
+                  cliente_id: c?.cliente_id ?? form.cliente_id,
+                });
+              }}
+              options={(contratos ?? [])
+                .filter((c: any) => !form.cliente_id || c.cliente_id === form.cliente_id)
+                .map((c: any) => ({
+                  value: c.id,
+                  label: c.numero_contrato || c.fornecedor || c.id.slice(0, 8),
+                  hint: c.fornecedor,
+                }))}
+            />
+          </div>
         </div>
       </CrudDialog>
     </>

@@ -54,7 +54,12 @@ type Row = {
     } | null;
   } | null;
   usuarios?: { nome: string } | null;
-  ativos?: { hostname: string } | null;
+  ativos?: {
+    id?: string;
+    hostname: string;
+    numero_patrimonio?: string | null;
+    clientes?: { nome: string } | null;
+  } | null;
 };
 
 type ChaveDisponivel = {
@@ -120,7 +125,7 @@ function Page() {
     queryFn: async () => {
       const { data, error } = await fetchAll<Row>(
         "alocacoes",
-        "id, licenca_id, usuario_id, ativo_id, data_inicio, data_fim, observacao, chave_individual, chave_id, licencas(id, chave_ativacao, produtos_catalogo(id, nome_oficial, modelo_licenciamento, tipo_licenciamento)), usuarios(nome), ativos(hostname)",
+        "id, licenca_id, usuario_id, ativo_id, data_inicio, data_fim, observacao, chave_individual, chave_id, licencas(id, chave_ativacao, produtos_catalogo(id, nome_oficial, modelo_licenciamento, tipo_licenciamento)), usuarios(nome), ativos(id, hostname, numero_patrimonio, clientes(nome))",
         (q) => q.order("data_inicio", { ascending: false }),
       );
       if (error) throw error;
@@ -168,9 +173,9 @@ function Page() {
     staleTime: 60_000,
     queryFn: async () =>
       (
-        await fetchAll<{ id: string; hostname: string; numero_patrimonio: string | null }>(
+        await fetchAll<{ id: string; hostname: string; numero_patrimonio: string | null; clientes?: { nome: string } | null }>(
           "ativos",
-          "id,hostname,numero_patrimonio",
+          "id,hostname,numero_patrimonio,clientes(nome)",
           (q) => q.neq("status_ciclo_vida", "baixado").order("hostname"),
         )
       ).data,
@@ -249,7 +254,7 @@ function Page() {
     const q = term.trim().replace(/[%_,()]/g, " ");
     let query = supabase
       .from("ativos")
-      .select("id, hostname, numero_patrimonio")
+      .select("id, hostname, numero_patrimonio, clientes(nome)")
       .neq("status_ciclo_vida", "baixado");
 
     if (q) {
@@ -258,10 +263,10 @@ function Page() {
 
     const { data, error } = await query.order("hostname").limit(100);
     if (error || !data) return [];
-    return data.map((a) => ({
+    return data.map((a: any) => ({
       value: a.id,
-      label: a.hostname,
-      hint: a.numero_patrimonio ?? undefined,
+      label: a.clientes?.nome ? `${a.hostname} (${a.clientes.nome})` : a.hostname,
+      hint: a.numero_patrimonio ? `Patrimônio: ${a.numero_patrimonio}` : (a.clientes?.nome ? `Cliente: ${a.clientes.nome}` : undefined),
     }));
   };
 
@@ -417,9 +422,19 @@ function Page() {
     },
     {
       id: "ativo", header: "Ativo",
-      accessor: (r) => r.ativos?.hostname ?? "—",
+      accessor: (r) => (
+        <div>
+          <span>{r.ativos?.hostname ?? "—"}</span>
+          {r.ativos?.clientes?.nome && (
+            <span className="block text-[11px] text-muted-foreground">
+              {r.ativos.clientes.nome}
+            </span>
+          )}
+        </div>
+      ),
       sortValue: (r) => r.ativos?.hostname ?? "",
-      searchValue: (r) => r.ativos?.hostname, exportValue: (r) => r.ativos?.hostname,
+      searchValue: (r) => `${r.ativos?.hostname ?? ""} ${r.ativos?.clientes?.nome ?? ""}`,
+      exportValue: (r) => r.ativos?.hostname ? `${r.ativos.hostname}${r.ativos.clientes?.nome ? ` (${r.ativos.clientes.nome})` : ""}` : "",
     },
     {
       id: "chave", header: "Chave",
@@ -572,13 +587,13 @@ function Page() {
           <Label className="text-xs">Ativo</Label>
           <Combobox
             placeholder="Todos"
-            searchPlaceholder="Buscar hostname…"
+            searchPlaceholder="Buscar hostname ou cliente…"
             value={fAtivo}
             onChange={setFAtivo}
             options={(ativos ?? []).map((a) => ({
               value: a.id,
-              label: a.hostname,
-              hint: a.numero_patrimonio ?? undefined,
+              label: a.clientes?.nome ? `${a.hostname} (${a.clientes.nome})` : a.hostname,
+              hint: a.numero_patrimonio ? `Patrimônio: ${a.numero_patrimonio}` : undefined,
             }))}
           />
         </div>
@@ -703,8 +718,8 @@ function Page() {
               onChange={(v) => setForm({ ...form, ativo_id: v })}
               options={(ativos ?? []).map((a) => ({
                 value: a.id,
-                label: a.hostname,
-                hint: a.numero_patrimonio ?? undefined,
+                label: a.clientes?.nome ? `${a.hostname} (${a.clientes.nome})` : a.hostname,
+                hint: a.numero_patrimonio ? `Patrimônio: ${a.numero_patrimonio}` : (a.clientes?.nome ? `Cliente: ${a.clientes.nome}` : undefined),
               }))}
               onSearch={searchAtivosServer}
             />
