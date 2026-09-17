@@ -652,20 +652,19 @@ function Page() {
             <Label>Chave (módulo Chaves de Licença)</Label>
             <Combobox
               placeholder="Sem chave individual"
-              searchPlaceholder="Buscar chave ou software…"
+              searchPlaceholder="Buscar pelos 5 últimos dígitos ou software…"
               clearable
               value={form.chave_id}
               onChange={(v) => setForm({ ...form, chave_id: v ?? null })}
               options={chavesOptions.map((c) => ({
                 value: c.id,
                 label: mascaraChave(c.chave_ativacao),
-                hint: `${c.software} · ${c.tipo_licenca ?? "—"}${form.licenca_id && c.licenca_id === form.licenca_id ? " (vinculada a este produto)" : ""}`,
+                hint: `${c.software} · ${c.tipo_licenca ?? "—"} · final ${c.chave_ativacao.trim().slice(-5)}`,
               }))}
-              onSearch={searchChavesServer}
             />
             {chavesOptions.length > 0 ? (
               <p className="text-[11px] text-muted-foreground mt-1">
-                Ao salvar, esta chave será associada a esta licença e alocada para o ativo/colaborador no módulo Chaves de Licença.
+                {chavesOptions.length} chave(s) disponível(is) desta licença. Busque pelos 5 últimos dígitos para evitar duplicidade.
               </p>
             ) : (
               <p className="text-[11px] text-muted-foreground mt-1">
