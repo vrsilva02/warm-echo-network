@@ -87,6 +87,24 @@ const initial = {
   observacao: "",
 };
 
+/** Normaliza nome de produto/software para comparação tolerante. */
+function normalizaNome(v: string): string {
+  return (v ?? "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/\p{Mn}/gu, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+/** Considera compatíveis nomes iguais ou em que um contém o outro
+ *  (ex.: "Microsoft / Office 2021 Professional Plus" x "Office 2021 Professional Plus"). */
+function nomesCompativeis(software: string, produtoNormalizado: string): boolean {
+  const s = normalizaNome(software);
+  if (!s || !produtoNormalizado) return false;
+  return s === produtoNormalizado || s.includes(produtoNormalizado) || produtoNormalizado.includes(s);
+}
+
 function mascaraChave(chave: string): string {
   const limpa = (chave ?? "").trim();
   if (limpa.length <= 5) return limpa;
