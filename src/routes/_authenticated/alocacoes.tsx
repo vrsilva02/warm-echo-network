@@ -202,24 +202,25 @@ function Page() {
   const chavesOptions = useMemo(() => {
     if (chavesDisponiveis.length === 0) return [];
 
-    // Filtra estritamente as chaves com status "disponivel" E que não estejam com alocação ativa aberta
+    // Somente chaves livres: status "disponivel" e sem alocação ativa aberta
     const apenasLivres = chavesDisponiveis.filter(
       (c) => (c.status ?? "disponivel") === "disponivel" && !chavesEmUsoSet.has(c.id),
     );
-    
-    return apenasLivres.sort((a, b) => {
-      const aMatchLicenca = form.licenca_id && a.licenca_id === form.licenca_id;
-      const bMatchLicenca = form.licenca_id && b.licenca_id === form.licenca_id;
-      if (aMatchLicenca && !bMatchLicenca) return -1;
-      if (!aMatchLicenca && bMatchLicenca) return 1;
 
-      const aMatchSoftware = produtoSelecionado && a.software.trim().toLowerCase() === produtoSelecionado;
-      const bMatchSoftware = produtoSelecionado && b.software.trim().toLowerCase() === produtoSelecionado;
-      if (aMatchSoftware && !bMatchSoftware) return -1;
-      if (!aMatchSoftware && bMatchSoftware) return 1;
+    // Com licença selecionada, mostra TODAS as chaves daquela licença/produto
+    if (form.licenca_id) {
+      const daLicenca = apenasLivres.filter((c) => c.licenca_id === form.licenca_id);
+      const doProduto = produtoSelecionado
+        ? apenasLivres.filter(
+            (c) => c.licenca_id == null && c.software.trim().toLowerCase() === produtoSelecionado,
+          )
+        : [];
+      return [...daLicenca, ...doProduto].sort((a, b) =>
+        a.chave_ativacao.slice(-5).localeCompare(b.chave_ativacao.slice(-5)),
+      );
+    }
 
-      return a.software.localeCompare(b.software);
-    });
+    return apenasLivres.sort((a, b) => a.software.localeCompare(b.software));
   }, [chavesDisponiveis, chavesEmUsoSet, form.licenca_id, produtoSelecionado]);
 
 
