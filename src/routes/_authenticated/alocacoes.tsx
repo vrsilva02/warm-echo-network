@@ -291,33 +291,9 @@ function Page() {
     }));
   };
 
-  // Busca indexada no servidor para CHAVES DISPONÍVEIS com debounce de 250ms
-  const searchChavesServer = async (term: string) => {
-    const q = term.trim().replace(/[%_,()]/g, " ");
-    let query = supabase
-      .from("licenses")
-      .select("id, software, chave_ativacao, tipo_licenca, licenca_id, status")
-      .eq("status", "disponivel");
+  // As chaves já vêm completas do banco (fetchAll), então a busca é local
+  // pelos 5 últimos dígitos da chave, pelo software ou pelo tipo.
 
-    if (form.licenca_id) {
-      // Se houver licença selecionada, prioriza ou filtra
-      query = query.or(`licenca_id.eq.${form.licenca_id},software.ilike.%${q || produtoSelecionado || ""}%`);
-    }
-
-    if (q) {
-      query = query.or(`software.ilike.%${q}%,chave_ativacao.ilike.%${q}%`);
-    }
-
-    const { data, error } = await query.order("software").limit(100);
-    if (error || !data) return [];
-
-    const livres = data.filter((c) => !chavesEmUsoSet.has(c.id));
-    return livres.map((c) => ({
-      value: c.id,
-      label: mascaraChave(c.chave_ativacao),
-      hint: `${c.software} · ${c.tipo_licenca ?? "—"}${form.licenca_id && c.licenca_id === form.licenca_id ? " (vinculada a este produto)" : ""}`,
-    }));
-  };
 
   function openNew() {
     setForm({ ...initial });
