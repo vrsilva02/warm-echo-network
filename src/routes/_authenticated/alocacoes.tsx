@@ -89,8 +89,8 @@ const initial = {
 
 function mascaraChave(chave: string): string {
   const limpa = (chave ?? "").trim();
-  if (limpa.length <= 8) return limpa;
-  return `${"•".repeat(6)}${limpa.slice(-4)}`;
+  if (limpa.length <= 5) return limpa;
+  return `${"•".repeat(6)}${limpa.slice(-5)}`;
 }
 
 function Page() {
@@ -202,24 +202,25 @@ function Page() {
   const chavesOptions = useMemo(() => {
     if (chavesDisponiveis.length === 0) return [];
 
-    // Filtra estritamente as chaves com status "disponivel" E que não estejam com alocação ativa aberta
+    // Somente chaves livres: status "disponivel" e sem alocação ativa aberta
     const apenasLivres = chavesDisponiveis.filter(
       (c) => (c.status ?? "disponivel") === "disponivel" && !chavesEmUsoSet.has(c.id),
     );
-    
-    return apenasLivres.sort((a, b) => {
-      const aMatchLicenca = form.licenca_id && a.licenca_id === form.licenca_id;
-      const bMatchLicenca = form.licenca_id && b.licenca_id === form.licenca_id;
-      if (aMatchLicenca && !bMatchLicenca) return -1;
-      if (!aMatchLicenca && bMatchLicenca) return 1;
 
-      const aMatchSoftware = produtoSelecionado && a.software.trim().toLowerCase() === produtoSelecionado;
-      const bMatchSoftware = produtoSelecionado && b.software.trim().toLowerCase() === produtoSelecionado;
-      if (aMatchSoftware && !bMatchSoftware) return -1;
-      if (!aMatchSoftware && bMatchSoftware) return 1;
+    // Com licença selecionada, mostra TODAS as chaves daquela licença/produto
+    if (form.licenca_id) {
+      const daLicenca = apenasLivres.filter((c) => c.licenca_id === form.licenca_id);
+      const doProduto = produtoSelecionado
+        ? apenasLivres.filter(
+            (c) => c.licenca_id == null && c.software.trim().toLowerCase() === produtoSelecionado,
+          )
+        : [];
+      return [...daLicenca, ...doProduto].sort((a, b) =>
+        a.chave_ativacao.slice(-5).localeCompare(b.chave_ativacao.slice(-5)),
+      );
+    }
 
-      return a.software.localeCompare(b.software);
-    });
+    return apenasLivres.sort((a, b) => a.software.localeCompare(b.software));
   }, [chavesDisponiveis, chavesEmUsoSet, form.licenca_id, produtoSelecionado]);
 
 
@@ -290,33 +291,9 @@ function Page() {
     }));
   };
 
-  // Busca indexada no servidor para CHAVES DISPONÍVEIS com debounce de 250ms
-  const searchChavesServer = async (term: string) => {
-    const q = term.trim().replace(/[%_,()]/g, " ");
-    let query = supabase
-      .from("licenses")
-      .select("id, software, chave_ativacao, tipo_licenca, licenca_id, status")
-      .eq("status", "disponivel");
+  // As chaves já vêm completas do banco (fetchAll), então a busca é local
+  // pelos 5 últimos dígitos da chave, pelo software ou pelo tipo.
 
-    if (form.licenca_id) {
-      // Se houver licença selecionada, prioriza ou filtra
-      query = query.or(`licenca_id.eq.${form.licenca_id},software.ilike.%${q || produtoSelecionado || ""}%`);
-    }
-
-    if (q) {
-      query = query.or(`software.ilike.%${q}%,chave_ativacao.ilike.%${q}%`);
-    }
-
-    const { data, error } = await query.order("software").limit(100);
-    if (error || !data) return [];
-
-    const livres = data.filter((c) => !chavesEmUsoSet.has(c.id));
-    return livres.map((c) => ({
-      value: c.id,
-      label: mascaraChave(c.chave_ativacao),
-      hint: `${c.software} · ${c.tipo_licenca ?? "—"}${form.licenca_id && c.licenca_id === form.licenca_id ? " (vinculada a este produto)" : ""}`,
-    }));
-  };
 
   function openNew() {
     setForm({ ...initial });
@@ -675,20 +652,19 @@ function Page() {
             <Label>Chave (módulo Chaves de Licença)</Label>
             <Combobox
               placeholder="Sem chave individual"
-              searchPlaceholder="Buscar chave ou software…"
+              searchPlaceholder="Buscar pelos 5 últimos dígitos ou software…"
               clearable
               value={form.chave_id}
               onChange={(v) => setForm({ ...form, chave_id: v ?? null })}
               options={chavesOptions.map((c) => ({
                 value: c.id,
                 label: mascaraChave(c.chave_ativacao),
-                hint: `${c.software} · ${c.tipo_licenca ?? "—"}${form.licenca_id && c.licenca_id === form.licenca_id ? " (vinculada a este produto)" : ""}`,
+                hint: `${c.software} · ${c.tipo_licenca ?? "—"} · final ${c.chave_ativacao.trim().slice(-5)}`,
               }))}
-              onSearch={searchChavesServer}
             />
             {chavesOptions.length > 0 ? (
               <p className="text-[11px] text-muted-foreground mt-1">
-                Ao salvar, esta chave será associada a esta licença e alocada para o ativo/colaborador no módulo Chaves de Licença.
+                {chavesOptions.length} chave(s) disponível(is) desta licença. Busque pelos 5 últimos dígitos para evitar duplicidade.
               </p>
             ) : (
               <p className="text-[11px] text-muted-foreground mt-1">
