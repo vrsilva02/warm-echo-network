@@ -87,6 +87,24 @@ const initial = {
   observacao: "",
 };
 
+/** Normaliza nome de produto/software para comparação tolerante. */
+function normalizaNome(v: string): string {
+  return (v ?? "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/\p{Mn}/gu, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+/** Considera compatíveis nomes iguais ou em que um contém o outro
+ *  (ex.: "Microsoft / Office 2021 Professional Plus" x "Office 2021 Professional Plus"). */
+function nomesCompativeis(software: string, produtoNormalizado: string): boolean {
+  const s = normalizaNome(software);
+  if (!s || !produtoNormalizado) return false;
+  return s === produtoNormalizado || s.includes(produtoNormalizado) || produtoNormalizado.includes(s);
+}
+
 function mascaraChave(chave: string): string {
   const limpa = (chave ?? "").trim();
   if (limpa.length <= 5) return limpa;
@@ -186,7 +204,7 @@ function Page() {
     [licencas, form.licenca_id],
   );
 
-  const produtoSelecionado = licencaSelecionada?.produtos_catalogo?.nome_oficial?.trim().toLowerCase() ?? "";
+  const produtoSelecionado = normalizaNome(licencaSelecionada?.produtos_catalogo?.nome_oficial ?? "");
 
   // IDs de chaves atualmente associadas a alocações em aberto (ativas)
   const chavesEmUsoSet = useMemo(() => {
@@ -212,7 +230,7 @@ function Page() {
       const daLicenca = apenasLivres.filter((c) => c.licenca_id === form.licenca_id);
       const doProduto = produtoSelecionado
         ? apenasLivres.filter(
-            (c) => c.licenca_id == null && c.software.trim().toLowerCase() === produtoSelecionado,
+            (c) => c.licenca_id == null && nomesCompativeis(c.software, produtoSelecionado),
           )
         : [];
       return [...daLicenca, ...doProduto].sort((a, b) =>
@@ -303,6 +321,23 @@ function Page() {
   async function save() {
     if (!form.licenca_id) return toast.error("Selecione a licença");
     if (!form.usuario_id && !form.ativo_id) return toast.error("Vincule a um colaborador ou ativo");
+
+    // A chave precisa estar livre e pertencer (ou ser compatível com) a licença escolhida.
+    if (form.chave_id) {
+      const escolhida = chavesOptions.find((c) => c.id === form.chave_id);
+      if (!escolhida) {
+        return toast.error("Esta chave não está mais disponível para a licença selecionada.");
+      }
+      // Chave herdada sem vínculo: passa a pertencer à licença escolhida.
+      if (escolhida.licenca_id == null) {
+        const { error } = await supabase
+          .from("licenses")
+          .update({ licenca_id: form.licenca_id } as any)
+          .eq("id", escolhida.id)
+          .is("licenca_id", null);
+        if (error) return toast.error("Não foi possível vincular a chave à licença.");
+      }
+    }
 
     const r = await criarAlocacao({
       licenca_id: form.licenca_id,
