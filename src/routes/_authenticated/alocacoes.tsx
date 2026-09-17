@@ -89,8 +89,8 @@ const initial = {
 
 function mascaraChave(chave: string): string {
   const limpa = (chave ?? "").trim();
-  if (limpa.length <= 8) return limpa;
-  return `${"•".repeat(6)}${limpa.slice(-4)}`;
+  if (limpa.length <= 5) return limpa;
+  return `${"•".repeat(6)}${limpa.slice(-5)}`;
 }
 
 function Page() {
