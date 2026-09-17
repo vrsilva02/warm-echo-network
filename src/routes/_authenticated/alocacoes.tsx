@@ -186,7 +186,7 @@ function Page() {
     [licencas, form.licenca_id],
   );
 
-  const produtoSelecionado = licencaSelecionada?.produtos_catalogo?.nome_oficial?.trim().toLowerCase() ?? "";
+  const produtoSelecionado = normalizaNome(licencaSelecionada?.produtos_catalogo?.nome_oficial ?? "");
 
   // IDs de chaves atualmente associadas a alocações em aberto (ativas)
   const chavesEmUsoSet = useMemo(() => {
@@ -212,7 +212,7 @@ function Page() {
       const daLicenca = apenasLivres.filter((c) => c.licenca_id === form.licenca_id);
       const doProduto = produtoSelecionado
         ? apenasLivres.filter(
-            (c) => c.licenca_id == null && c.software.trim().toLowerCase() === produtoSelecionado,
+            (c) => c.licenca_id == null && nomesCompativeis(c.software, produtoSelecionado),
           )
         : [];
       return [...daLicenca, ...doProduto].sort((a, b) =>
