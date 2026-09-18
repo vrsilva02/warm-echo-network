@@ -74,6 +74,13 @@ export function Combobox({
     overscan: 8,
   });
 
+  // O conteúdo do Popover só é montado ao abrir. Mede a lista nesse momento
+  // para que as opções já apareçam no primeiro clique, antes de qualquer busca.
+  React.useLayoutEffect(() => {
+    if (!open || !parentRef.current) return;
+    rowVirtualizer.measure();
+  }, [open, filtered.length, rowVirtualizer]);
+
   // Debounce da busca assíncrona (250ms)
   React.useEffect(() => {
     if (!onSearch || !open) return;
