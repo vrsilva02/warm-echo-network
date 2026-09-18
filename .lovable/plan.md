@@ -1,11 +1,10 @@
-# Ajustar seleção e exibição de chaves
+# Exibir chaves ao abrir Nova alocação
 
-## Alterações
-- Em **Nova alocação**, manter somente chaves com status disponível e pertencentes à licença selecionada.
-- Exibir a chave completa no autocomplete e permitir busca local, sem limite, por qualquer trecho e sem diferenciar maiúsculas/minúsculas.
-- Limpar a chave escolhida quando a licença mudar e manter a validação contra chaves alocadas ou de outra licença.
-- Em **Chaves de Licença**, mostrar a chave completa na coluna e manter a pesquisa pela chave completa.
+## Alteração
+- Fazer o campo **Chave** abrir mostrando imediatamente todas as chaves disponíveis da licença selecionada.
+- Manter a filtragem em tempo real por qualquer trecho da chave completa.
+- Preservar as regras atuais de disponibilidade, vínculo por licença e limpeza ao trocar de licença.
 
 ## Validação
-- Conferir o carregamento sem limite por meio da consulta paginada completa já usada pelo sistema.
-- Verificar compilação e as duas telas no navegador.
+- Abrir **Nova alocação**, escolher uma licença e clicar em **Chave**.
+- Confirmar que as opções aparecem antes de qualquer digitação e que a busca continua funcionando.
