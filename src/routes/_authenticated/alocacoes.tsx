@@ -97,6 +97,16 @@ function normalizaNome(v: string): string {
     .trim();
 }
 
+function nomesCompativeis(software: string, produtoNormalizado: string): boolean {
+  const softwareNormalizado = normalizaNome(software);
+  if (!softwareNormalizado || !produtoNormalizado) return false;
+  return (
+    softwareNormalizado === produtoNormalizado ||
+    softwareNormalizado.includes(produtoNormalizado) ||
+    produtoNormalizado.includes(softwareNormalizado)
+  );
+}
+
 function Page() {
   const { canWrite } = useAuth();
   const qc = useQueryClient();
@@ -185,6 +195,12 @@ function Page() {
       ).data,
   });
 
+  const licencaSelecionada = useMemo<{ produtos_catalogo?: { nome_oficial: string } | null } | undefined>(
+    () => (licencas ?? []).find((l: any) => l.id === form.licenca_id) as any,
+    [licencas, form.licenca_id],
+  );
+  const produtoSelecionado = normalizaNome(licencaSelecionada?.produtos_catalogo?.nome_oficial ?? "");
+
   // IDs de chaves atualmente associadas a alocações em aberto (ativas)
   const chavesEmUsoSet = useMemo(() => {
     const set = new Set<string>();
@@ -206,11 +222,15 @@ function Page() {
 
     if (!form.licenca_id) return [];
 
-    // Somente chaves vinculadas diretamente à licença selecionada.
+    // Inclui chaves vinculadas e registros antigos sem vínculo cujo software corresponde ao produto.
     return apenasLivres
-      .filter((c) => c.licenca_id === form.licenca_id)
+      .filter(
+        (c) =>
+          c.licenca_id === form.licenca_id ||
+          (c.licenca_id == null && nomesCompativeis(c.software, produtoSelecionado)),
+      )
       .sort((a, b) => a.chave_ativacao.localeCompare(b.chave_ativacao));
-  }, [chavesDisponiveis, chavesEmUsoSet, form.licenca_id]);
+  }, [chavesDisponiveis, chavesEmUsoSet, form.licenca_id, produtoSelecionado]);
 
 
   const chaveIds = useMemo(() => {
@@ -297,6 +317,14 @@ function Page() {
       const escolhida = chavesOptions.find((c) => c.id === form.chave_id);
       if (!escolhida) {
         return toast.error("Esta chave não está mais disponível para a licença selecionada.");
+      }
+      if (escolhida.licenca_id == null) {
+        const { error } = await supabase
+          .from("licenses")
+          .update({ licenca_id: form.licenca_id } as any)
+          .eq("id", escolhida.id)
+          .is("licenca_id", null);
+        if (error) return toast.error("Não foi possível vincular a chave à licença.");
       }
     }
 
