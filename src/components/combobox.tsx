@@ -72,6 +72,7 @@ export function Combobox({
     getScrollElement: () => parentRef.current,
     estimateSize: () => ITEM_HEIGHT,
     overscan: 8,
+    initialRect: { width: 0, height: listHeight },
   });
 
   // O conteúdo do Popover só é montado ao abrir. Mede a lista nesse momento
