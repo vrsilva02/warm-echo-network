@@ -97,20 +97,6 @@ function normalizaNome(v: string): string {
     .trim();
 }
 
-/** Considera compatíveis nomes iguais ou em que um contém o outro
- *  (ex.: "Microsoft / Office 2021 Professional Plus" x "Office 2021 Professional Plus"). */
-function nomesCompativeis(software: string, produtoNormalizado: string): boolean {
-  const s = normalizaNome(software);
-  if (!s || !produtoNormalizado) return false;
-  return s === produtoNormalizado || s.includes(produtoNormalizado) || produtoNormalizado.includes(s);
-}
-
-function mascaraChave(chave: string): string {
-  const limpa = (chave ?? "").trim();
-  if (limpa.length <= 5) return limpa;
-  return `${"•".repeat(6)}${limpa.slice(-5)}`;
-}
-
 function Page() {
   const { canWrite } = useAuth();
   const qc = useQueryClient();
@@ -199,13 +185,6 @@ function Page() {
       ).data,
   });
 
-  const licencaSelecionada = useMemo<{ produtos_catalogo?: { nome_oficial: string } | null } | undefined>(
-    () => (licencas ?? []).find((l: any) => l.id === form.licenca_id) as any,
-    [licencas, form.licenca_id],
-  );
-
-  const produtoSelecionado = normalizaNome(licencaSelecionada?.produtos_catalogo?.nome_oficial ?? "");
-
   // IDs de chaves atualmente associadas a alocações em aberto (ativas)
   const chavesEmUsoSet = useMemo(() => {
     const set = new Set<string>();
@@ -225,21 +204,13 @@ function Page() {
       (c) => (c.status ?? "disponivel") === "disponivel" && !chavesEmUsoSet.has(c.id),
     );
 
-    // Com licença selecionada, mostra TODAS as chaves daquela licença/produto
-    if (form.licenca_id) {
-      const daLicenca = apenasLivres.filter((c) => c.licenca_id === form.licenca_id);
-      const doProduto = produtoSelecionado
-        ? apenasLivres.filter(
-            (c) => c.licenca_id == null && nomesCompativeis(c.software, produtoSelecionado),
-          )
-        : [];
-      return [...daLicenca, ...doProduto].sort((a, b) =>
-        a.chave_ativacao.slice(-5).localeCompare(b.chave_ativacao.slice(-5)),
-      );
-    }
+    if (!form.licenca_id) return [];
 
-    return apenasLivres.sort((a, b) => a.software.localeCompare(b.software));
-  }, [chavesDisponiveis, chavesEmUsoSet, form.licenca_id, produtoSelecionado]);
+    // Somente chaves vinculadas diretamente à licença selecionada.
+    return apenasLivres
+      .filter((c) => c.licenca_id === form.licenca_id)
+      .sort((a, b) => a.chave_ativacao.localeCompare(b.chave_ativacao));
+  }, [chavesDisponiveis, chavesEmUsoSet, form.licenca_id]);
 
 
   const chaveIds = useMemo(() => {
@@ -309,8 +280,7 @@ function Page() {
     }));
   };
 
-  // As chaves já vêm completas do banco (fetchAll), então a busca é local
-  // pelos 5 últimos dígitos da chave, pelo software ou pelo tipo.
+  // As chaves vêm completas do banco; o Combobox faz busca local por qualquer trecho.
 
 
   function openNew() {
@@ -322,20 +292,11 @@ function Page() {
     if (!form.licenca_id) return toast.error("Selecione a licença");
     if (!form.usuario_id && !form.ativo_id) return toast.error("Vincule a um colaborador ou ativo");
 
-    // A chave precisa estar livre e pertencer (ou ser compatível com) a licença escolhida.
+    // A chave precisa estar livre e pertencer à licença escolhida.
     if (form.chave_id) {
       const escolhida = chavesOptions.find((c) => c.id === form.chave_id);
       if (!escolhida) {
         return toast.error("Esta chave não está mais disponível para a licença selecionada.");
-      }
-      // Chave herdada sem vínculo: passa a pertencer à licença escolhida.
-      if (escolhida.licenca_id == null) {
-        const { error } = await supabase
-          .from("licenses")
-          .update({ licenca_id: form.licenca_id } as any)
-          .eq("id", escolhida.id)
-          .is("licenca_id", null);
-        if (error) return toast.error("Não foi possível vincular a chave à licença.");
       }
     }
 
@@ -687,19 +648,19 @@ function Page() {
             <Label>Chave (módulo Chaves de Licença)</Label>
             <Combobox
               placeholder="Sem chave individual"
-              searchPlaceholder="Buscar pelos 5 últimos dígitos ou software…"
+              searchPlaceholder="Buscar por qualquer trecho da chave…"
               clearable
               value={form.chave_id}
               onChange={(v) => setForm({ ...form, chave_id: v ?? null })}
               options={chavesOptions.map((c) => ({
                 value: c.id,
-                label: mascaraChave(c.chave_ativacao),
-                hint: `${c.software} · ${c.tipo_licenca ?? "—"} · final ${c.chave_ativacao.trim().slice(-5)}`,
+                label: c.chave_ativacao,
+                hint: `${c.software} · ${c.tipo_licenca ?? "—"}`,
               }))}
             />
             {chavesOptions.length > 0 ? (
               <p className="text-[11px] text-muted-foreground mt-1">
-                {chavesOptions.length} chave(s) disponível(is) desta licença. Busque pelos 5 últimos dígitos para evitar duplicidade.
+                {chavesOptions.length} chave(s) disponível(is) desta licença. Busque por qualquer trecho da chave.
               </p>
             ) : (
               <p className="text-[11px] text-muted-foreground mt-1">

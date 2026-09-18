@@ -105,7 +105,6 @@ type LicenseRow = {
 const TIPOS = TIPOS_LICENCA;
 const STATUS_LABEL = STATUS_CHAVE_LABEL;
 
-/** Exibe apenas os 5 últimos caracteres da chave. */
 function maskTail(key: string): string {
   const clean = (key ?? "").trim();
   if (clean.length <= 5) return clean;
@@ -238,7 +237,7 @@ function Page() {
         header: "Chave",
         accessor: (r) => (
           <span className="inline-flex items-center gap-1">
-            <span className="font-mono text-xs tabular-nums">{maskTail(r.chave_ativacao)}</span>
+            <span className="font-mono text-xs tabular-nums">{r.chave_ativacao}</span>
             <CopyKeyButton value={r.chave_ativacao} />
           </span>
         ),
