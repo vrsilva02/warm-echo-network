@@ -386,10 +386,9 @@ function DashboardPage() {
   useRealtimeInvalidate({ channel: "dash-contratos", table: "contratos", queryKeys: [["dashboard"]] });
   useRealtimeInvalidate({ channel: "dash-clientes", table: "clientes", queryKeys: [["dashboard", "ativos-por-cliente"]] });
 
-  // Lista unificada para considerar dados reais de vw_licencas_indicadores
-  const elpRows: ElpRow[] = (data?.elp && data.elp.length > 0)
-    ? data.elp
-    : (data?.indicadoresRaw ?? []).map((i: any) => ({
+  // Prioriza vw_licencas_indicadores (a mesma fonte do módulo Licenças)
+  const elpRows: ElpRow[] = (data?.indicadoresRaw && data.indicadoresRaw.length > 0)
+    ? data.indicadoresRaw.map((i: any) => ({
         produto_id: i.licenca_id,
         nome_oficial: i.nome,
         categoria: i.categoria || "Outro",
@@ -398,7 +397,8 @@ function DashboardPage() {
         licencas_alocadas: Number(i.atribuidas ?? 0),
         saldo: Number(i.disponiveis ?? 0),
         status_compliance: (i.atribuidas > i.total) ? "deficit" : (i.atribuidas === 0 ? "ocioso" : "ok"),
-      }));
+      }))
+    : (data?.elp ?? []);
 
   const totais = { Windows: 0, Office: 0, EDR: 0 } as Record<string, number>;
   const alocadasMap = { Windows: 0, Office: 0, EDR: 0 } as Record<string, number>;
