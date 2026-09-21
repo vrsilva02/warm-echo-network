@@ -137,7 +137,7 @@ function CopyKeyButton({ value }: { value: string }) {
 }
 
 function Page() {
-  const { isAdmin } = useAuth();
+  const { isAdmin, isGestor } = useAuth();
   const qc = useQueryClient();
 
   const [software, setSoftware] = React.useState("todos");
@@ -446,14 +446,16 @@ function Page() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            {isAdmin ? (
+            {(isAdmin || isGestor) ? (
               <>
                 <Button size="sm" onClick={() => setBulkOpen(true)}>
                   <Plus className="h-4 w-4" /> Inserção em massa
                 </Button>
-                <Button size="sm" variant="destructive" onClick={() => setWipeOpen(true)}>
-                  <AlertTriangle className="h-4 w-4" /> Excluir todas as licenças
-                </Button>
+                {isAdmin && (
+                  <Button size="sm" variant="destructive" onClick={() => setWipeOpen(true)}>
+                    <AlertTriangle className="h-4 w-4" /> Excluir todas as licenças
+                  </Button>
+                )}
               </>
             ) : null}
           </div>
@@ -537,27 +539,27 @@ function Page() {
         }
       />
 
+      {(isAdmin || isGestor) && (
+        <BulkInsertDialog
+          open={bulkOpen}
+          onOpenChange={setBulkOpen}
+          licencas={licencasRef}
+          onDone={() => {
+            void qc.invalidateQueries({ queryKey: ["licenses"] });
+            void qc.invalidateQueries({ queryKey: ["chaves-saldo"] });
+          }}
+        />
+      )}
       {isAdmin && (
-        <>
-          <BulkInsertDialog
-            open={bulkOpen}
-            onOpenChange={setBulkOpen}
-            licencas={licencasRef}
-            onDone={() => {
-              void qc.invalidateQueries({ queryKey: ["licenses"] });
-              void qc.invalidateQueries({ queryKey: ["chaves-saldo"] });
-            }}
-          />
-          <WipeDialog
-            open={wipeOpen}
-            onOpenChange={setWipeOpen}
-            total={rows.length}
-            onDone={() => {
-              void qc.invalidateQueries({ queryKey: ["licenses"] });
-              void qc.invalidateQueries({ queryKey: ["chaves-saldo"] });
-            }}
-          />
-        </>
+        <WipeDialog
+          open={wipeOpen}
+          onOpenChange={setWipeOpen}
+          total={rows.length}
+          onDone={() => {
+            void qc.invalidateQueries({ queryKey: ["licenses"] });
+            void qc.invalidateQueries({ queryKey: ["chaves-saldo"] });
+          }}
+        />
       )}
     </div>
   );
