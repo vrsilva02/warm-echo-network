@@ -175,9 +175,10 @@ function buildAlertas(data: ReturnType<typeof useDashboardData>["data"], elpRows
 
 // ── Components ───────────────────────────────────────────────────────────────
 
-function KpiCard({ title, value, icon, hint, to, search, tone }: {
+function KpiCard({ title, value, icon, hint, to, search, tone, subtext }: {
   title: string; value: number | string; icon: React.ReactNode; hint?: string;
   to?: string; search?: Record<string, string>; tone?: "ok" | "warn" | "danger";
+  subtext?: string;
 }) {
   const toneClass = tone === "ok" ? "text-[color:var(--success)]" : tone === "warn" ? "text-[color:var(--warning)]" : tone === "danger" ? "text-destructive" : "";
   const inner = (
@@ -199,7 +200,10 @@ function KpiCard({ title, value, icon, hint, to, search, tone }: {
         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted/70 text-muted-foreground">{icon}</span>
       </CardHeader>
       <CardContent className="flex items-end justify-between">
-        <div className={cn("metric text-[1.75rem] leading-none", toneClass)}>{value}</div>
+        <div>
+          <div className={cn("metric text-[1.75rem] leading-none", toneClass)}>{value}</div>
+          {subtext && <div className="text-[11px] text-muted-foreground mt-1 tabular-nums font-medium">{subtext}</div>}
+        </div>
         {to && <ArrowRight className="h-4 w-4 text-muted-foreground/0 group-hover:text-muted-foreground/60 transition-all duration-200" />}
       </CardContent>
     </Card>
@@ -382,7 +386,7 @@ function DashboardPage() {
   useRealtimeInvalidate({ channel: "dash-contratos", table: "contratos", queryKeys: [["dashboard"]] });
   useRealtimeInvalidate({ channel: "dash-clientes", table: "clientes", queryKeys: [["dashboard", "ativos-por-cliente"]] });
 
-  // Lista unificada para considerar dados reais de vw_licencas_indicadores caso a view_elp esteja vazia
+  // Lista unificada para considerar dados reais de vw_licencas_indicadores
   const elpRows: ElpRow[] = (data?.elp && data.elp.length > 0)
     ? data.elp
     : (data?.indicadoresRaw ?? []).map((i: any) => ({
@@ -397,22 +401,29 @@ function DashboardPage() {
       }));
 
   const totais = { Windows: 0, Office: 0, EDR: 0 } as Record<string, number>;
+  const alocadasMap = { Windows: 0, Office: 0, EDR: 0 } as Record<string, number>;
+  const disponiveisMap = { Windows: 0, Office: 0, EDR: 0 } as Record<string, number>;
   let compradas = 0, alocadas = 0;
 
   elpRows.forEach((r) => {
     const cat = r.categoria || "Outro";
     const qtd = Number(r.licencas_compradas ?? 0);
     const aloc = Number(r.licencas_alocadas ?? 0);
+    const disp = Number(r.saldo ?? 0);
 
-    if (/office|m365|microsoft 365|produtividade/i.test(cat)) {
-      totais["Office"] = (totais["Office"] ?? 0) + qtd;
-    } else if (/windows/i.test(cat)) {
-      totais["Windows"] = (totais["Windows"] ?? 0) + qtd;
-    } else if (/edr|antivirus|segurança|seguranca/i.test(cat)) {
-      totais["EDR"] = (totais["EDR"] ?? 0) + qtd;
-    } else {
-      totais[cat] = (totais[cat] ?? 0) + qtd;
+    let key = cat;
+    if (/office|m365|microsoft 365|produtividade/i.test(cat) || /office/i.test(r.nome_oficial)) {
+      key = "Office";
+    } else if (/windows/i.test(cat) || /windows/i.test(r.nome_oficial)) {
+      key = "Windows";
+    } else if (/edr|antivirus|segurança|seguranca/i.test(cat) || /edr/i.test(r.nome_oficial)) {
+      key = "EDR";
     }
+
+    totais[key] = (totais[key] ?? 0) + qtd;
+    alocadasMap[key] = (alocadasMap[key] ?? 0) + aloc;
+    disponiveisMap[key] = (disponiveisMap[key] ?? 0) + disp;
+
     compradas += qtd;
     alocadas += aloc;
   });
@@ -465,10 +476,41 @@ function DashboardPage() {
 
       {/* Licenças */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5 mb-6">
-        <KpiCard title="Licenças Windows" value={totais.Windows ?? 0} icon={<KeySquare className="h-4 w-4" />} hint="Licenças contratadas da categoria Windows." to="/licencas" search={{ categoria: "Windows" }} />
-        <KpiCard title="Licenças Office" value={totais.Office ?? 0} icon={<KeySquare className="h-4 w-4" />} hint="Licenças contratadas da categoria Office." to="/licencas" search={{ categoria: "Office" }} />
-        <KpiCard title="Licenças EDR" value={totais.EDR ?? 0} icon={<KeySquare className="h-4 w-4" />} hint="Licenças contratadas para EDR/segurança." to="/licencas" search={{ categoria: "EDR" }} />
-        <KpiCard title="Compliance geral" value={`${compliance}%`} icon={compliance >= 90 ? <CheckCircle2 className="h-4 w-4 text-[color:var(--success)]" /> : <TrendingDown className="h-4 w-4 text-[color:var(--warning)]" />} hint="% dentro do direito contratado. Abaixo de 100% = over-deployment." to="/licencas" tone={compliance >= 95 ? "ok" : compliance >= 80 ? "warn" : "danger"} />
+        <KpiCard
+          title="Licenças Windows"
+          value={`${alocadasMap.Windows ?? 0} / ${totais.Windows ?? 0}`}
+          subtext={`${disponiveisMap.Windows ?? 0} disponíveis de ${totais.Windows ?? 0}`}
+          icon={<KeySquare className="h-4 w-4" />}
+          hint="Licenças Windows: Atribuídas / Contratadas."
+          to="/licencas"
+          search={{ categoria: "Windows" }}
+        />
+        <KpiCard
+          title="Licenças Office"
+          value={`${alocadasMap.Office ?? 0} / ${totais.Office ?? 0}`}
+          subtext={`${disponiveisMap.Office ?? 0} disponíveis de ${totais.Office ?? 0}`}
+          icon={<KeySquare className="h-4 w-4" />}
+          hint="Licenças de Office/M365: Atribuídas / Contratadas."
+          to="/licencas"
+          search={{ categoria: "Office" }}
+        />
+        <KpiCard
+          title="Licenças EDR"
+          value={`${alocadasMap.EDR ?? 0} / ${totais.EDR ?? 0}`}
+          subtext={`${disponiveisMap.EDR ?? 0} disponíveis de ${totais.EDR ?? 0}`}
+          icon={<KeySquare className="h-4 w-4" />}
+          hint="Licenças EDR/Segurança: Atribuídas / Contratadas."
+          to="/licencas"
+          search={{ categoria: "EDR" }}
+        />
+        <KpiCard
+          title="Compliance geral"
+          value={`${compliance}%`}
+          icon={compliance >= 90 ? <CheckCircle2 className="h-4 w-4 text-[color:var(--success)]" /> : <TrendingDown className="h-4 w-4 text-[color:var(--warning)]" />}
+          hint="% dentro do direito contratado. Abaixo de 100% = over-deployment."
+          to="/licencas"
+          tone={compliance >= 95 ? "ok" : compliance >= 80 ? "warn" : "danger"}
+        />
       </div>
 
       {/* Status ELP */}
