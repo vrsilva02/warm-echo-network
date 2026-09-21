@@ -98,6 +98,7 @@ function useDashboardData() {
       ]);
       return {
         elp: (elp.data ?? []) as ElpRow[],
+        indicadoresRaw: (indicadores.data ?? []) as any[],
         ativos: ativos.data ?? [],
         contratosVencendo30: (vencendo.data ?? []).filter((r: any) => r.dias_para_vencer <= 30).length,
         contratosVencendoRaw: (vencendo.data ?? []) as any[],
@@ -152,7 +153,7 @@ function brl(v: number) {
 }
 const SEV_ORDER: Record<Sev, number> = { critico: 0, alto: 1, medio: 2 };
 
-function buildAlertas(data: ReturnType<typeof useDashboardData>["data"]): AlertaItem[] {
+function buildAlertas(data: ReturnType<typeof useDashboardData>["data"], elpRows: ElpRow[]): AlertaItem[] {
   if (!data) return [];
   const alertas: AlertaItem[] = [];
   for (const c of data.contratosVencendoRaw ?? []) {
@@ -161,7 +162,7 @@ function buildAlertas(data: ReturnType<typeof useDashboardData>["data"]): Alerta
     const sev: Sev = dias < 0 ? "critico" : dias <= 30 ? "critico" : dias <= 60 ? "alto" : "medio";
     alertas.push({ id: `c-${c.id}`, tipo: "contrato", severidade: sev, titulo: `${c.fornecedor} — ${c.numero_contrato ?? "sem nº"}`, descricao: dias < 0 ? `Vencido há ${Math.abs(dias)} dia(s)` : `Vence em ${dias} dia(s)`, acaoLink: "/contratos" });
   }
-  for (const p of data.elp ?? []) {
+  for (const p of elpRows) {
     if (p.status_compliance !== "deficit") continue;
     const excesso = Number(p.licencas_alocadas) - Number(p.licencas_compradas);
     alertas.push({ id: `d-${p.produto_id}`, tipo: "compliance", severidade: excesso > 10 ? "critico" : "alto", titulo: `Déficit em ${p.nome_oficial}`, descricao: `${excesso} licença(s) além do adquirido`, acaoLink: "/licencas" });
@@ -381,9 +382,41 @@ function DashboardPage() {
   useRealtimeInvalidate({ channel: "dash-contratos", table: "contratos", queryKeys: [["dashboard"]] });
   useRealtimeInvalidate({ channel: "dash-clientes", table: "clientes", queryKeys: [["dashboard", "ativos-por-cliente"]] });
 
+  // Lista unificada para considerar dados reais de vw_licencas_indicadores caso a view_elp esteja vazia
+  const elpRows: ElpRow[] = (data?.elp && data.elp.length > 0)
+    ? data.elp
+    : (data?.indicadoresRaw ?? []).map((i: any) => ({
+        produto_id: i.licenca_id,
+        nome_oficial: i.nome,
+        categoria: i.categoria || "Outro",
+        fabricante: i.fabricante,
+        licencas_compradas: Number(i.total ?? 0),
+        licencas_alocadas: Number(i.atribuidas ?? 0),
+        saldo: Number(i.disponiveis ?? 0),
+        status_compliance: (i.atribuidas > i.total) ? "deficit" : (i.atribuidas === 0 ? "ocioso" : "ok"),
+      }));
+
   const totais = { Windows: 0, Office: 0, EDR: 0 } as Record<string, number>;
   let compradas = 0, alocadas = 0;
-  (data?.elp ?? []).forEach((r) => { totais[r.categoria] = (totais[r.categoria] ?? 0) + Number(r.licencas_compradas); compradas += Number(r.licencas_compradas); alocadas += Number(r.licencas_alocadas); });
+
+  elpRows.forEach((r) => {
+    const cat = r.categoria || "Outro";
+    const qtd = Number(r.licencas_compradas ?? 0);
+    const aloc = Number(r.licencas_alocadas ?? 0);
+
+    if (/office|m365|microsoft 365|produtividade/i.test(cat)) {
+      totais["Office"] = (totais["Office"] ?? 0) + qtd;
+    } else if (/windows/i.test(cat)) {
+      totais["Windows"] = (totais["Windows"] ?? 0) + qtd;
+    } else if (/edr|antivirus|segurança|seguranca/i.test(cat)) {
+      totais["EDR"] = (totais["EDR"] ?? 0) + qtd;
+    } else {
+      totais[cat] = (totais[cat] ?? 0) + qtd;
+    }
+    compradas += qtd;
+    alocadas += aloc;
+  });
+
   const compliance = compradas > 0 ? Math.min(100, Math.round(((compradas - Math.max(0, alocadas - compradas)) / compradas) * 100)) : 100;
 
   useEffect(() => { if (!isLoading && compradas > 0) saveTrendPoint(compliance); }, [isLoading, compliance, compradas]);
@@ -396,9 +429,13 @@ function DashboardPage() {
   const pieData = Object.entries(ativosCount).map(([name, value]) => ({ name, value }));
 
   const complianceCount = { ok: 0, ocioso: 0, deficit: 0 };
-  (data?.elp ?? []).forEach((r) => { complianceCount[r.status_compliance]++; });
+  elpRows.forEach((r) => {
+    if (r.status_compliance in complianceCount) {
+      complianceCount[r.status_compliance]++;
+    }
+  });
 
-  const alertas = buildAlertas(data);
+  const alertas = buildAlertas(data, elpRows);
   const scoreMaxRisco = Math.round(Math.max(0, ...(data?.risco ?? []).map((r) => Number(r.score ?? 0))));
   const valorOcioso = (data?.ocioseFin ?? []).reduce((a, x) => a + Number(x.valor_ocioso ?? 0), 0);
 
@@ -542,12 +579,12 @@ function DashboardPage() {
               <TableBody>
                 {isLoading
                   ? <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground text-sm py-6">Carregando…</TableCell></TableRow>
-                  : (data?.elp ?? []).length === 0
+                  : elpRows.length === 0
                   ? <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground text-sm py-6">Nenhum produto cadastrado.</TableCell></TableRow>
-                  : data!.elp.map((r) => {
+                  : elpRows.map((r) => {
                       const s = statusStyle(r.status_compliance);
                       return (
-                        <TableRow key={r.produto_id} className="cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => { window.location.href = "/licencas"; }}>
+                        <TableRow key={r.produto_id} className="cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => { window.location.href = "/licencas?categoria=" + encodeURIComponent(r.categoria); }}>
                           <TableCell className="font-medium">{r.nome_oficial}</TableCell>
                           <TableCell>{r.categoria}</TableCell>
                           <TableCell>{r.fabricante ?? "—"}</TableCell>
