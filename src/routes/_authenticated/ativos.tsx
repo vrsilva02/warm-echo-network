@@ -366,15 +366,39 @@ function AtivosPage() {
       ? await supabase.from("ativos").update(payload as any).eq("id", editing.id)
       : await supabase.from("ativos").insert(payload as any);
     if (error) {
-      if (
-        error.code === "23505" ||
-        error.message?.includes("idx_ativos_cliente") ||
-        error.message?.includes("duplicate key")
-      ) {
-        return toast.error("Já existe um ativo com este código cadastrado para este cliente");
+      if (error.code === "23505") {
+        // Check if the conflict is within the same client (false positive from global constraint)
+        const conflictMsg = error.message ?? "";
+        if (conflictMsg.includes("hostname") || conflictMsg.includes("idx_ativos_cliente_hostname")) {
+          return toast.error("Já existe um ativo com este hostname cadastrado para este cliente");
+        }
+        if (conflictMsg.includes("patrimonio") || conflictMsg.includes("idx_ativos_cliente_patrimonio")) {
+          return toast.error("Já existe um ativo com este número de patrimônio cadastrado para este cliente");
+        }
+        if (conflictMsg.includes("serie") || conflictMsg.includes("idx_ativos_cliente_serie")) {
+          return toast.error("Já existe um ativo com este número de série cadastrado para este cliente");
+        }
+        // Generic: verify which field actually conflicts within same client
+        const { data: sameClientHostname } = await supabase
+          .from("ativos").select("id").eq("cliente_id", form.cliente_id)
+          .eq("hostname", hostname).neq("id", editing?.id ?? "");
+        if (sameClientHostname && sameClientHostname.length > 0) {
+          return toast.error("Já existe um ativo com este hostname cadastrado para este cliente");
+        }
+        if (patrimonio) {
+          const { data: sameClientPat } = await supabase
+            .from("ativos").select("id").eq("cliente_id", form.cliente_id)
+            .eq("numero_patrimonio", patrimonio).neq("id", editing?.id ?? "");
+          if (sameClientPat && sameClientPat.length > 0) {
+            return toast.error("Já existe um ativo com este número de patrimônio cadastrado para este cliente");
+          }
+        }
+        // Constraint global não é do mesmo cliente — informar ao admin que o banco precisa de migration
+        return toast.error("Erro de integridade no banco de dados. Contate o administrador.");
       }
       return toast.error(friendlyError(error));
     }
+
     toast.success(editing ? "Ativo atualizado" : "Ativo criado");
     setOpen(false);
     qc.invalidateQueries({ queryKey: ["ativos"] });
