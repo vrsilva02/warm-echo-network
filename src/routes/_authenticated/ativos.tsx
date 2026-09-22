@@ -320,32 +320,33 @@ function AtivosPage() {
     if (!hostname) return toast.error("Informe o hostname do ativo");
     if (!form.cliente_id) return toast.error("Selecione o cliente do ativo antes de salvar");
 
-    // 1. Validação de duplicidade de Hostname no escopo do Cliente
+    // 1. Validação de duplicidade de Hostname no escopo do Cliente (match exato)
     let checkHost = supabase
       .from("ativos")
       .select("id")
       .eq("cliente_id", form.cliente_id)
-      .ilike("hostname", hostname);
+      .filter("lower(trim(hostname))", "eq", hostname.toLowerCase().trim());
     if (editing) checkHost = checkHost.neq("id", editing.id);
     const { data: dupHost } = await checkHost.limit(1);
     if (dupHost && dupHost.length > 0) {
-      return toast.error("Já existe um ativo com este código cadastrado para este cliente");
+      return toast.error("Já existe um ativo com este hostname cadastrado para este cliente");
     }
 
-    // 2. Validação de duplicidade de Patrimônio no escopo do Cliente
+    // 2. Validação de duplicidade de Patrimônio no escopo do Cliente (match exato)
     const patrimonio = form.numero_patrimonio.trim();
     if (patrimonio) {
       let checkPat = supabase
         .from("ativos")
         .select("id")
         .eq("cliente_id", form.cliente_id)
-        .ilike("numero_patrimonio", patrimonio);
+        .filter("lower(trim(numero_patrimonio))", "eq", patrimonio.toLowerCase().trim());
       if (editing) checkPat = checkPat.neq("id", editing.id);
       const { data: dupPat } = await checkPat.limit(1);
       if (dupPat && dupPat.length > 0) {
-        return toast.error("Já existe um ativo com este código cadastrado para este cliente");
+        return toast.error("Já existe um ativo com este número de patrimônio cadastrado para este cliente");
       }
     }
+
 
     const payload = {
       hostname,
