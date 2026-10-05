@@ -169,7 +169,7 @@ function Page() {
         await fetchAll<ChaveDisponivel>(
           "licenses",
           "id, software, chave_ativacao, tipo_licenca, licenca_id, status",
-          (q) => q.in("status", ["disponivel", "alocada"]).order("software", { ascending: true }),
+          (q) => q.order("software", { ascending: true }),
         )
       ).data,
   });
@@ -232,15 +232,29 @@ function Page() {
 
     return chavesDisponiveis
       .filter((c) => {
+        // Ignora chaves que não podem ser usadas
+        if (c.status === "expirada" || c.status === "revogada") return false;
+
         // Determina o limite verificando tanto o produto selecionado quanto o software salvo na chave
         const nomeChave = (c.software ?? "").toLowerCase();
         const nomeSelec = (nomeProduto ?? "").toLowerCase();
-        const isOffice2019 = nomeChave.includes("office 2019 professional plus") || nomeSelec.includes("office 2019 professional plus");
+        
+        // Verifica de forma mais flexível (Office + 2019)
+        const isOffice2019 = 
+          (nomeChave.includes("office") && nomeChave.includes("2019")) || 
+          (nomeSelec.includes("office") && nomeSelec.includes("2019"));
+          
         const limiteUso = isOffice2019 ? 5 : 1;
 
         const inUse = chavesUsoCount.get(c.id) || 0;
         if (inUse >= limiteUso) return false;
         
+        // Se ambos (chave e produto selecionado) são Office 2019, mostre a chave!
+        // Isso evita que diferenças sutis no 'software' vs 'nomeProduto' ocultem a chave.
+        if (isOffice2019 && nomeChave.includes("office") && nomeSelec.includes("office")) {
+            return true;
+        }
+
         // A chave é válida se pertencer exatamente a este lote OU se o nome do software for compatível
         return c.licenca_id === form.licenca_id || nomesCompativeis(c.software, nomeProdutoNormalizado);
       })
