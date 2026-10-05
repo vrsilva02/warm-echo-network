@@ -156,7 +156,7 @@ function Page() {
       (
         await fetchAll<any>(
           "licencas",
-          "id, quantidade, produtos_catalogo(id, nome_oficial, modelo_licenciamento, tipo_licenciamento)",
+          "id, quantidade, produtos_catalogo(id, nome_oficial, modelo_licenciamento, tipo_licenciamento), contratos(fornecedor)",
         )
       ).data,
   });
@@ -169,7 +169,7 @@ function Page() {
         await fetchAll<ChaveDisponivel>(
           "licenses",
           "id, software, chave_ativacao, tipo_licenca, licenca_id, status",
-          (q) => q.eq("status", "disponivel").order("software", { ascending: true }),
+          (q) => q.in("status", ["disponivel", "alocada"]).order("software", { ascending: true }),
         )
       ).data,
   });
@@ -195,42 +195,42 @@ function Page() {
       ).data,
   });
 
-  const licencaSelecionada = useMemo<{ produtos_catalogo?: { nome_oficial: string } | null } | undefined>(
+  const licencaSelecionada = useMemo<{ produtos_catalogo?: { nome_oficial: string } | null, contratos?: { fornecedor: string | null } | null } | undefined>(
     () => (licencas ?? []).find((l: any) => l.id === form.licenca_id) as any,
     [licencas, form.licenca_id],
   );
   const produtoSelecionado = normalizaNome(licencaSelecionada?.produtos_catalogo?.nome_oficial ?? "");
 
-  // IDs de chaves atualmente associadas a alocações em aberto (ativas)
-  const chavesEmUsoSet = useMemo(() => {
-    const set = new Set<string>();
+  // Quantidade de vezes que cada chave está associada a alocações em aberto
+  const chavesUsoCount = useMemo(() => {
+    const map = new Map<string, number>();
     (rows ?? []).forEach((r) => {
       if (!r.data_fim && r.chave_id) {
-        set.add(r.chave_id);
+        map.set(r.chave_id, (map.get(r.chave_id) || 0) + 1);
       }
     });
-    return set;
+    return map;
   }, [rows]);
 
   const chavesOptions = useMemo(() => {
     if (chavesDisponiveis.length === 0) return [];
-
-    // Somente chaves livres: status "disponivel" e sem alocação ativa aberta
-    const apenasLivres = chavesDisponiveis.filter(
-      (c) => (c.status ?? "disponivel") === "disponivel" && !chavesEmUsoSet.has(c.id),
-    );
-
     if (!form.licenca_id) return [];
 
+    const isOffice2019 = licencaSelecionada?.produtos_catalogo?.nome_oficial?.includes("Microsoft / Office 2019 Professional Plus");
+    const isDmsGpj = licencaSelecionada?.contratos?.fornecedor === "DMS - GPJ";
+    const limiteUso = (isOffice2019 && isDmsGpj) ? 5 : 1;
+
     // Inclui chaves vinculadas e registros antigos sem vínculo cujo software corresponde ao produto.
-    return apenasLivres
-      .filter(
-        (c) =>
-          c.licenca_id === form.licenca_id ||
-          (c.licenca_id == null && nomesCompativeis(c.software, produtoSelecionado)),
-      )
+    return chavesDisponiveis
+      .filter((c) => {
+        const inUse = chavesUsoCount.get(c.id) || 0;
+        if (inUse >= limiteUso) return false;
+        
+        return c.licenca_id === form.licenca_id ||
+          (c.licenca_id == null && nomesCompativeis(c.software, produtoSelecionado));
+      })
       .sort((a, b) => a.chave_ativacao.localeCompare(b.chave_ativacao));
-  }, [chavesDisponiveis, chavesEmUsoSet, form.licenca_id, produtoSelecionado]);
+  }, [chavesDisponiveis, chavesUsoCount, form.licenca_id, licencaSelecionada, produtoSelecionado]);
 
 
   const chaveIds = useMemo(() => {
