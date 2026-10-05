@@ -156,7 +156,7 @@ function Page() {
       (
         await fetchAll<any>(
           "licencas",
-          "id, quantidade, produtos_catalogo(id, nome_oficial, modelo_licenciamento, tipo_licenciamento), contratos(fornecedor)",
+          "id, quantidade, produtos_catalogo(id, nome_oficial, modelo_licenciamento, tipo_licenciamento)",
         )
       ).data,
   });
@@ -195,13 +195,24 @@ function Page() {
       ).data,
   });
 
-  const licencaSelecionada = useMemo<{ produtos_catalogo?: { nome_oficial: string } | null, contratos?: { fornecedor: string | null } | null } | undefined>(
+  const licencaSelecionada = useMemo<{ produtos_catalogo?: { nome_oficial: string } | null } | undefined>(
     () => (licencas ?? []).find((l: any) => l.id === form.licenca_id) as any,
     [licencas, form.licenca_id],
   );
   const produtoSelecionado = normalizaNome(licencaSelecionada?.produtos_catalogo?.nome_oficial ?? "");
 
-  // Quantidade de vezes que cada chave está associada a alocações em aberto
+  /**
+   * Regras de limite de alocações por chave:
+   * - Office 2019 Professional Plus: permite até 5 ativos por chave (licença multidevice)
+   * - Demais licenças: 1 ativo por chave
+   */
+  function getLimiteChave(nomeProduto: string | null | undefined): number {
+    const nome = (nomeProduto ?? "").toLowerCase();
+    if (nome.includes("office 2019 professional plus")) return 5;
+    return 1;
+  }
+
+  // Contagem de alocações ativas por chave_id
   const chavesUsoCount = useMemo(() => {
     const map = new Map<string, number>();
     (rows ?? []).forEach((r) => {
@@ -216,16 +227,15 @@ function Page() {
     if (chavesDisponiveis.length === 0) return [];
     if (!form.licenca_id) return [];
 
-    const isOffice2019 = licencaSelecionada?.produtos_catalogo?.nome_oficial?.includes("Microsoft / Office 2019 Professional Plus");
-    const isDmsGpj = licencaSelecionada?.contratos?.fornecedor === "DMS - GPJ";
-    const limiteUso = (isOffice2019 && isDmsGpj) ? 5 : 1;
+    const nomeProduto = licencaSelecionada?.produtos_catalogo?.nome_oficial;
+    const limiteUso = getLimiteChave(nomeProduto);
 
     // Inclui chaves vinculadas e registros antigos sem vínculo cujo software corresponde ao produto.
+    // Chave disponível enquanto alocações ativas < limiteUso.
     return chavesDisponiveis
       .filter((c) => {
         const inUse = chavesUsoCount.get(c.id) || 0;
         if (inUse >= limiteUso) return false;
-        
         return c.licenca_id === form.licenca_id ||
           (c.licenca_id == null && nomesCompativeis(c.software, produtoSelecionado));
       })
