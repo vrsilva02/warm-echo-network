@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/page-header";
 import { AdvancedTable, type Column, type SavedView } from "@/components/advanced-table";
@@ -121,6 +121,9 @@ function Page() {
   const [fDataInicio, setFDataInicio] = useState("");
   const [fDataFim, setFDataFim] = useState("");
 
+  // Cache para resolver nomes de licenças buscadas via serverSearch que não estão na query inicial
+  const licencasNomeCache = useRef(new Map<string, string>());
+
   useRealtimeInvalidate({
     channel: "alocacoes-live",
     table: "alocacoes",
@@ -227,7 +230,7 @@ function Page() {
     if (chavesDisponiveis.length === 0) return [];
     if (!form.licenca_id) return [];
 
-    const nomeProduto = licencaSelecionada?.produtos_catalogo?.nome_oficial;
+    const nomeProduto = licencaSelecionada?.produtos_catalogo?.nome_oficial || licencasNomeCache.current.get(form.licenca_id);
     const nomeProdutoNormalizado = produtoSelecionado || normalizaNome(nomeProduto ?? "");
 
     return chavesDisponiveis
@@ -322,6 +325,13 @@ function Page() {
 
     const { data, error } = await query.limit(100);
     if (error || !data) return [];
+    
+    // Atualiza o cache local para termos o nome correto mesmo se a licença não estiver na query inicial
+    data.forEach((l: any) => {
+      const nome = l.produtos_catalogo?.nome_oficial;
+      if (nome) licencasNomeCache.current.set(l.id, nome);
+    });
+
     return data.map((l: any) => ({
       value: l.id,
       label: l.produtos_catalogo?.nome_oficial ?? l.id.slice(0, 8),
