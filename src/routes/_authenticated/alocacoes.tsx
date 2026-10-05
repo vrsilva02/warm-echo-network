@@ -228,16 +228,21 @@ function Page() {
     if (!form.licenca_id) return [];
 
     const nomeProduto = licencaSelecionada?.produtos_catalogo?.nome_oficial;
-    const limiteUso = getLimiteChave(nomeProduto);
+    const nomeProdutoNormalizado = produtoSelecionado || normalizaNome(nomeProduto ?? "");
 
-    // Inclui chaves vinculadas e registros antigos sem vínculo cujo software corresponde ao produto.
-    // Chave disponível enquanto alocações ativas < limiteUso.
     return chavesDisponiveis
       .filter((c) => {
+        // Determina o limite verificando tanto o produto selecionado quanto o software salvo na chave
+        const nomeChave = (c.software ?? "").toLowerCase();
+        const nomeSelec = (nomeProduto ?? "").toLowerCase();
+        const isOffice2019 = nomeChave.includes("office 2019 professional plus") || nomeSelec.includes("office 2019 professional plus");
+        const limiteUso = isOffice2019 ? 5 : 1;
+
         const inUse = chavesUsoCount.get(c.id) || 0;
         if (inUse >= limiteUso) return false;
-        return c.licenca_id === form.licenca_id ||
-          (c.licenca_id == null && nomesCompativeis(c.software, produtoSelecionado));
+        
+        // A chave é válida se pertencer exatamente a este lote OU se o nome do software for compatível
+        return c.licenca_id === form.licenca_id || nomesCompativeis(c.software, nomeProdutoNormalizado);
       })
       .sort((a, b) => a.chave_ativacao.localeCompare(b.chave_ativacao));
   }, [chavesDisponiveis, chavesUsoCount, form.licenca_id, licencaSelecionada, produtoSelecionado]);
