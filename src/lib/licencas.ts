@@ -144,14 +144,40 @@ export async function criarAlocacao(input: {
   if (input.ativo_id) {
     const { data: existente, error: errExistente } = await supabase
       .from("alocacoes")
-      .select("id")
+      .select("id, chave_id")
       .eq("ativo_id", input.ativo_id)
       .eq("licenca_id", input.licenca_id)
       .is("data_fim", null)
       .maybeSingle();
 
     if (errExistente) return { ok: false, error: "Erro ao validar duplicidade." };
-    if (existente) return { ok: false, error: "Este ativo já possui esta licença atribuída." };
+    if (existente) {
+      if (!existente.chave_id && input.chave_id) {
+        // O ativo já tem a licença, mas sem chave. Vamos apenas atualizar a alocação existente para incluir a chave!
+        const { error: errUpdate } = await supabase
+          .from("alocacoes")
+          .update({ chave_id: input.chave_id })
+          .eq("id", existente.id);
+        
+        if (errUpdate) return { ok: false, error: "Erro ao atualizar alocação existente com a nova chave." };
+        
+        // E também marca a chave como alocada na tabela licenses
+        const hoje = new Date().toISOString().slice(0, 10);
+        await supabase
+          .from("licenses")
+          .update({
+            status: "alocada",
+            licenca_id: input.licenca_id,
+            ativo_id: input.ativo_id,
+            usuario_id: input.usuario_id ?? null,
+            data_alocacao: hoje,
+          })
+          .eq("id", input.chave_id);
+          
+        return { ok: true };
+      }
+      return { ok: false, error: "Este ativo já possui esta licença atribuída." };
+    }
   }
 
   if (!input.ativo_id && !input.usuario_id) {
