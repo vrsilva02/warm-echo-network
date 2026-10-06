@@ -221,16 +221,33 @@ function Page() {
     return 1;
   }
 
-  // Contagem de alocações ativas por chave_id
-  const chavesUsoCount = useMemo(() => {
+  // Contagem de alocações ativas por chave_id e conjunto de chaves deste produto
+  const { chavesUsoCount, chavesJaUsadasNesteProduto } = useMemo(() => {
     const map = new Map<string, number>();
+    const usadasNeste = new Set<string>();
+    
+    const nomeAtual = (form.licenca_nome || licencaSelecionada?.produtos_catalogo?.nome_oficial || "").toLowerCase();
+    const isOfficeAtual = nomeAtual.includes("office") && nomeAtual.includes("2019");
+
     (rows ?? []).forEach((r) => {
       if (!r.data_fim && r.chave_id) {
         map.set(r.chave_id, (map.get(r.chave_id) || 0) + 1);
+        
+        // Verifica se esta alocação pertence a um produto compatível com o selecionado
+        const rNome = (r.licencas?.produtos_catalogo?.nome_oficial || "").toLowerCase();
+        const rIsOffice = rNome.includes("office") && rNome.includes("2019");
+        
+        if (
+          r.licenca_id === form.licenca_id || 
+          (licencaSelecionada?.produtos_catalogo?.id && r.licencas?.produtos_catalogo?.id === licencaSelecionada.produtos_catalogo.id) ||
+          (isOfficeAtual && rIsOffice)
+        ) {
+          usadasNeste.add(r.chave_id);
+        }
       }
     });
-    return map;
-  }, [rows]);
+    return { chavesUsoCount: map, chavesJaUsadasNesteProduto: usadasNeste };
+  }, [rows, form.licenca_id, form.licenca_nome, licencaSelecionada]);
 
   const chavesOptions = useMemo(() => {
     if (chavesDisponiveis.length === 0) return [];
@@ -268,6 +285,13 @@ function Page() {
         // independentemente do status 'alocada' (a chave é compartilhada entre vários ativos)
         if (isOffice2019) {
           if (inUse >= limiteUso) return false; // Atingiu limite de 5 ativos
+          // Se a chave já estiver em uso neste exato produto (mesmo produto ou lotes idênticos), nós devemos sempre permiti-la
+          if (chavesJaUsadasNesteProduto.has(c.id)) return true;
+          
+          // Se a chave for totalmente flutuante (não associada a nenhum lote) e ainda estiver 'disponivel', 
+          // nós permitimos, porque o usuário pode não ter preenchido o nome corretamente.
+          if (c.licenca_id === null && c.status === "disponivel") return true;
+
           // Verifica se a chave pertence a este produto (por ID do lote, por ID do produto do catálogo, ou por nome)
           if (c.licenca_id === form.licenca_id) return true;
           if (mesmoProdutoPeloId) return true;
@@ -284,7 +308,7 @@ function Page() {
         return c.licenca_id === form.licenca_id || mesmoProdutoPeloId || nomesCompativeis(c.software, nomeProdutoNormalizado);
       })
       .sort((a, b) => a.chave_ativacao.localeCompare(b.chave_ativacao));
-  }, [chavesDisponiveis, chavesUsoCount, form.licenca_id, licencaSelecionada, produtoSelecionado]);
+  }, [chavesDisponiveis, chavesUsoCount, chavesJaUsadasNesteProduto, form.licenca_id, form.licenca_nome, licencaSelecionada, produtoSelecionado]);
 
 
   const chaveIds = useMemo(() => {
