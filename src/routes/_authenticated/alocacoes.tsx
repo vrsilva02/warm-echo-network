@@ -69,6 +69,9 @@ type ChaveDisponivel = {
   tipo_licenca: string | null;
   licenca_id: string | null;
   status?: string | null;
+  licencas?: {
+    produtos_catalogo_id: string | null;
+  } | null;
 };
 
 type ChaveAssoc = {
@@ -172,7 +175,7 @@ function Page() {
       (
         await fetchAll<ChaveDisponivel>(
           "licenses",
-          "id, software, chave_ativacao, tipo_licenca, licenca_id, status",
+          "id, software, chave_ativacao, tipo_licenca, licenca_id, status, licencas(produtos_catalogo_id)",
           (q) => q.order("software", { ascending: true }),
         )
       ).data,
@@ -199,7 +202,7 @@ function Page() {
       ).data,
   });
 
-  const licencaSelecionada = useMemo<{ produtos_catalogo?: { nome_oficial: string } | null } | undefined>(
+  const licencaSelecionada = useMemo<{ produtos_catalogo?: { id: string, nome_oficial: string } | null } | undefined>(
     () => (licencas ?? []).find((l: any) => l.id === form.licenca_id) as any,
     [licencas, form.licenca_id],
   );
@@ -239,6 +242,12 @@ function Page() {
         // Ignora chaves que não podem ser usadas
         if (c.status === "expirada" || c.status === "revogada") return false;
 
+        // Se a chave tem licencas.produtos_catalogo_id igual ao do produto selecionado, ela pertence ao mesmo produto (mesmo se for de outro lote)
+        const mesmoProdutoPeloId = 
+          c.licencas?.produtos_catalogo_id && 
+          licencaSelecionada?.produtos_catalogo?.id && 
+          c.licencas.produtos_catalogo_id === licencaSelecionada.produtos_catalogo.id;
+
         // Determina o limite verificando tanto o produto selecionado quanto o software salvo na chave
         const nomeChave = (c.software ?? "").toLowerCase();
         const nomeSelec = (nomeProduto ?? "").toLowerCase();
@@ -260,8 +269,8 @@ function Page() {
           if (nomeChave.includes("office") || nomeChave.includes("2019")) return true;
         }
 
-        // A chave é válida se pertencer exatamente a este lote OU se o nome do software for compatível
-        return c.licenca_id === form.licenca_id || nomesCompativeis(c.software, nomeProdutoNormalizado);
+        // A chave é válida se pertencer exatamente a este lote, ou for do mesmo produto (lote diferente), OU se o nome do software for compatível
+        return c.licenca_id === form.licenca_id || mesmoProdutoPeloId || nomesCompativeis(c.software, nomeProdutoNormalizado);
       })
       .sort((a, b) => a.chave_ativacao.localeCompare(b.chave_ativacao));
   }, [chavesDisponiveis, chavesUsoCount, form.licenca_id, licencaSelecionada, produtoSelecionado]);
