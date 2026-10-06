@@ -79,6 +79,7 @@ type ChaveAssoc = {
 
 const initial = {
   licenca_id: "",
+  licenca_nome: "",
   usuario_id: null as string | null,
   ativo_id: null as string | null,
   data_inicio: new Date().toISOString().slice(0, 10),
@@ -230,7 +231,7 @@ function Page() {
     if (chavesDisponiveis.length === 0) return [];
     if (!form.licenca_id) return [];
 
-    const nomeProduto = licencaSelecionada?.produtos_catalogo?.nome_oficial || licencasNomeCache.current.get(form.licenca_id);
+    const nomeProduto = form.licenca_nome || licencaSelecionada?.produtos_catalogo?.nome_oficial || licencasNomeCache.current.get(form.licenca_id);
     const nomeProdutoNormalizado = produtoSelecionado || normalizaNome(nomeProduto ?? "");
 
     return chavesDisponiveis
@@ -252,10 +253,11 @@ function Page() {
         const inUse = chavesUsoCount.get(c.id) || 0;
         if (inUse >= limiteUso) return false;
         
-        // Se ambos (chave e produto selecionado) são Office 2019, mostre a chave!
-        // Isso evita que diferenças sutis no 'software' vs 'nomeProduto' ocultem a chave.
-        if (isOffice2019 && nomeChave.includes("office") && nomeSelec.includes("office")) {
-            return true;
+        // Se o produto selecionado for Office 2019, permitimos exibir a chave se ela pertencer ao mesmo lote
+        // ou tiver a palavra "office" ou "2019" no nome (flexibilização agressiva para evitar ocultação acidental)
+        if (isOffice2019) {
+          if (c.licenca_id === form.licenca_id) return true;
+          if (nomeChave.includes("office") || nomeChave.includes("2019")) return true;
         }
 
         // A chave é válida se pertencer exatamente a este lote OU se o nome do software for compatível
@@ -701,6 +703,7 @@ function Page() {
             clearable={false}
             value={form.licenca_id || null}
             onChange={(v) => setForm({ ...form, licenca_id: v ?? "", chave_id: null })}
+            onOptionChange={(opt) => setForm((prev) => ({ ...prev, licenca_nome: opt?.label ?? "" }))}
             options={(licencas ?? []).map((l: any) => ({
               value: l.id,
               label: l.produtos_catalogo?.nome_oficial ?? l.id.slice(0, 8),

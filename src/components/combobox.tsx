@@ -16,6 +16,7 @@ type Props = {
   options: ComboboxOption[];
   value: string | null | undefined;
   onChange: (value: string | null) => void;
+  onOptionChange?: (opt: ComboboxOption | null) => void;
   placeholder?: string;
   emptyText?: string;
   searchPlaceholder?: string;
@@ -41,6 +42,7 @@ export function Combobox({
   clearable = true,
   className,
   onSearch,
+  onOptionChange,
   loading: externalLoading,
 }: Props) {
   const [open, setOpen] = React.useState(false);
@@ -115,6 +117,7 @@ export function Combobox({
 
   function handleSelect(opt: ComboboxOption) {
     onChange(opt.value);
+    if (onOptionChange) onOptionChange(opt);
     setOpen(false);
     setSearch("");
   }
@@ -141,6 +144,7 @@ export function Combobox({
                 onClick={(e) => {
                   e.stopPropagation();
                   onChange(null);
+                  if (onOptionChange) onOptionChange(null);
                 }}
               />
             )}
