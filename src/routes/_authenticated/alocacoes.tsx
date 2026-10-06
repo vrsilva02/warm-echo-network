@@ -176,7 +176,9 @@ function Page() {
         await fetchAll<ChaveDisponivel>(
           "licenses",
           "id, software, chave_ativacao, tipo_licenca, licenca_id, status, licencas(produtos_catalogo_id)",
-          (q) => q.order("software", { ascending: true }),
+          // Não filtrar por status aqui: precisamos trazer também as chaves 'alocada'
+          // para poder exibí-las até atingir o limite de uso (ex.: Office 2019 = 5 ativos)
+          (q) => q.not("status", "in", '("expirada","revogada")').order("software", { ascending: true }),
         )
       ).data,
   });
@@ -239,7 +241,7 @@ function Page() {
 
     return chavesDisponiveis
       .filter((c) => {
-        // Ignora chaves que não podem ser usadas
+        // Ignora chaves definitivamente inativas
         if (c.status === "expirada" || c.status === "revogada") return false;
 
         // Se a chave tem licencas.produtos_catalogo_id igual ao do produto selecionado, ela pertence ao mesmo produto (mesmo se for de outro lote)
@@ -259,16 +261,25 @@ function Page() {
           
         const limiteUso = isOffice2019 ? 5 : 1;
 
+        // Conta quantas alocações ativas já existem para esta chave
         const inUse = chavesUsoCount.get(c.id) || 0;
+        
+        // Para licenças multi-seat (Office 2019): a chave deve aparecer até atingir 5 usos,
+        // independentemente do status 'alocada' (a chave é compartilhada entre vários ativos)
+        if (isOffice2019) {
+          if (inUse >= limiteUso) return false; // Atingiu limite de 5 ativos
+          // Verifica se a chave pertence a este produto (por ID do lote, por ID do produto do catálogo, ou por nome)
+          if (c.licenca_id === form.licenca_id) return true;
+          if (mesmoProdutoPeloId) return true;
+          if (nomeChave.includes("office") || nomeChave.includes("2019")) return true;
+          return nomesCompativeis(c.software, nomeProdutoNormalizado);
+        }
+        
+        // Para licenças normais (1 ativo por chave):
+        // A chave só aparece se estiver 'disponivel' e sem uso
+        if (c.status !== "disponivel") return false;
         if (inUse >= limiteUso) return false;
         
-        // Se o produto selecionado for Office 2019, permitimos exibir a chave se ela pertencer ao mesmo lote
-        // ou tiver a palavra "office" ou "2019" no nome (flexibilização agressiva para evitar ocultação acidental)
-        if (isOffice2019) {
-          if (c.licenca_id === form.licenca_id) return true;
-          if (nomeChave.includes("office") || nomeChave.includes("2019")) return true;
-        }
-
         // A chave é válida se pertencer exatamente a este lote, ou for do mesmo produto (lote diferente), OU se o nome do software for compatível
         return c.licenca_id === form.licenca_id || mesmoProdutoPeloId || nomesCompativeis(c.software, nomeProdutoNormalizado);
       })

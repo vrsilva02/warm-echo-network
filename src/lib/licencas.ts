@@ -2,11 +2,29 @@ import { supabase } from "@/integrations/supabase/client";
 import { logAction } from "@/lib/audit";
 
 /**
- * Libera uma chave do módulo Chaves de Licença quando a alocação é encerrada.
- * Só age se a chave ainda estiver marcada como alocada, para não sobrescrever
- * um uso paralelo feito por outro fluxo.
+ * Libera uma chave do módulo Chaves de Licença quando uma alocação é encerrada.
+ * Para licenças multi-seat (ex.: Office 2019), só marca como 'disponivel'
+ * quando não há mais nenhuma alocação ativa referenciando esta chave.
  */
 async function liberarChave(chaveId: string) {
+  // Conta quantas alocações ativas ainda usam esta chave
+  const { count, error: errCount } = await supabase
+    .from("alocacoes")
+    .select("id", { count: "exact", head: true })
+    .eq("chave_id", chaveId)
+    .is("data_fim", null);
+
+  if (errCount) {
+    console.warn("Não foi possível verificar alocações restantes da chave:", errCount.message);
+    return;
+  }
+
+  // Só libera a chave se não houver mais nenhuma alocação ativa para ela
+  if ((count ?? 0) > 0) {
+    // Ainda há outros ativos usando esta chave — não libera
+    return;
+  }
+
   const { error } = await supabase
     .from("licenses")
     .update({
@@ -15,8 +33,7 @@ async function liberarChave(chaveId: string) {
       usuario_id: null,
       data_alocacao: null,
     })
-    .eq("id", chaveId)
-    .eq("status", "alocada");
+    .eq("id", chaveId);
 
   if (error) {
     console.warn("Não foi possível liberar a chave de licença após encerrar a alocação:", error.message);
@@ -220,9 +237,13 @@ export async function criarAlocacao(input: {
   }
 
   // 4. Associar a chave do módulo Chaves de Licença ao ativo/colaborador.
+  // Para licenças multi-seat (Office 2019): a chave permanece com status 'alocada'
+  // após a primeira alocação. Só tentamos marcar 'alocada' se ainda estiver 'disponivel'.
+  // Se já estiver 'alocada' (outra alocação anterior), simplesmente não tocamos no status.
   if (input.chave_id) {
     const hoje = new Date().toISOString().slice(0, 10);
-    const { error: errChave } = await supabase
+    // Tenta marcar como 'alocada' apenas se ainda estiver 'disponivel'
+    await supabase
       .from("licenses")
       .update({
         status: "alocada",
@@ -232,11 +253,7 @@ export async function criarAlocacao(input: {
         data_alocacao: hoje,
       })
       .eq("id", input.chave_id)
-      .eq("status", "disponivel");
-
-    if (errChave) {
-      console.warn("Alocação criada, mas a chave não pôde ser marcada como alocada:", errChave.message);
-    }
+      .eq("status", "disponivel"); // Só atualiza se ainda estiver disponivel; se já 'alocada' para multi-seat, ok silencioso
   }
 
   void logAction(
