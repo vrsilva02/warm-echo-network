@@ -284,19 +284,14 @@ function Page() {
         // Para licenças multi-seat (Office 2019): a chave deve aparecer até atingir 5 usos,
         // independentemente do status 'alocada' (a chave é compartilhada entre vários ativos)
         if (isOffice2019) {
-          if (inUse >= limiteUso) return false; // Atingiu limite de 5 ativos
-          // Se a chave já estiver em uso neste exato produto (mesmo produto ou lotes idênticos), nós devemos sempre permiti-la
-          if (chavesJaUsadasNesteProduto.has(c.id)) return true;
+          if (inUse >= 5) return false; // Atingiu limite de 5 ativos
           
-          // Se a chave for totalmente flutuante (não associada a nenhum lote) e ainda estiver 'disponivel', 
-          // nós permitimos, porque o usuário pode não ter preenchido o nome corretamente.
-          if (c.licenca_id === null && c.status === "disponivel") return true;
-
-          // Verifica se a chave pertence a este produto (por ID do lote, por ID do produto do catálogo, ou por nome)
-          if (c.licenca_id === form.licenca_id) return true;
-          if (mesmoProdutoPeloId) return true;
-          if (nomeChave.includes("office") || nomeChave.includes("2019")) return true;
-          return nomesCompativeis(c.software, nomeProdutoNormalizado);
+          // Liberação Total (Bypass de Filtros Rígidos):
+          // Para garantir que NENHUMA chave de Office fique invisível devido a preenchimento 
+          // incorreto de lote, nome do software, ou status, nós vamos permitir TODAS as chaves
+          // que não passaram do limite de 5, delegando ao usuário (e à busca do Combobox)
+          // a seleção da chave correta.
+          return true;
         }
         
         // Para licenças normais (1 ativo por chave):
