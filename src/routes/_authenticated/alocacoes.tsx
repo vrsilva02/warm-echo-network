@@ -176,9 +176,8 @@ function Page() {
         await fetchAll<ChaveDisponivel>(
           "licenses",
           "id, software, chave_ativacao, tipo_licenca, licenca_id, status, licencas(produtos_catalogo_id)",
-          // Não filtrar por status aqui: precisamos trazer também as chaves 'alocada'
-          // para poder exibí-las até atingir o limite de uso (ex.: Office 2019 = 5 ativos)
-          (q) => q.not("status", "in", '("expirada","revogada")').order("software", { ascending: true }),
+          // Busca TODAS as chaves (disponivel + alocada); excluiremos expirada/revogada no frontend
+          (q) => q.order("software", { ascending: true }),
         )
       ).data,
   });
@@ -250,10 +249,13 @@ function Page() {
   }, [rows, form.licenca_id, form.licenca_nome, licencaSelecionada]);
 
   const chavesOptions = useMemo(() => {
+    console.log('[CHAVES DEBUG] chavesDisponiveis total:', chavesDisponiveis.length, chavesDisponiveis.slice(0, 3));
+    console.log('[CHAVES DEBUG] form.licenca_id:', form.licenca_id, '| form.licenca_nome:', form.licenca_nome);
     if (chavesDisponiveis.length === 0) return [];
     if (!form.licenca_id) return [];
 
     const nomeProduto = form.licenca_nome || licencaSelecionada?.produtos_catalogo?.nome_oficial || licencasNomeCache.current.get(form.licenca_id);
+    console.log('[CHAVES DEBUG] nomeProduto resolvido:', nomeProduto);
     const nomeProdutoNormalizado = produtoSelecionado || normalizaNome(nomeProduto ?? "");
 
     return chavesDisponiveis
@@ -261,46 +263,32 @@ function Page() {
         // Ignora chaves definitivamente inativas
         if (c.status === "expirada" || c.status === "revogada") return false;
 
-        // Se a chave tem licencas.produtos_catalogo_id igual ao do produto selecionado, ela pertence ao mesmo produto (mesmo se for de outro lote)
-        const mesmoProdutoPeloId = 
-          c.licencas?.produtos_catalogo_id && 
-          licencaSelecionada?.produtos_catalogo?.id && 
-          c.licencas.produtos_catalogo_id === licencaSelecionada.produtos_catalogo.id;
-
-        // Determina o limite verificando tanto o produto selecionado quanto o software salvo na chave
-        const nomeChave = (c.software ?? "").toLowerCase();
-        const nomeSelec = (nomeProduto ?? "").toLowerCase();
-        
-        // Verifica de forma mais flexível (Office + 2019)
-        const isOffice2019 = 
-          (nomeChave.includes("office") && nomeChave.includes("2019")) || 
-          (nomeSelec.includes("office") && nomeSelec.includes("2019"));
-          
-        const limiteUso = isOffice2019 ? 5 : 1;
-
         // Conta quantas alocações ativas já existem para esta chave
         const inUse = chavesUsoCount.get(c.id) || 0;
-        
-        // Para licenças multi-seat (Office 2019): a chave deve aparecer até atingir 5 usos,
-        // independentemente do status 'alocada' (a chave é compartilhada entre vários ativos)
+
+        // Para Office 2019 (multi-seat): TODAS as chaves ficam visíveis até completar 5 alocações.
+        // Não há qualquer outra condição — nem de lote, nem de nome, nem de status 'disponivel'.
+        const isOffice2019 =
+          (c.software ?? "").toLowerCase().includes("office") ||
+          (c.software ?? "").toLowerCase().includes("2019") ||
+          (nomeProduto ?? "").toLowerCase().includes("office") ||
+          (nomeProduto ?? "").toLowerCase().includes("2019");
+
         if (isOffice2019) {
-          if (inUse >= 5) return false; // Atingiu limite de 5 ativos
-          
-          // Liberação Total (Bypass de Filtros Rígidos):
-          // Para garantir que NENHUMA chave de Office fique invisível devido a preenchimento 
-          // incorreto de lote, nome do software, ou status, nós vamos permitir TODAS as chaves
-          // que não passaram do limite de 5, delegando ao usuário (e à busca do Combobox)
-          // a seleção da chave correta.
-          return true;
+          return inUse < 5;
         }
-        
-        // Para licenças normais (1 ativo por chave):
-        // A chave só aparece se estiver 'disponivel' e sem uso
+
+        // Para licenças normais (1 ativo por chave): só disponivel e sem uso.
         if (c.status !== "disponivel") return false;
-        if (inUse >= limiteUso) return false;
-        
-        // A chave é válida se pertencer exatamente a este lote, ou for do mesmo produto (lote diferente), OU se o nome do software for compatível
-        return c.licenca_id === form.licenca_id || mesmoProdutoPeloId || nomesCompativeis(c.software, nomeProdutoNormalizado);
+        if (inUse >= 1) return false;
+
+        // A chave pertence a este produto?
+        const mesmoProdutoPeloId =
+          c.licencas?.produtos_catalogo_id &&
+          licencaSelecionada?.produtos_catalogo?.id &&
+          c.licencas.produtos_catalogo_id === licencaSelecionada.produtos_catalogo.id;
+
+        return c.licenca_id === form.licenca_id || !!mesmoProdutoPeloId || nomesCompativeis(c.software, nomeProdutoNormalizado);
       })
       .sort((a, b) => a.chave_ativacao.localeCompare(b.chave_ativacao));
   }, [chavesDisponiveis, chavesUsoCount, chavesJaUsadasNesteProduto, form.licenca_id, form.licenca_nome, licencaSelecionada, produtoSelecionado]);
