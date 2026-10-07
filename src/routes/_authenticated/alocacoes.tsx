@@ -276,8 +276,8 @@ function Page() {
           c.tipo_licenca
         ].filter(Boolean).join(" ").toLowerCase();
 
-        const formIsOffice2019 = formProduto.includes("office") && formProduto.includes("2019");
-        const keyIsOffice2019 = keyProdutoStr.includes("office") && keyProdutoStr.includes("2019");
+        const formIsOffice2019 = formProduto.includes("office");
+        const keyIsOffice2019 = keyProdutoStr.includes("office");
 
         const belongsToProduct = 
           c.licenca_id === form.licenca_id || 
