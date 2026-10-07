@@ -270,10 +270,14 @@ function Page() {
           c.licencas.produto_id === licencaSelecionada.produtos_catalogo.id;
 
         const formProduto = (nomeProduto ?? "").toLowerCase();
-        const keyProduto = (c.software || c.licencas?.produtos_catalogo?.nome_oficial || "").toLowerCase();
+        const keyProdutoStr = [
+          c.software,
+          c.licencas?.produtos_catalogo?.nome_oficial,
+          c.tipo_licenca
+        ].filter(Boolean).join(" ").toLowerCase();
 
         const formIsOffice2019 = formProduto.includes("office") && formProduto.includes("2019");
-        const keyIsOffice2019 = keyProduto.includes("office") && keyProduto.includes("2019");
+        const keyIsOffice2019 = keyProdutoStr.includes("office") && keyProdutoStr.includes("2019");
 
         const belongsToProduct = 
           c.licenca_id === form.licenca_id || 
@@ -282,7 +286,10 @@ function Page() {
           nomesCompativeis(c.licencas?.produtos_catalogo?.nome_oficial, nomeProdutoNormalizado) ||
           (formIsOffice2019 && keyIsOffice2019);
 
-        if (!belongsToProduct) return false;
+        // Se a chave não tem software nem licença atrelada, ela é "órfã" e pode ser alocada a qualquer produto se o usuário pesquisar por ela.
+        const isOrphan = !c.licenca_id && !c.software;
+
+        if (!belongsToProduct && !isOrphan) return false;
 
         // Conta quantas alocações ativas já existem para esta chave
         const inUse = chavesUsoCount.get(c.id) || 0;
