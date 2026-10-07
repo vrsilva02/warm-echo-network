@@ -263,15 +263,22 @@ function Page() {
         // Ignora chaves definitivamente inativas
         if (c.status === "expirada" || c.status === "revogada") return false;
 
+        // A chave pertence a este produto? (Filtro base rigoroso)
+        const mesmoProdutoPeloId =
+          c.licencas?.produto_id &&
+          licencaSelecionada?.produtos_catalogo?.id &&
+          c.licencas.produto_id === licencaSelecionada.produtos_catalogo.id;
+
+        const belongsToProduct = c.licenca_id === form.licenca_id || !!mesmoProdutoPeloId || nomesCompativeis(c.software, nomeProdutoNormalizado);
+
+        if (!belongsToProduct) return false;
+
         // Conta quantas alocações ativas já existem para esta chave
         const inUse = chavesUsoCount.get(c.id) || 0;
 
-        // Para Office 2019 (multi-seat): TODAS as chaves ficam visíveis até completar 5 alocações.
-        // Não há qualquer outra condição — nem de lote, nem de nome, nem de status 'disponivel'.
+        // Verifica se o produto atual é do tipo Office 2019 (multi-seat)
         const isOffice2019 =
-          (c.software ?? "").toLowerCase().includes("office") ||
-          (c.software ?? "").toLowerCase().includes("2019") ||
-          (nomeProduto ?? "").toLowerCase().includes("office") ||
+          (nomeProduto ?? "").toLowerCase().includes("office") &&
           (nomeProduto ?? "").toLowerCase().includes("2019");
 
         if (isOffice2019) {
@@ -280,15 +287,7 @@ function Page() {
 
         // Para licenças normais (1 ativo por chave): só disponivel e sem uso.
         if (c.status !== "disponivel") return false;
-        if (inUse >= 1) return false;
-
-        // A chave pertence a este produto?
-        const mesmoProdutoPeloId =
-          c.licencas?.produto_id &&
-          licencaSelecionada?.produtos_catalogo?.id &&
-          c.licencas.produto_id === licencaSelecionada.produtos_catalogo.id;
-
-        return c.licenca_id === form.licenca_id || !!mesmoProdutoPeloId || nomesCompativeis(c.software, nomeProdutoNormalizado);
+        return inUse < 1;
       })
       .sort((a, b) => a.chave_ativacao.localeCompare(b.chave_ativacao));
   }, [chavesDisponiveis, chavesUsoCount, chavesJaUsadasNesteProduto, form.licenca_id, form.licenca_nome, licencaSelecionada, produtoSelecionado]);
