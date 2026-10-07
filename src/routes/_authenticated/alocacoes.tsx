@@ -263,23 +263,22 @@ function Page() {
         // Ignora chaves definitivamente inativas
         if (c.status === "expirada" || c.status === "revogada") return false;
 
-        // A chave pertence a este produto? (Filtro base rigoroso)
         const mesmoProdutoPeloId =
           c.licencas?.produto_id &&
           licencaSelecionada?.produtos_catalogo?.id &&
           c.licencas.produto_id === licencaSelecionada.produtos_catalogo.id;
 
-        const formIsOffice2019 =
-          (nomeProduto ?? "").toLowerCase().includes("office") &&
-          (nomeProduto ?? "").toLowerCase().includes("2019");
-        const keyIsOffice2019 =
-          (c.software ?? "").toLowerCase().includes("office") &&
-          (c.software ?? "").toLowerCase().includes("2019");
+        const formProduto = (nomeProduto ?? "").toLowerCase();
+        const keyProduto = (c.software || c.licencas?.produtos_catalogo?.nome_oficial || "").toLowerCase();
+
+        const formIsOffice2019 = formProduto.includes("office") && formProduto.includes("2019");
+        const keyIsOffice2019 = keyProduto.includes("office") && keyProduto.includes("2019");
 
         const belongsToProduct = 
           c.licenca_id === form.licenca_id || 
           !!mesmoProdutoPeloId || 
           nomesCompativeis(c.software, nomeProdutoNormalizado) ||
+          nomesCompativeis(c.licencas?.produtos_catalogo?.nome_oficial, nomeProdutoNormalizado) ||
           (formIsOffice2019 && keyIsOffice2019);
 
         if (!belongsToProduct) return false;
