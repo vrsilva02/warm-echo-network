@@ -269,7 +269,18 @@ function Page() {
           licencaSelecionada?.produtos_catalogo?.id &&
           c.licencas.produto_id === licencaSelecionada.produtos_catalogo.id;
 
-        const belongsToProduct = c.licenca_id === form.licenca_id || !!mesmoProdutoPeloId || nomesCompativeis(c.software, nomeProdutoNormalizado);
+        const formIsOffice2019 =
+          (nomeProduto ?? "").toLowerCase().includes("office") &&
+          (nomeProduto ?? "").toLowerCase().includes("2019");
+        const keyIsOffice2019 =
+          (c.software ?? "").toLowerCase().includes("office") &&
+          (c.software ?? "").toLowerCase().includes("2019");
+
+        const belongsToProduct = 
+          c.licenca_id === form.licenca_id || 
+          !!mesmoProdutoPeloId || 
+          nomesCompativeis(c.software, nomeProdutoNormalizado) ||
+          (formIsOffice2019 && keyIsOffice2019);
 
         if (!belongsToProduct) return false;
 
@@ -277,11 +288,7 @@ function Page() {
         const inUse = chavesUsoCount.get(c.id) || 0;
 
         // Verifica se o produto atual é do tipo Office 2019 (multi-seat)
-        const isOffice2019 =
-          (nomeProduto ?? "").toLowerCase().includes("office") &&
-          (nomeProduto ?? "").toLowerCase().includes("2019");
-
-        if (isOffice2019) {
+        if (formIsOffice2019) {
           return inUse < 5;
         }
 
