@@ -71,6 +71,7 @@ type ChaveDisponivel = {
   status?: string | null;
   licencas?: {
     produto_id: string | null;
+    produtos_catalogo?: { nome_oficial: string | null; } | null;
   } | null;
 };
 
@@ -92,7 +93,7 @@ const initial = {
 };
 
 /** Normaliza nome de produto/software para comparação tolerante. */
-function normalizaNome(v: string): string {
+function normalizaNome(v?: string | null): string {
   return (v ?? "")
     .toLowerCase()
     .normalize("NFD")
@@ -101,7 +102,7 @@ function normalizaNome(v: string): string {
     .trim();
 }
 
-function nomesCompativeis(software: string, produtoNormalizado: string): boolean {
+function nomesCompativeis(software?: string | null, produtoNormalizado?: string | null): boolean {
   const softwareNormalizado = normalizaNome(software);
   if (!softwareNormalizado || !produtoNormalizado) return false;
   return (
@@ -175,7 +176,7 @@ function Page() {
       (
         await fetchAll<ChaveDisponivel>(
           "licenses",
-          "id, software, chave_ativacao, tipo_licenca, licenca_id, status, licencas(produto_id)",
+          "id, software, chave_ativacao, tipo_licenca, licenca_id, status, licencas(produto_id, produtos_catalogo(nome_oficial))",
           // Busca TODAS as chaves (disponivel + alocada); excluiremos expirada/revogada no frontend
           (q) => q.order("software", { ascending: true }),
         )
