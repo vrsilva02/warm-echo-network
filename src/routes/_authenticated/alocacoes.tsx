@@ -70,7 +70,7 @@ type ChaveDisponivel = {
   licenca_id: string | null;
   status?: string | null;
   licencas?: {
-    produtos_catalogo_id: string | null;
+    produto_id: string | null;
   } | null;
 };
 
@@ -175,7 +175,7 @@ function Page() {
       (
         await fetchAll<ChaveDisponivel>(
           "licenses",
-          "id, software, chave_ativacao, tipo_licenca, licenca_id, status, licencas(produtos_catalogo_id)",
+          "id, software, chave_ativacao, tipo_licenca, licenca_id, status, licencas(produto_id)",
           // Busca TODAS as chaves (disponivel + alocada); excluiremos expirada/revogada no frontend
           (q) => q.order("software", { ascending: true }),
         )
@@ -284,9 +284,9 @@ function Page() {
 
         // A chave pertence a este produto?
         const mesmoProdutoPeloId =
-          c.licencas?.produtos_catalogo_id &&
+          c.licencas?.produto_id &&
           licencaSelecionada?.produtos_catalogo?.id &&
-          c.licencas.produtos_catalogo_id === licencaSelecionada.produtos_catalogo.id;
+          c.licencas.produto_id === licencaSelecionada.produtos_catalogo.id;
 
         return c.licenca_id === form.licenca_id || !!mesmoProdutoPeloId || nomesCompativeis(c.software, nomeProdutoNormalizado);
       })
