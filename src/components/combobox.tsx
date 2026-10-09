@@ -24,6 +24,7 @@ type Props = {
   disabled?: boolean;
   clearable?: boolean;
   className?: string;
+  popoverClassName?: string;
   /** Busca assíncrona opcional (no banco com debounce de 250ms) */
   onSearch?: (query: string) => Promise<ComboboxOption[]>;
   loading?: boolean;
@@ -42,6 +43,7 @@ export function Combobox({
   disabled,
   clearable = true,
   className,
+  popoverClassName,
   onSearch,
   onOptionChange,
   loading: externalLoading,
@@ -156,7 +158,7 @@ export function Combobox({
       </PopoverTrigger>
 
       <PopoverContent
-        className="p-0 w-[--radix-popover-trigger-width] min-w-[240px]"
+        className={cn("p-0 w-[--radix-popover-trigger-width] min-w-[240px]", popoverClassName)}
         align="start"
       >
         {/* Campo de busca local — não depende do cmdk */}
@@ -215,7 +217,7 @@ export function Combobox({
                       className={cn("h-4 w-4 shrink-0", isSelected ? "opacity-100" : "opacity-0")}
                     />
                     <div className="flex flex-col min-w-0 flex-1">
-                      <span className="truncate">{opt.label}</span>
+                      <span className="truncate" title={opt.label}>{opt.label}</span>
                       {opt.hint && (
                         <span className="text-xs text-muted-foreground truncate">{opt.hint}</span>
                       )}

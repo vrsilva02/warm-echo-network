@@ -705,6 +705,7 @@ function Page() {
             <Label>Chave (módulo Chaves de Licença)</Label>
             <Combobox
               placeholder="Sem chave individual"
+              popoverClassName={office2019 ? "w-[min(540px,calc(100vw-2rem))]" : undefined}
               searchPlaceholder="Buscar por qualquer trecho da chave…"
               clearable
               value={form.chave_id}
