@@ -52,6 +52,7 @@ import { Combobox } from "@/components/combobox";
 import { fetchAll } from "@/lib/fetch-all";
 import { AdvancedTable, type Column, type SavedView } from "@/components/advanced-table";
 import { useRealtimeInvalidate } from "@/hooks/use-realtime-invalidate";
+import { contarAtivosPorChave, isOffice2019ProfessionalPlus } from "@/lib/chave-capacidade";
 import {
   fetchChaves,
   inserirChavesEmLote,
@@ -98,6 +99,8 @@ type LicenseRow = {
   data_alocacao: string | null;
   data_expiracao: string | null;
   licenca_id: string | null;
+  ativos_alocados?: number;
+  office2019?: boolean;
   ativos?: { hostname: string } | null;
   usuarios?: { nome: string } | null;
 };
@@ -173,7 +176,31 @@ function Page() {
     gcTime: 10 * 60_000,
   });
 
-  const rows = data ?? [];
+  useRealtimeInvalidate({
+    channel: "chaves-alocacoes-live",
+    table: "alocacoes",
+    queryKeys: [["chaves-uso-ativos"], ["licenses"]],
+  });
+  const { data: usoAtivos = [] } = useQuery({
+    queryKey: ["chaves-uso-ativos"],
+    queryFn: async () => {
+      const { data, error } = await fetchAll<{ chave_id: string | null; ativo_id: string | null; data_fim: string | null }>(
+        "alocacoes", "chave_id, ativo_id, data_fim", (q) => q.is("data_fim", null),
+      );
+      if (error) throw error;
+      return data;
+    },
+    staleTime: 30_000,
+  });
+  const rows = React.useMemo(() => {
+    const counts = contarAtivosPorChave(usoAtivos);
+    return (data ?? []).map((r) => {
+      const produto = licencasRef.find((l: any) => l.id === r.licenca_id)?.produtos_catalogo?.nome_oficial;
+      const office2019 = isOffice2019ProfessionalPlus(produto);
+      return { ...r, office2019, ativos_alocados: counts.get(r.id) ?? 0 };
+    });
+  }, [data, licencasRef, usoAtivos]);
+  const statusLabel = (r: LicenseRow) => r.office2019 && r.status === "alocada" ? "Indisponível" : STATUS_LABEL[r.status];
   const softwares = React.useMemo(
     () => Array.from(new Set(rows.map((r) => r.software))).sort(),
     [rows],
@@ -197,6 +224,7 @@ function Page() {
     await qc.invalidateQueries({ queryKey: ["licenses"] });
     void qc.invalidateQueries({ queryKey: ["chaves-saldo"] });
     void qc.invalidateQueries({ queryKey: ["alocacoes"] });
+    void qc.invalidateQueries({ queryKey: ["chaves-uso-ativos"] });
     void qc.invalidateQueries({ queryKey: ["chaves-disponiveis-alocacao"] });
   }
 
@@ -266,12 +294,13 @@ function Page() {
                   : "destructive"
             }
           >
-            {STATUS_LABEL[r.status]}
+            {statusLabel(r)}
+            {r.office2019 ? ` (${r.ativos_alocados ?? 0}/5 alocados)` : ""}
           </Badge>
         ),
-        sortValue: (r) => STATUS_LABEL[r.status],
-        searchValue: (r) => STATUS_LABEL[r.status],
-        exportValue: (r) => STATUS_LABEL[r.status],
+        sortValue: statusLabel,
+        searchValue: statusLabel,
+        exportValue: statusLabel,
       },
       {
         id: "ativo",
@@ -313,7 +342,7 @@ function Page() {
         alwaysVisible: true,
         className: "w-28",
         accessor: (r) =>
-          r.status === "alocada" ? (
+          r.status === "alocada" || (r.office2019 && (r.ativos_alocados ?? 0) > 0) ? (
             <Button
               size="sm"
               variant="ghost"
@@ -376,7 +405,7 @@ function Page() {
       r.software,
       maskTail(r.chave_ativacao),
       r.tipo_licenca,
-      STATUS_LABEL[r.status],
+      statusLabel(r),
       r.ativos?.hostname ?? "—",
       r.usuarios?.nome ?? "—",
       r.data_alocacao ?? "—",
