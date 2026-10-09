@@ -22,6 +22,7 @@ import { criarAlocacao, encerrarAlocacao, encerrarAlocacoes } from "@/lib/licenc
 import { fetchAll } from "@/lib/fetch-all";
 import { AlocacaoLoteDialog } from "@/components/alocacao-lote-dialog";
 import { useRealtimeInvalidate } from "@/hooks/use-realtime-invalidate";
+import { isOffice2019ProfessionalPlus, contarAtivosPorChave } from "@/lib/chave-capacidade";
 
 export const Route = createFileRoute("/_authenticated/alocacoes")({
   component: Page,
@@ -29,6 +30,10 @@ export const Route = createFileRoute("/_authenticated/alocacoes")({
     meta: [
       { title: "Alocações — GestoraIT" },
       { name: "description", content: "Vínculo de licenças a colaboradores e ativos." },
+      { property: "og:title", content: "Alocações — GestoraIT" },
+      { property: "og:description", content: "Vínculo de licenças a colaboradores e ativos." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
 });
@@ -210,53 +215,14 @@ function Page() {
   );
   const produtoSelecionado = normalizaNome(licencaSelecionada?.produtos_catalogo?.nome_oficial ?? "");
 
-  /**
-   * Regras de limite de alocações por chave:
-   * - Office 2019 Professional Plus: permite até 5 ativos por chave (licença multidevice)
-   * - Demais licenças: 1 ativo por chave
-   */
-  function getLimiteChave(nomeProduto: string | null | undefined): number {
-    const nome = (nomeProduto ?? "").toLowerCase();
-    if (nome.includes("office 2019 professional plus")) return 5;
-    return 1;
-  }
-
-  // Contagem de alocações ativas por chave_id e conjunto de chaves deste produto
-  const { chavesUsoCount, chavesJaUsadasNesteProduto } = useMemo(() => {
-    const map = new Map<string, number>();
-    const usadasNeste = new Set<string>();
-    
-    const nomeAtual = (form.licenca_nome || licencaSelecionada?.produtos_catalogo?.nome_oficial || "").toLowerCase();
-    const isOfficeAtual = nomeAtual.includes("office") && nomeAtual.includes("2019");
-
-    (rows ?? []).forEach((r) => {
-      if (!r.data_fim && r.chave_id) {
-        map.set(r.chave_id, (map.get(r.chave_id) || 0) + 1);
-        
-        // Verifica se esta alocação pertence a um produto compatível com o selecionado
-        const rNome = (r.licencas?.produtos_catalogo?.nome_oficial || "").toLowerCase();
-        const rIsOffice = rNome.includes("office") && rNome.includes("2019");
-        
-        if (
-          r.licenca_id === form.licenca_id || 
-          (licencaSelecionada?.produtos_catalogo?.id && r.licencas?.produtos_catalogo?.id === licencaSelecionada.produtos_catalogo.id) ||
-          (isOfficeAtual && rIsOffice)
-        ) {
-          usadasNeste.add(r.chave_id);
-        }
-      }
-    });
-    return { chavesUsoCount: map, chavesJaUsadasNesteProduto: usadasNeste };
-  }, [rows, form.licenca_id, form.licenca_nome, licencaSelecionada]);
+  const office2019 = isOffice2019ProfessionalPlus(licencaSelecionada?.produtos_catalogo?.nome_oficial || form.licenca_nome);
+  const chavesUsoCount = useMemo(() => contarAtivosPorChave(rows ?? []), [rows]);
 
   const chavesOptions = useMemo(() => {
-    console.log('[CHAVES DEBUG] chavesDisponiveis total:', chavesDisponiveis.length, chavesDisponiveis.slice(0, 3));
-    console.log('[CHAVES DEBUG] form.licenca_id:', form.licenca_id, '| form.licenca_nome:', form.licenca_nome);
     if (chavesDisponiveis.length === 0) return [];
     if (!form.licenca_id) return [];
 
     const nomeProduto = form.licenca_nome || licencaSelecionada?.produtos_catalogo?.nome_oficial || licencasNomeCache.current.get(form.licenca_id);
-    console.log('[CHAVES DEBUG] nomeProduto resolvido:', nomeProduto);
     const nomeProdutoNormalizado = produtoSelecionado || normalizaNome(nomeProduto ?? "");
 
     return chavesDisponiveis
@@ -264,39 +230,16 @@ function Page() {
         // Ignora chaves definitivamente inativas
         if (c.status === "expirada" || c.status === "revogada") return false;
 
-        const mesmoProdutoPeloId =
-          c.licencas?.produto_id &&
-          licencaSelecionada?.produtos_catalogo?.id &&
-          c.licencas.produto_id === licencaSelecionada.produtos_catalogo.id;
-
-        const formProduto = (nomeProduto ?? "").toLowerCase();
-        const keyProdutoStr = [
-          c.software,
-          c.licencas?.produtos_catalogo?.nome_oficial,
-          c.tipo_licenca
-        ].filter(Boolean).join(" ").toLowerCase();
-
-        const formIsOffice2019 = formProduto.includes("office");
-        const keyIsOffice2019 = keyProdutoStr.includes("office");
-
-        const belongsToProduct = 
-          c.licenca_id === form.licenca_id || 
-          !!mesmoProdutoPeloId || 
-          nomesCompativeis(c.software, nomeProdutoNormalizado) ||
-          nomesCompativeis(c.licencas?.produtos_catalogo?.nome_oficial, nomeProdutoNormalizado) ||
-          (formIsOffice2019 && keyIsOffice2019);
-
-        // Se a chave não tem software nem licença atrelada, ela é "órfã" e pode ser alocada a qualquer produto se o usuário pesquisar por ela.
-        const isOrphan = !c.licenca_id && !c.software;
-
-        if (!belongsToProduct && !isOrphan) return false;
+        const belongsToProduct = c.licenca_id === form.licenca_id ||
+          (c.licenca_id == null && nomesCompativeis(c.software, nomeProdutoNormalizado));
+        if (!belongsToProduct) return false;
 
         // Conta quantas alocações ativas já existem para esta chave
         const inUse = chavesUsoCount.get(c.id) || 0;
 
         // Verifica se o produto atual é do tipo Office 2019 (multi-seat)
-        if (formIsOffice2019) {
-          return inUse < 5;
+        if (office2019) {
+          return c.status === "disponivel" || c.status === "alocada";
         }
 
         // Para licenças normais (1 ativo por chave): só disponivel e sem uso.
@@ -304,7 +247,7 @@ function Page() {
         return inUse < 1;
       })
       .sort((a, b) => a.chave_ativacao.localeCompare(b.chave_ativacao));
-  }, [chavesDisponiveis, chavesUsoCount, chavesJaUsadasNesteProduto, form.licenca_id, form.licenca_nome, licencaSelecionada, produtoSelecionado]);
+  }, [chavesDisponiveis, chavesUsoCount, office2019, form.licenca_id, form.licenca_nome, licencaSelecionada, produtoSelecionado]);
 
 
   const chaveIds = useMemo(() => {
@@ -399,6 +342,10 @@ function Page() {
       if (!escolhida) {
         return toast.error("Esta chave não está mais disponível para a licença selecionada.");
       }
+      if (office2019 && (chavesUsoCount.get(escolhida.id) ?? 0) >= 5) {
+        return toast.error("Esta chave já possui 5/5 ativos alocados.");
+      }
+      if (office2019 && !form.ativo_id) return toast.error("Selecione um ativo para alocar esta chave do Office 2019.");
       if (escolhida.licenca_id == null) {
         const { error } = await supabase
           .from("licenses")
@@ -758,13 +705,15 @@ function Page() {
             <Label>Chave (módulo Chaves de Licença)</Label>
             <Combobox
               placeholder="Sem chave individual"
+              popoverClassName={office2019 ? "w-[min(540px,calc(100vw-2rem))]" : undefined}
               searchPlaceholder="Buscar por qualquer trecho da chave…"
               clearable
               value={form.chave_id}
               onChange={(v) => setForm({ ...form, chave_id: v ?? null })}
               options={chavesOptions.map((c) => ({
                 value: c.id,
-                label: c.chave_ativacao,
+                label: office2019 ? `${c.chave_ativacao} (${chavesUsoCount.get(c.id) ?? 0}/5 alocados)` : c.chave_ativacao,
+                disabled: office2019 && (chavesUsoCount.get(c.id) ?? 0) >= 5,
                 hint: `${c.software} · ${c.tipo_licenca ?? "—"}`,
               }))}
             />

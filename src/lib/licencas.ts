@@ -176,7 +176,7 @@ export async function criarAlocacao(input: {
           .update({ chave_id: input.chave_id })
           .eq("id", existente.id);
         
-        if (errUpdate) return { ok: false, error: "Erro ao atualizar alocação existente com a nova chave." };
+        if (errUpdate) return { ok: false, error: errUpdate.message };
         
         // E também marca a chave como alocada na tabela licenses
         const hoje = new Date().toISOString().slice(0, 10);
@@ -237,9 +237,8 @@ export async function criarAlocacao(input: {
   }
 
   // 4. Associar a chave do módulo Chaves de Licença ao ativo/colaborador.
-  // Para licenças multi-seat (Office 2019): a chave permanece com status 'alocada'
-  // após a primeira alocação. Só tentamos marcar 'alocada' se ainda estiver 'disponivel'.
-  // Se já estiver 'alocada' (outra alocação anterior), simplesmente não tocamos no status.
+  // O banco recalcula o status do Office 2019 pela capacidade real em toda atualização.
+  // Para outras licenças, preservamos a transição existente disponível -> alocada.
   if (input.chave_id) {
     const hoje = new Date().toISOString().slice(0, 10);
     // Tenta marcar como 'alocada' apenas se ainda estiver 'disponivel'

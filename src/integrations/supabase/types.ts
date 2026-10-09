@@ -19,6 +19,7 @@ export type Database = {
           ativo_id: string | null
           chave_id: string | null
           chave_individual: string | null
+          chave_multiplos_ativos: boolean
           created_at: string | null
           data_fim: string | null
           data_inicio: string | null
@@ -31,6 +32,7 @@ export type Database = {
           ativo_id?: string | null
           chave_id?: string | null
           chave_individual?: string | null
+          chave_multiplos_ativos?: boolean
           created_at?: string | null
           data_fim?: string | null
           data_inicio?: string | null
@@ -43,6 +45,7 @@ export type Database = {
           ativo_id?: string | null
           chave_id?: string | null
           chave_individual?: string | null
+          chave_multiplos_ativos?: boolean
           created_at?: string | null
           data_fim?: string | null
           data_inicio?: string | null
@@ -2006,6 +2009,7 @@ export type Database = {
       can_operate_os: { Args: { _user_id: string }; Returns: boolean }
       can_read: { Args: { _user_id: string }; Returns: boolean }
       can_read_os: { Args: { _user_id: string }; Returns: boolean }
+      chave_office_2019: { Args: { p_chave: string }; Returns: boolean }
       fn_log_action: {
         Args: {
           p_acao: string

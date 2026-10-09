@@ -10,6 +10,7 @@ export type ComboboxOption = {
   value: string;
   label: string;
   hint?: string;
+  disabled?: boolean;
 };
 
 type Props = {
@@ -23,6 +24,7 @@ type Props = {
   disabled?: boolean;
   clearable?: boolean;
   className?: string;
+  popoverClassName?: string;
   /** Busca assíncrona opcional (no banco com debounce de 250ms) */
   onSearch?: (query: string) => Promise<ComboboxOption[]>;
   loading?: boolean;
@@ -41,6 +43,7 @@ export function Combobox({
   disabled,
   clearable = true,
   className,
+  popoverClassName,
   onSearch,
   onOptionChange,
   loading: externalLoading,
@@ -116,6 +119,7 @@ export function Combobox({
   }
 
   function handleSelect(opt: ComboboxOption) {
+    if (opt.disabled) return;
     onChange(opt.value);
     if (onOptionChange) onOptionChange(opt);
     setOpen(false);
@@ -154,7 +158,7 @@ export function Combobox({
       </PopoverTrigger>
 
       <PopoverContent
-        className="p-0 w-[--radix-popover-trigger-width] min-w-[240px]"
+        className={cn("p-0 w-[--radix-popover-trigger-width] min-w-[240px]", popoverClassName)}
         align="start"
       >
         {/* Campo de busca local — não depende do cmdk */}
@@ -191,6 +195,9 @@ export function Combobox({
                 return (
                   <div
                     key={opt.value}
+                    role="option"
+                    aria-selected={isSelected}
+                    aria-disabled={opt.disabled || undefined}
                     style={{
                       position: "absolute",
                       top: virtualItem.start,
@@ -202,6 +209,7 @@ export function Combobox({
                       "flex items-center gap-2 px-3 cursor-pointer text-sm select-none",
                       "hover:bg-accent hover:text-accent-foreground",
                       isSelected && "bg-accent/60",
+                      opt.disabled && "opacity-50 cursor-not-allowed",
                     )}
                     onClick={() => handleSelect(opt)}
                   >
@@ -209,7 +217,7 @@ export function Combobox({
                       className={cn("h-4 w-4 shrink-0", isSelected ? "opacity-100" : "opacity-0")}
                     />
                     <div className="flex flex-col min-w-0 flex-1">
-                      <span className="truncate">{opt.label}</span>
+                      <span className="truncate" title={opt.label}>{opt.label}</span>
                       {opt.hint && (
                         <span className="text-xs text-muted-foreground truncate">{opt.hint}</span>
                       )}
