@@ -10,6 +10,7 @@ export type ComboboxOption = {
   value: string;
   label: string;
   hint?: string;
+  disabled?: boolean;
 };
 
 type Props = {
@@ -116,6 +117,7 @@ export function Combobox({
   }
 
   function handleSelect(opt: ComboboxOption) {
+    if (opt.disabled) return;
     onChange(opt.value);
     if (onOptionChange) onOptionChange(opt);
     setOpen(false);
@@ -191,6 +193,9 @@ export function Combobox({
                 return (
                   <div
                     key={opt.value}
+                    role="option"
+                    aria-selected={isSelected}
+                    aria-disabled={opt.disabled || undefined}
                     style={{
                       position: "absolute",
                       top: virtualItem.start,
@@ -202,6 +207,7 @@ export function Combobox({
                       "flex items-center gap-2 px-3 cursor-pointer text-sm select-none",
                       "hover:bg-accent hover:text-accent-foreground",
                       isSelected && "bg-accent/60",
+                      opt.disabled && "opacity-50 cursor-not-allowed",
                     )}
                     onClick={() => handleSelect(opt)}
                   >
