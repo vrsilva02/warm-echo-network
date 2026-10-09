@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1791570392357,
+      "tag": "0000_office_2019_key_capacity",
+      "breakpoints": true
+    }
+  ]
+}
