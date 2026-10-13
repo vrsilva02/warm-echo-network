@@ -1,6 +1,7 @@
-/** A exceção é exclusiva deste produto, nunca de outras versões do Office. */
 export function isOffice2019ProfessionalPlus(nome?: string | null): boolean {
   const normalizado = (nome ?? "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  if (normalizado.includes("office") && normalizado.includes("2019")) return true;
+  if (normalizado.includes("office") && (normalizado.includes("pro") || normalizado.includes("professional"))) return true;
   return normalizado === "office 2019 professional plus" || normalizado === "microsoft office 2019 professional plus";
 }
 

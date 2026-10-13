@@ -242,7 +242,7 @@ function Page() {
           return c.status === "disponivel" || c.status === "alocada";
         }
 
-        // Para licenças normais (1 ativo por chave): só disponivel e sem uso.
+        // Para licenças normais (1 ativo por chave): só disponivel e sem uso ativo
         if (c.status !== "disponivel") return false;
         return inUse < 1;
       })
@@ -710,12 +710,15 @@ function Page() {
               clearable
               value={form.chave_id}
               onChange={(v) => setForm({ ...form, chave_id: v ?? null })}
-              options={chavesOptions.map((c) => ({
-                value: c.id,
-                label: office2019 ? `${c.chave_ativacao} (${chavesUsoCount.get(c.id) ?? 0}/5 alocados)` : c.chave_ativacao,
-                disabled: office2019 && (chavesUsoCount.get(c.id) ?? 0) >= 5,
-                hint: `${c.software} · ${c.tipo_licenca ?? "—"}`,
-              }))}
+              options={chavesOptions.map((c) => {
+                const inUse = chavesUsoCount.get(c.id) ?? 0;
+                return {
+                  value: c.id,
+                  label: office2019 ? `${c.chave_ativacao} (${inUse}/5 alocados)` : c.chave_ativacao,
+                  disabled: office2019 ? inUse >= 5 : false,
+                  hint: `${c.software} · ${office2019 ? `${inUse}/5 em uso` : (c.status === "alocada" ? "Alocada" : "Disponível")}`,
+                };
+              })}
             />
             {chavesOptions.length > 0 ? (
               <p className="text-[11px] text-muted-foreground mt-1">

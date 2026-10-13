@@ -366,16 +366,47 @@ function ProductCard({ row, onSelect }: { row: ProdutoAgg; onSelect: (id: string
     if (!novo) return toast.error("Informe um nome");
     if (novo === row.nome_oficial) { setRenameOpen(false); return; }
     setSaving(true);
-    const { error } = await supabase
-      .from("produtos_catalogo")
-      .update({ nome_oficial: novo })
-      .eq("id", row.produto_id);
-    setSaving(false);
-    if (error) return toast.error(friendlyError(error, "Não foi possível renomear a licença."));
-    toast.success("Licença renomeada");
-    void logAction("BULK_UPDATE", "produtos_catalogo", { operacao: "renomear", id: row.produto_id, de: row.nome_oficial, para: novo }, row.produto_id);
-    setRenameOpen(false);
-    qc.invalidateQueries({ queryKey: ["licencas-produtos-agg"] });
+    try {
+      // 1. Localiza o produto_id no catálogo através da licença
+      let catalogoId = (row as any).produto_catalogo_id;
+      if (!catalogoId) {
+        const { data: licData } = await supabase
+          .from("licencas")
+          .select("produto_id")
+          .eq("id", row.produto_id)
+          .maybeSingle();
+        catalogoId = licData?.produto_id || row.produto_id;
+      }
+
+      // 2. Atualiza o nome oficial em produtos_catalogo
+      const { error: catError } = await supabase
+        .from("produtos_catalogo")
+        .update({ nome_oficial: novo })
+        .eq("id", catalogoId);
+
+      if (catError) throw catError;
+
+      // 3. Atualiza o nome do software nas chaves de licença (licenses) vinculadas
+      await supabase
+        .from("licenses")
+        .update({ software: novo })
+        .eq("licenca_id", row.produto_id);
+
+      toast.success("Licença renomeada com sucesso");
+      void logAction("BULK_UPDATE", "produtos_catalogo", { operacao: "renomear", id: catalogoId, de: row.nome_oficial, para: novo }, catalogoId);
+      setRenameOpen(false);
+
+      // Invalida a query principal de indicadores para atualizar na tela na hora
+      qc.invalidateQueries({ queryKey: ["licencas-indicadores"] });
+      qc.invalidateQueries({ queryKey: ["licencas-produtos-agg"] });
+      qc.invalidateQueries({ queryKey: ["licencas-blocos"] });
+      qc.invalidateQueries({ queryKey: ["produtos-with-cat"] });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+    } catch (err: any) {
+      toast.error(friendlyError(err, "Não foi possível renomear a licença."));
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function removerProduto() {
@@ -617,6 +648,53 @@ function ProductDetail({
     qc.invalidateQueries({ queryKey: ["licencas-produtos-agg"] });
   }
 
+  const [renameOpen, setRenameOpen] = useState(false);
+  const [nomeOficial, setNomeOficial] = useState(produto.nome_oficial);
+  const [savingRename, setSavingRename] = useState(false);
+
+  async function saveRenameDetail() {
+    const novo = nomeOficial.trim();
+    if (!novo) return toast.error("Informe um nome");
+    setSavingRename(true);
+    try {
+      let catalogoId = (produto as any).produto_catalogo_id;
+      if (!catalogoId) {
+        const { data: licData } = await supabase
+          .from("licencas")
+          .select("produto_id")
+          .eq("id", produto.produto_id)
+          .maybeSingle();
+        catalogoId = licData?.produto_id || produto.produto_id;
+      }
+
+      const { error: catError } = await supabase
+        .from("produtos_catalogo")
+        .update({ nome_oficial: novo })
+        .eq("id", catalogoId);
+
+      if (catError) throw catError;
+
+      await supabase
+        .from("licenses")
+        .update({ software: novo })
+        .eq("licenca_id", produto.produto_id);
+
+      toast.success("Licença renomeada com sucesso");
+      produto.nome_oficial = novo;
+      setRenameOpen(false);
+
+      qc.invalidateQueries({ queryKey: ["licencas-indicadores"] });
+      qc.invalidateQueries({ queryKey: ["licencas-produtos-agg"] });
+      qc.invalidateQueries({ queryKey: ["licencas-blocos"] });
+      qc.invalidateQueries({ queryKey: ["produtos-with-cat"] });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+    } catch (err: any) {
+      toast.error(friendlyError(err, "Não foi possível renomear a licença."));
+    } finally {
+      setSavingRename(false);
+    }
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2">
@@ -624,12 +702,41 @@ function ProductDetail({
           <ArrowLeft className="h-4 w-4" /> Voltar
         </Button>
         <div className="min-w-0">
-          <div className="text-sm font-semibold truncate">{produto.nome_oficial}</div>
+          <div className="flex items-center gap-2">
+            <div className="text-sm font-semibold truncate">{nomeOficial}</div>
+            {canWrite && (
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-6 w-6"
+                title="Renomear licença"
+                onClick={() => { setNomeOficial(produto.nome_oficial); setRenameOpen(true); }}
+              >
+                <Pencil className="h-3.5 w-3.5" />
+              </Button>
+            )}
+          </div>
           <div className="text-xs text-muted-foreground truncate">
             {produto.fabricante ?? "—"} · {produto.categoria}{produto.subtipo ? ` · ${produto.subtipo}` : ""}
           </div>
         </div>
       </div>
+
+      <Dialog open={renameOpen} onOpenChange={setRenameOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Renomear licença</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label>Nome oficial</Label>
+            <Input value={nomeOficial} onChange={(e) => setNomeOficial(e.target.value)} autoFocus />
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setRenameOpen(false)}>Cancelar</Button>
+            <Button onClick={saveRenameDetail} disabled={savingRename}>{savingRename ? "Salvando…" : "Salvar"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between gap-3 flex-wrap">
