@@ -290,14 +290,25 @@ function Page() {
           </div>
 
           <div className="mt-4">
-            <ProductGrid rows={filteredData} isLoading={isLoading} onSelect={setSelectedProdId} />
+            <ProductGrid
+              rows={filteredData}
+              isLoading={isLoading}
+              onSelect={setSelectedProdId}
+              onEdit={(id) => {
+                setEditingLicId(id);
+                setNewLicOpen(true);
+              }}
+            />
           </div>
         </Tabs>
       )}
 
       <LicencaDialog
         open={newLicOpen}
-        onOpenChange={setNewLicOpen}
+        onOpenChange={(v) => {
+          setNewLicOpen(v);
+          if (!v) setEditingLicId(null);
+        }}
         licencaId={editingLicId}
         defaultCategoria={defaultCategoria}
       />
@@ -311,10 +322,12 @@ function ProductGrid({
   rows,
   isLoading,
   onSelect,
+  onEdit,
 }: {
   rows: ProdutoAgg[];
   isLoading: boolean;
   onSelect: (id: string) => void;
+  onEdit: (id: string) => void;
 }) {
   if (isLoading) {
     return (
@@ -335,13 +348,21 @@ function ProductGrid({
   return (
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {rows.map((r) => (
-        <ProductCard key={r.produto_id} row={r} onSelect={onSelect} />
+        <ProductCard key={r.produto_id} row={r} onSelect={onSelect} onEdit={onEdit} />
       ))}
     </div>
   );
 }
 
-function ProductCard({ row, onSelect }: { row: ProdutoAgg; onSelect: (id: string) => void }) {
+function ProductCard({
+  row,
+  onSelect,
+  onEdit,
+}: {
+  row: ProdutoAgg;
+  onSelect: (id: string) => void;
+  onEdit: (id: string) => void;
+}) {
   const { canWrite } = useAuth();
   const qc = useQueryClient();
   const confirm = useConfirm();
@@ -367,33 +388,65 @@ function ProductCard({ row, onSelect }: { row: ProdutoAgg; onSelect: (id: string
     if (novo === row.nome_oficial) { setRenameOpen(false); return; }
     setSaving(true);
     try {
-      // 1. Localiza o produto_id no catálogo através da licença
-      let catalogoId = (row as any).produto_catalogo_id;
-      if (!catalogoId) {
-        const { data: licData } = await supabase
+      // 1. Localiza os dados da licença e seu produto vinculado
+      const { data: licData } = await supabase
+        .from("licencas")
+        .select("id, produto_id, produtos_catalogo(*)")
+        .eq("id", row.produto_id)
+        .maybeSingle();
+
+      const catalogoId = licData?.produto_id || (row as any).produto_catalogo_id;
+      if (!catalogoId) throw new Error("Produto não encontrado");
+
+      // 2. Verifica se outras licenças compartilham esse produto do catálogo
+      const { count } = await supabase
+        .from("licencas")
+        .select("id", { count: "exact", head: true })
+        .eq("produto_id", catalogoId);
+
+      let finalCatId = catalogoId;
+      if (count && count > 1) {
+        // Isola este card: cria um novo registro no catálogo exclusivo para esta licença com o novo nome
+        const catOriginal = (licData as any)?.produtos_catalogo;
+        const { data: newCat, error: errNewCat } = await supabase
+          .from("produtos_catalogo")
+          .insert({
+            nome_oficial: novo,
+            categoria: catOriginal?.categoria || row.categoria || "Office",
+            modelo_licenciamento: catOriginal?.modelo_licenciamento || "dispositivo",
+            tipo_licenciamento: catOriginal?.tipo_licenciamento || "Perpetua",
+            fabricante_id: catOriginal?.fabricante_id || null,
+            subtipo: catOriginal?.subtipo || row.subtipo || null,
+          })
+          .select("id")
+          .single();
+
+        if (errNewCat) throw errNewCat;
+        finalCatId = newCat.id;
+
+        // Vincula esta licença específica ao novo produto
+        await supabase
           .from("licencas")
-          .select("produto_id")
-          .eq("id", row.produto_id)
-          .maybeSingle();
-        catalogoId = licData?.produto_id || row.produto_id;
+          .update({ produto_id: newCat.id })
+          .eq("id", row.produto_id);
+      } else {
+        // É a única licença deste produto: atualiza direto no catálogo
+        const { error: catError } = await supabase
+          .from("produtos_catalogo")
+          .update({ nome_oficial: novo })
+          .eq("id", catalogoId);
+
+        if (catError) throw catError;
       }
 
-      // 2. Atualiza o nome oficial em produtos_catalogo
-      const { error: catError } = await supabase
-        .from("produtos_catalogo")
-        .update({ nome_oficial: novo })
-        .eq("id", catalogoId);
-
-      if (catError) throw catError;
-
-      // 3. Atualiza o nome do software nas chaves de licença (licenses) vinculadas
+      // 3. Atualiza o nome do software nas chaves de licença vinculadas
       await supabase
         .from("licenses")
         .update({ software: novo })
         .eq("licenca_id", row.produto_id);
 
       toast.success("Licença renomeada com sucesso");
-      void logAction("BULK_UPDATE", "produtos_catalogo", { operacao: "renomear", id: catalogoId, de: row.nome_oficial, para: novo }, catalogoId);
+      void logAction("BULK_UPDATE", "produtos_catalogo", { operacao: "renomear", id: finalCatId, de: row.nome_oficial, para: novo }, finalCatId);
       setRenameOpen(false);
 
       // Invalida a query principal de indicadores para atualizar na tela na hora
@@ -480,8 +533,17 @@ function ProductCard({ row, onSelect }: { row: ProdutoAgg; onSelect: (id: string
               size="icon"
               variant="ghost"
               className="h-7 w-7"
-              title="Renomear"
+              title="Renomear licença"
               onClick={(e) => { e.stopPropagation(); setNome(row.nome_oficial); setRenameOpen(true); }}
+            >
+              <FileText className="h-3.5 w-3.5" />
+            </Button>
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-7 w-7"
+              title="Editar licença"
+              onClick={(e) => { e.stopPropagation(); onEdit(row.produto_id); }}
             >
               <Pencil className="h-3.5 w-3.5" />
             </Button>
@@ -489,14 +551,14 @@ function ProductCard({ row, onSelect }: { row: ProdutoAgg; onSelect: (id: string
               size="icon"
               variant="ghost"
               className="h-7 w-7 text-destructive hover:text-destructive"
-              title="Excluir"
+              title="Excluir licença"
               onClick={(e) => { e.stopPropagation(); void removerProduto(); }}
             >
               <Trash2 className="h-3.5 w-3.5" />
             </Button>
           </div>
         )}
-        <div className="flex items-start justify-between gap-2 mb-2 pr-20">
+        <div className="flex items-start justify-between gap-2 mb-2 pr-28">
           <div className="min-w-0">
             <div className="font-semibold text-sm truncate">{row.nome_oficial}</div>
             <div className="text-xs text-muted-foreground truncate">
@@ -657,22 +719,51 @@ function ProductDetail({
     if (!novo) return toast.error("Informe um nome");
     setSavingRename(true);
     try {
-      let catalogoId = (produto as any).produto_catalogo_id;
-      if (!catalogoId) {
-        const { data: licData } = await supabase
+      const { data: licData } = await supabase
+        .from("licencas")
+        .select("id, produto_id, produtos_catalogo(*)")
+        .eq("id", produto.produto_id)
+        .maybeSingle();
+
+      const catalogoId = licData?.produto_id || (produto as any).produto_catalogo_id;
+      if (!catalogoId) throw new Error("Produto não encontrado");
+
+      const { count } = await supabase
+        .from("licencas")
+        .select("id", { count: "exact", head: true })
+        .eq("produto_id", catalogoId);
+
+      let finalCatId = catalogoId;
+      if (count && count > 1) {
+        const catOriginal = (licData as any)?.produtos_catalogo;
+        const { data: newCat, error: errNewCat } = await supabase
+          .from("produtos_catalogo")
+          .insert({
+            nome_oficial: novo,
+            categoria: catOriginal?.categoria || produto.categoria || "Office",
+            modelo_licenciamento: catOriginal?.modelo_licenciamento || "dispositivo",
+            tipo_licenciamento: catOriginal?.tipo_licenciamento || "Perpetua",
+            fabricante_id: catOriginal?.fabricante_id || null,
+            subtipo: catOriginal?.subtipo || produto.subtipo || null,
+          })
+          .select("id")
+          .single();
+
+        if (errNewCat) throw errNewCat;
+        finalCatId = newCat.id;
+
+        await supabase
           .from("licencas")
-          .select("produto_id")
-          .eq("id", produto.produto_id)
-          .maybeSingle();
-        catalogoId = licData?.produto_id || produto.produto_id;
+          .update({ produto_id: newCat.id })
+          .eq("id", produto.produto_id);
+      } else {
+        const { error: catError } = await supabase
+          .from("produtos_catalogo")
+          .update({ nome_oficial: novo })
+          .eq("id", catalogoId);
+
+        if (catError) throw catError;
       }
-
-      const { error: catError } = await supabase
-        .from("produtos_catalogo")
-        .update({ nome_oficial: novo })
-        .eq("id", catalogoId);
-
-      if (catError) throw catError;
 
       await supabase
         .from("licenses")
@@ -1190,6 +1281,8 @@ function LicencaDialog({
 }) {
   const qc = useQueryClient();
   const [form, setForm] = useState<any>({
+    nome_licenca: "",
+    categoria: defaultCategoria || "Office",
     produto_id: defaultProdutoId ?? "",
     contrato_id: null,
     cliente_id: null,
@@ -1225,36 +1318,125 @@ function LicencaDialog({
   React.useEffect(() => {
     if (!open) return;
     if (licencaId) {
-      supabase.from("licencas").select("*").eq("id", licencaId).single().then(({ data }) => {
-        if (data) setForm({
-          produto_id: data.produto_id ?? "",
-          contrato_id: data.contrato_id,
-          cliente_id: data.cliente_id ?? null,
-          quantidade: data.quantidade ?? 1,
-          custo_unitario: data.custo_unitario?.toString() ?? "",
-          data_expiracao: data.data_expiracao ?? "",
-          chave_ativacao: data.chave_ativacao ?? "",
-          tipo_ativacao: data.tipo_ativacao ?? "",
-          numero_certificado: data.numero_certificado ?? "",
-          limite_workstations: data.limite_workstations?.toString() ?? "",
-          limite_file_servers: data.limite_file_servers?.toString() ?? "",
-          dias_carencia: data.dias_carencia ?? 0,
-          politica_grupo: data.politica_grupo ?? "",
+      supabase
+        .from("licencas")
+        .select("*, produtos_catalogo(id, nome_oficial, categoria, subtipo)")
+        .eq("id", licencaId)
+        .single()
+        .then(({ data }) => {
+          if (data) {
+            setForm({
+              nome_licenca: (data as any).produtos_catalogo?.nome_oficial ?? "",
+              categoria: (data as any).produtos_catalogo?.categoria ?? defaultCategoria ?? "Office",
+              produto_id: data.produto_id ?? "",
+              contrato_id: data.contrato_id,
+              cliente_id: data.cliente_id ?? null,
+              quantidade: data.quantidade ?? 1,
+              custo_unitario: data.custo_unitario?.toString() ?? "",
+              data_expiracao: data.data_expiracao ?? "",
+              chave_ativacao: data.chave_ativacao ?? "",
+              tipo_ativacao: data.tipo_ativacao ?? "",
+              numero_certificado: data.numero_certificado ?? "",
+              limite_workstations: data.limite_workstations?.toString() ?? "",
+              limite_file_servers: data.limite_file_servers?.toString() ?? "",
+              dias_carencia: data.dias_carencia ?? 0,
+              politica_grupo: data.politica_grupo ?? "",
+            });
+          }
         });
-      });
     } else {
-      setForm((f: any) => ({ ...f, produto_id: defaultProdutoId ?? "" }));
+      setForm((f: any) => ({
+        ...f,
+        nome_licenca: "",
+        categoria: defaultCategoria || "Office",
+        produto_id: defaultProdutoId ?? "",
+        quantidade: 1,
+        custo_unitario: "",
+        data_expiracao: "",
+        chave_ativacao: "",
+        tipo_ativacao: "",
+        numero_certificado: "",
+        limite_workstations: "",
+        limite_file_servers: "",
+        dias_carencia: 0,
+        politica_grupo: "",
+      }));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, licencaId]);
 
   const prodSel = (produtos ?? []).find((p: any) => p.id === form.produto_id);
-  const isEDR = (prodSel?.categoria ?? defaultCategoria) === "EDR";
+  const isEDR = (form.categoria || prodSel?.categoria || defaultCategoria) === "EDR";
 
   async function save() {
-    if (!form.produto_id) return toast.error("Selecione o produto");
+    const nomeFinal = (form.nome_licenca ?? "").trim();
+    if (!nomeFinal && !form.produto_id) return toast.error("Informe o nome da licença");
+
+    let finalProdutoId = form.produto_id;
+
+    if (licencaId) {
+      // 1. EDITANDO LICENÇA EXISTENTE:
+      if (nomeFinal) {
+        // Verifica se outras licenças compartilham o mesmo produto do catálogo
+        const { count } = await supabase
+          .from("licencas")
+          .select("id", { count: "exact", head: true })
+          .eq("produto_id", finalProdutoId);
+
+        if (count && count > 1) {
+          // Cria um novo produto no catálogo exclusivo para isolar este card
+          const { data: newProd, error: errNewProd } = await supabase
+            .from("produtos_catalogo")
+            .insert({
+              nome_oficial: nomeFinal,
+              categoria: form.categoria || prodSel?.categoria || "Office",
+              modelo_licenciamento: prodSel?.modelo_licenciamento || "dispositivo",
+              tipo_licenciamento: prodSel?.tipo_licenciamento || "Perpetua",
+              fabricante_id: prodSel?.fabricante_id || null,
+              subtipo: prodSel?.subtipo || null,
+            })
+            .select("id")
+            .single();
+
+          if (errNewProd) throw errNewProd;
+          finalProdutoId = newProd.id;
+        } else if (finalProdutoId) {
+          // É a única licença deste produto: atualiza direto no catálogo
+          const { error: errUpdateCat } = await supabase
+            .from("produtos_catalogo")
+            .update({
+              nome_oficial: nomeFinal,
+              categoria: form.categoria || prodSel?.categoria || "Office",
+            })
+            .eq("id", finalProdutoId);
+
+          if (errUpdateCat) throw errUpdateCat;
+        }
+      }
+    } else {
+      // 2. CRIANDO NOVA LICENÇA:
+      if (!finalProdutoId || prodSel?.nome_oficial !== nomeFinal) {
+        // Cria um produto novo exclusivo no catálogo
+        const { data: newProd, error: errNewProd } = await supabase
+          .from("produtos_catalogo")
+          .insert({
+            nome_oficial: nomeFinal || prodSel?.nome_oficial || "Nova Licença",
+            categoria: form.categoria || prodSel?.categoria || defaultCategoria || "Office",
+            modelo_licenciamento: prodSel?.modelo_licenciamento || "dispositivo",
+            tipo_licenciamento: prodSel?.tipo_licenciamento || "Perpetua",
+            fabricante_id: prodSel?.fabricante_id || null,
+            subtipo: prodSel?.subtipo || null,
+          })
+          .select("id")
+          .single();
+
+        if (errNewProd) throw errNewProd;
+        finalProdutoId = newProd.id;
+      }
+    }
+
     const payload: any = {
-      produto_id: form.produto_id,
+      produto_id: finalProdutoId,
       contrato_id: form.contrato_id,
       cliente_id: form.cliente_id,
       quantidade: Number(form.quantidade) || 1,
@@ -1268,14 +1450,27 @@ function LicencaDialog({
       dias_carencia: Number(form.dias_carencia) || 0,
       politica_grupo: form.politica_grupo || null,
     };
-    const { error } = licencaId
-      ? await supabase.from("licencas").update(payload).eq("id", licencaId)
-      : await supabase.from("licencas").insert(payload);
+
+    const { error, data: savedLic } = licencaId
+      ? await supabase.from("licencas").update(payload).eq("id", licencaId).select("id").maybeSingle()
+      : await supabase.from("licencas").insert(payload).select("id").maybeSingle();
+
     if (error) return toast.error(friendlyError(error));
-    toast.success("Salvo");
+
+    // Atualiza nome do software nas chaves vinculadas a esta licença
+    if (nomeFinal) {
+      await supabase
+        .from("licenses")
+        .update({ software: nomeFinal })
+        .eq("licenca_id", licencaId || savedLic?.id);
+    }
+
+    toast.success(licencaId ? "Licença atualizada com sucesso!" : "Licença criada com sucesso!");
     onOpenChange(false);
+    qc.invalidateQueries({ queryKey: ["licencas-indicadores"] });
     qc.invalidateQueries({ queryKey: ["licencas-blocos"] });
     qc.invalidateQueries({ queryKey: ["licencas-produtos-agg"] });
+    qc.invalidateQueries({ queryKey: ["produtos-with-cat"] });
     qc.invalidateQueries({ queryKey: ["dashboard"] });
   }
 
@@ -1290,27 +1485,67 @@ function LicencaDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{licencaId ? "Editar bloco de licenças" : "Nova licença"}</DialogTitle>
+          <DialogTitle>{licencaId ? "Editar licença" : "Nova licença"}</DialogTitle>
         </DialogHeader>
         <form className="space-y-3" onSubmit={handleSubmit}>
           <div>
-            <Label>Produto *</Label>
-            <Combobox
-              placeholder="Selecione…"
-              clearable={false}
-              value={form.produto_id || null}
-              onChange={(v) => setForm({ ...form, produto_id: v ?? "" })}
-              options={(produtos ?? []).map((p: any) => ({ value: p.id, label: p.nome_oficial, hint: `${p.categoria}${p.subtipo ? " · " + p.subtipo : ""}` }))}
+            <Label>Nome da licença *</Label>
+            <Input
+              value={form.nome_licenca}
+              onChange={(e) => setForm({ ...form, nome_licenca: e.target.value })}
+              placeholder="Ex: Microsoft / Office 2019 Professional Plus"
+              autoFocus
             />
           </div>
+
           <div>
-            <Label>Contrato</Label>
+            <Label>Modelo do Catálogo (opcional)</Label>
             <Combobox
-              placeholder="Nenhum"
-              value={form.contrato_id}
-              onChange={(v) => setForm({ ...form, contrato_id: v })}
-              options={(contratos ?? []).map((c: any) => ({ value: c.id, label: c.fornecedor, hint: c.numero_contrato ?? undefined }))}
+              placeholder="Selecionar modelo para autopreencher…"
+              clearable
+              value={form.produto_id || null}
+              onChange={(v) => {
+                const p = (produtos ?? []).find((prod: any) => prod.id === v);
+                setForm({
+                  ...form,
+                  produto_id: v ?? "",
+                  nome_licenca: p ? p.nome_oficial : form.nome_licenca,
+                  categoria: p ? p.categoria : form.categoria,
+                });
+              }}
+              options={(produtos ?? []).map((p: any) => ({
+                value: p.id,
+                label: p.nome_oficial,
+                hint: `${p.categoria}${p.subtipo ? " · " + p.subtipo : ""}`,
+              }))}
             />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>Categoria</Label>
+              <Select
+                value={form.categoria}
+                onValueChange={(v) => setForm({ ...form, categoria: v })}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Office">Office</SelectItem>
+                  <SelectItem value="Windows">Windows</SelectItem>
+                  <SelectItem value="EDR">EDR</SelectItem>
+                  <SelectItem value="Outro">Outro</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Contrato</Label>
+              <Combobox
+                placeholder="Nenhum"
+                value={form.contrato_id}
+                onChange={(v) => setForm({ ...form, contrato_id: v })}
+                options={(contratos ?? []).map((c: any) => ({ value: c.id, label: c.fornecedor, hint: c.numero_contrato ?? undefined }))}
+              />
+            </div>
           </div>
           <div>
             <Label>Cliente</Label>
