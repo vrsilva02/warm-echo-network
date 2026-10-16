@@ -1390,9 +1390,9 @@ function LicencaDialog({
             .insert({
               nome_oficial: nomeFinal,
               categoria: form.categoria || prodSel?.categoria || "Office",
-              modelo_licenciamento: prodSel?.modelo_licenciamento || "dispositivo",
-              tipo_licenciamento: prodSel?.tipo_licenciamento || "Perpetua",
-              fabricante_id: prodSel?.fabricante_id || null,
+              modelo_licenciamento: (prodSel as any)?.modelo_licenciamento || "dispositivo",
+              tipo_licenciamento: (prodSel as any)?.tipo_licenciamento || "Perpetua",
+              fabricante_id: (prodSel as any)?.fabricante_id || null,
               subtipo: prodSel?.subtipo || null,
             })
             .select("id")
@@ -1422,9 +1422,9 @@ function LicencaDialog({
           .insert({
             nome_oficial: nomeFinal || prodSel?.nome_oficial || "Nova Licença",
             categoria: form.categoria || prodSel?.categoria || defaultCategoria || "Office",
-            modelo_licenciamento: prodSel?.modelo_licenciamento || "dispositivo",
-            tipo_licenciamento: prodSel?.tipo_licenciamento || "Perpetua",
-            fabricante_id: prodSel?.fabricante_id || null,
+            modelo_licenciamento: (prodSel as any)?.modelo_licenciamento || "dispositivo",
+            tipo_licenciamento: (prodSel as any)?.tipo_licenciamento || "Perpetua",
+            fabricante_id: (prodSel as any)?.fabricante_id || null,
             subtipo: prodSel?.subtipo || null,
           })
           .select("id")
@@ -1462,7 +1462,7 @@ function LicencaDialog({
       await supabase
         .from("licenses")
         .update({ software: nomeFinal })
-        .eq("licenca_id", licencaId || savedLic?.id);
+        .eq("licenca_id", (licencaId || savedLic?.id) as string);
     }
 
     toast.success(licencaId ? "Licença atualizada com sucesso!" : "Licença criada com sucesso!");

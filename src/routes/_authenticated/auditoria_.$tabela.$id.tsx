@@ -13,7 +13,7 @@ export const Route = createFileRoute("/_authenticated/auditoria_/$tabela/$id")({
     const router = useRouter();
     return (
       <div className="p-6 space-y-3">
-        <p className="text-destructive text-sm">Erro ao carregar timeline: {error.message}</p>
+        <p className="text-destructive text-sm">Erro ao carregar timeline: {(error as Error).message}</p>
         <Button
           size="sm"
           variant="outline"
