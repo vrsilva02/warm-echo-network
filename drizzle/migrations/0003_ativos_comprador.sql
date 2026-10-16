@@ -1,0 +1,1 @@
+ALTER TABLE public.ativos ADD COLUMN comprador text;

@@ -22,6 +22,13 @@
       "when": 1792178222550,
       "tag": "0002_office_2019_auto_vinculo_chave",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1792180742363,
+      "tag": "0003_ativos_comprador",
+      "breakpoints": true
     }
   ]
 }
