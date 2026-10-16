@@ -333,7 +333,9 @@ function AtivosPage() {
     try {
       valorAquisicao = parseValorAquisicao(form.valor_aquisicao);
     } catch (error) {
-      throw new Error(error instanceof Error ? error.message : "Valor de aquisição inválido.");
+      const message = error instanceof Error ? error.message : "Valor de aquisição inválido.";
+      toast.error(message);
+      throw new Error(message);
     }
 
     // 1. Validação de duplicidade de Hostname no escopo do Cliente (match exato)
