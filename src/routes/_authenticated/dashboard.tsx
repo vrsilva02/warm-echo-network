@@ -448,7 +448,7 @@ function DashboardPage() {
   const { data: ativosCliente } = useAtivosPorCliente();
 
   useRealtimeInvalidate({ channel: "dash-alocacoes", table: "alocacoes", queryKeys: [["dashboard"]] });
-  useRealtimeInvalidate({ channel: "dash-ativos", table: "ativos", queryKeys: [["dashboard"], ["dashboard", "ativos-por-cliente"]] });
+  useRealtimeInvalidate({ channel: "dash-ativos", table: "ativos", queryKeys: [["dashboard"], ["dashboard", "ativos-por-cliente"], ["dashboard", "custo-por-comprador"]] });
   useRealtimeInvalidate({ channel: "dash-licencas", table: "licencas", queryKeys: [["dashboard"]] });
   useRealtimeInvalidate({ channel: "dash-contratos", table: "contratos", queryKeys: [["dashboard"]] });
   useRealtimeInvalidate({ channel: "dash-clientes", table: "clientes", queryKeys: [["dashboard", "ativos-por-cliente"]] });
@@ -539,6 +539,9 @@ function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 lg:gap-5 mb-6">
         <KpiCard title="Total de ativos" value={ativosCliente?.total ?? 0} icon={<Boxes className="h-4 w-4" />} hint="Total de ativos cadastrados." to="/ativos" />
         <AtivosPorClienteCard />
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 lg:gap-5 mb-6">
+        <CustoPorCompradorCard />
       </div>
 
       {/* Licenças */}
