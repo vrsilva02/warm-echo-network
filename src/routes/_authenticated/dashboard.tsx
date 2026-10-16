@@ -316,6 +316,73 @@ function AtivosPorClienteCard() {
   );
 }
 
+function useCustoPorComprador() {
+  return useQuery({
+    queryKey: ["dashboard", "custo-por-comprador"],
+    staleTime: 30_000,
+    refetchInterval: 30_000,
+    queryFn: async () => {
+      const { fetchAll } = await import("@/lib/fetch-all");
+      const { data, error } = await fetchAll<{ comprador: string | null; valor_aquisicao: number | null }>(
+        "ativos",
+        "comprador,valor_aquisicao",
+        (q) => q.not("valor_aquisicao", "is", null),
+      );
+      if (error) throw error;
+      const map = new Map<string, { total: number; quantidade: number }>();
+      for (const r of data) {
+        const nome = r.comprador?.trim() || "Sem comprador informado";
+        const atual = map.get(nome) ?? { total: 0, quantidade: 0 };
+        atual.total += Number(r.valor_aquisicao ?? 0);
+        atual.quantidade += 1;
+        map.set(nome, atual);
+      }
+      const porComprador = Array.from(map.entries())
+        .map(([nome, v]) => ({ nome, ...v }))
+        .sort((a, b) => b.total - a.total);
+      return { totalGeral: porComprador.reduce((a, c) => a + c.total, 0), porComprador };
+    },
+  });
+}
+
+function CustoPorCompradorCard() {
+  const { data, isLoading } = useCustoPorComprador();
+  const linhas = data?.porComprador ?? [];
+  const total = data?.totalGeral ?? 0;
+  return (
+    <Card className="lg:col-span-3">
+      <CardHeader className="pb-2">
+        <div className="flex items-center justify-between gap-2">
+          <CardTitle className="text-sm flex items-center gap-2"><Coins className="h-4 w-4 text-muted-foreground" /> Custo total de aquisição por comprador</CardTitle>
+          <span className="text-sm font-semibold tabular-nums">{brl(total)}</span>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {isLoading ? <div className="py-6 text-center text-sm text-muted-foreground">Carregando…</div>
+          : linhas.length === 0 ? <div className="py-6 text-center text-sm text-muted-foreground">Nenhum valor de aquisição registrado.</div>
+          : (
+            <div className="space-y-2">
+              {linhas.map((c) => {
+                const pct = total > 0 ? Math.round((c.total / total) * 100) : 0;
+                return (
+                  <div key={c.nome} className="text-xs">
+                    <div className="flex justify-between gap-2 mb-0.5">
+                      <span className="truncate font-medium">{c.nome}</span>
+                      <span className="font-mono tabular-nums text-muted-foreground">{brl(c.total)} · {c.quantidade} ativo(s) · {pct}%</span>
+                    </div>
+                    <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+                      <div className="h-full bg-primary transition-all duration-500" style={{ width: `${pct}%` }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+      </CardContent>
+    </Card>
+  );
+}
+
 const OCIOSAS_KEY = "gestorait.ociosas.limit";
 
 function CustoOciosasCard({ valor }: { valor: number }) {
