@@ -2038,6 +2038,7 @@ export type Database = {
       is_admin: { Args: { _user_id: string }; Returns: boolean }
       is_gestor_or_admin: { Args: { _user_id: string }; Returns: boolean }
       is_tecnico: { Args: { _user_id: string }; Returns: boolean }
+      produto_office_2019: { Args: { p_licenca: string }; Returns: boolean }
     }
     Enums: {
       aditivo_tipo: "quantidade" | "prazo" | "valor" | "outro"
