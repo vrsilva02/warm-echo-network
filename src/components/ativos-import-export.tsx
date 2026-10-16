@@ -18,6 +18,7 @@ import { useLatestBulkJob, chunk } from "@/lib/bulk-import";
 import { fetchAll } from "@/lib/fetch-all";
 import { ATIVOS_COLUMNS } from "@/lib/import-templates";
 import { garantirOpcoesCatalogo } from "@/lib/ativos-catalogo";
+import { valorAquisicaoImport } from "@/lib/valor-aquisicao";
 
 
 /**
@@ -46,7 +47,7 @@ export async function exportAtivos() {
   const tid = toast.loading("Preparando exportação…");
   const { data, error } = await fetchAll<any>(
     "ativos",
-    "hostname, tipo, categoria, marca, modelo, numero_patrimonio, numero_serie, setor, status_ciclo_vida, usuarios(email), clientes(nome)",
+    "hostname, tipo, categoria, marca, modelo, numero_patrimonio, numero_serie, setor, status_ciclo_vida, usuarios(email), clientes(nome), valor_aquisicao",
     (q) => q.order("hostname"),
     { onProgress: (n) => toast.loading(`Baixando dados… ${n} registro(s)`, { id: tid }) },
   );
@@ -66,6 +67,7 @@ export async function exportAtivos() {
     a.status_ciclo_vida ?? "",
     a.usuarios?.email ?? "",
     a.clientes?.nome ?? "",
+    a.valor_aquisicao ?? "",
   ]);
   toast.loading("Gerando arquivo XLSX…", { id: tid });
   const fname = `ativos_${new Date().toISOString().slice(0, 10)}.xlsx`;
@@ -89,6 +91,7 @@ export function downloadTemplate() {
     "em_uso",
     "colaborador@empresa.com",
     "MTR2.TECH",
+    "4500,00",
   ];
   // Exemplo mínimo: apenas hostname — Tipo e Categoria são opcionais e ficam em branco.
   const exemploMinimo = COLUMNS.map((c) => (c === "hostname" ? "SEM-TIPO-0002" : ""));
@@ -158,7 +161,15 @@ async function importarLinhas(
       continue;
     }
 
-    const hostname = nz(r.hostname)!;
+    const hostname = nz(r.hostname);
+    if (!hostname) continue;
+    let valorPayload: { valor_aquisicao?: number };
+    try {
+      valorPayload = valorAquisicaoImport(r.valor_aquisicao);
+    } catch (error) {
+      rep.erros.push({ linha, motivo: error instanceof Error ? error.message : "Valor de aquisição inválido." });
+      continue;
+    }
     const tipo = nz(r.tipo);
     const statusBruto = nz(r.status_ciclo_vida) ?? "estoque";
     const status = STATUS_ALIAS[statusBruto] ?? statusBruto;
@@ -195,6 +206,7 @@ async function importarLinhas(
     }
 
     const payload = {
+      ...valorPayload,
       hostname,
       tipo,
       categoria: nz(r.categoria),
@@ -255,12 +267,15 @@ async function importarLinhas(
 
   setPhase(`Atualizando ${updates.length} ativo(s) existente(s)…`);
   for (const lote of chunk(updates, BATCH)) {
-    const { error } = await supabase
-      .from("ativos")
-      .upsert(lote.map((p) => ({ id: p.id, ...p.payload })) as any, { onConflict: "id" });
+    // UPDATE preserva valor de aquisição omitido, inclusive em arquivos antigos.
+    const results = await Promise.all(lote.map(async (p) => {
+      if (!p.id) return { error: new Error("Ativo sem identificador.") };
+      return supabase.from("ativos").update(p.payload as any).eq("id", p.id);
+    }));
+    const error = results.find((r) => r.error)?.error;
     if (error) {
-      for (const p of lote) {
-        const { error: e2 } = await supabase.from("ativos").update(p.payload as any).eq("id", p.id!);
+      for (const [index, p] of lote.entries()) {
+        const e2 = results[index]?.error;
         if (e2) rep.erros.push({ linha: p.linha, motivo: `Atualizar: ${friendlyError(e2)}` });
         else rep.atualizados++;
         onProgress(++feitos);
@@ -321,7 +336,7 @@ export function AtivosImportExport({ canWrite, onImported }: { canWrite: boolean
               <DropdownMenuItem onClick={() => setOpen(true)}>
                 {running ? (
                   <>
-                    <Loader2 className="h-4 w-4 animate-spin" /> Ver progresso ({job!.processed}/{job!.total})
+                    <Loader2 className="h-4 w-4 animate-spin" /> Ver progresso ({job?.processed}/{job?.total})
                   </>
                 ) : unread ? (
                   <>
@@ -344,8 +359,8 @@ export function AtivosImportExport({ canWrite, onImported }: { canWrite: boolean
         scope="ativos"
         title="Importar ativos"
         description="Envie um arquivo XLSX seguindo o template. Somente hostname é obrigatório — Tipo, Categoria e Cliente são opcionais e podem ficar em branco. Ativos existentes (mesmo hostname) são atualizados; novos são criados. O responsável é vinculado quando o e-mail já existe em Usuários; o cliente é vinculado quando o nome já existe em Clientes."
-        requiredColumns={COLUMNS}
-        previewColumns={["hostname", "tipo", "categoria", "marca", "modelo", "status_ciclo_vida", "cliente"]}
+        requiredColumns={COLUMNS.filter((c) => c !== "valor_aquisicao")}
+        previewColumns={["hostname", "tipo", "categoria", "marca", "modelo", "status_ciclo_vida", "cliente", "valor_aquisicao"]}
         renderPreviewCell={(r, c) =>
           c === "numero_patrimonio" ? <span className="font-mono">{r[c]}</span>
           : c === "tipo" && !(r[c] ?? "").trim() ? <span className="text-muted-foreground">Sem tipo</span>
