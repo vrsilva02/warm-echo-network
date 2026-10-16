@@ -20,6 +20,8 @@ import { useConfirm } from "@/components/confirm-dialog";
 import { Combobox } from "@/components/combobox";
 import { ComboboxCreatable } from "@/components/combobox-creatable";
 import { comValorAtual } from "@/lib/ativos-opcoes";
+import { parseValorAquisicao, formatValorAquisicao } from "@/lib/valor-aquisicao";
+import { ValorAquisicaoDialog } from "@/components/valor-aquisicao-dialog";
 import {
   useAtivoTipos,
   useAtivoCategorias,
@@ -51,6 +53,10 @@ export const Route = createFileRoute("/_authenticated/ativos")({
     meta: [
       { title: "Ativos — GestoraIT" },
       { name: "description", content: "Cadastro e ciclo de vida de ativos corporativos." },
+      { property: "og:title", content: "Ativos — GestoraIT" },
+      { property: "og:description", content: "Cadastro, valores de aquisição e ciclo de vida dos equipamentos corporativos." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
 });
@@ -70,6 +76,7 @@ type Ativo = {
   usuario_responsavel_id: string | null;
   centro_custo_id: string | null;
   cliente_id: string | null;
+  valor_aquisicao: number | null;
   contrato_id?: string | null;
   usuarios?: { nome: string } | null;
   centros_custo?: { nome: string } | null;
@@ -102,7 +109,7 @@ function loadAtivosListState() {
 type ListState = ReturnType<typeof loadAtivosListState>;
 
 const ATIVO_SELECT =
-  "id,hostname,tipo,categoria,marca,modelo,numero_serie,numero_patrimonio,setor,status_ciclo_vida,usuario_responsavel_id,centro_custo_id,cliente_id,usuarios(nome),centros_custo(nome),clientes(nome)";
+  "id,hostname,tipo,categoria,marca,modelo,numero_serie,numero_patrimonio,setor,status_ciclo_vida,usuario_responsavel_id,centro_custo_id,cliente_id,valor_aquisicao,usuarios(nome),centros_custo(nome),clientes(nome)";
 
 /** Aplica busca e visão salva na query do Supabase. */
 function applyAtivosFilters(query: any, s: ListState) {
@@ -137,6 +144,7 @@ function ativosPageQuery(s: ListState) {
       const sortColumns: Record<string, string> = {
         hostname: "hostname", patrimonio: "numero_patrimonio", tipo: "tipo", categoria: "categoria",
         marca: "marca", modelo: "modelo", setor: "setor", status: "status_ciclo_vida",
+        valor_aquisicao: "valor_aquisicao",
       };
       const sortColumn = (s.sort ? sortColumns[s.sort.id] : "hostname") ?? "hostname";
       const { data, error } = await applyAtivosFilters(
@@ -183,6 +191,7 @@ function normalizeStatus(s: string | null | undefined): string {
 
 const initial = {
   hostname: "",
+  valor_aquisicao: "",
   tipo: null as string | null,
   categoria: "",
   marca: "",
@@ -300,6 +309,7 @@ function AtivosPage() {
     setOriginalStatus(r.status_ciclo_vida);
     setForm({
       hostname: r.hostname,
+      valor_aquisicao: r.valor_aquisicao == null ? "" : r.valor_aquisicao.toFixed(2).replace(".", ","),
       tipo: r.tipo ?? null,
       categoria: r.categoria ?? "",
       marca: r.marca ?? "",
@@ -319,6 +329,12 @@ function AtivosPage() {
     const hostname = form.hostname.trim();
     if (!hostname) return toast.error("Informe o hostname do ativo");
     if (!form.cliente_id) return toast.error("Selecione o cliente do ativo antes de salvar");
+    let valorAquisicao: number | null;
+    try {
+      valorAquisicao = parseValorAquisicao(form.valor_aquisicao);
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : "Valor de aquisição inválido.");
+    }
 
     // 1. Validação de duplicidade de Hostname no escopo do Cliente (match exato)
     let checkHost = supabase
@@ -350,6 +366,7 @@ function AtivosPage() {
 
     const payload = {
       hostname,
+      valor_aquisicao: valorAquisicao,
       tipo: form.tipo?.trim() || null,
       categoria: form.categoria.trim() || null,
       marca: form.marca.trim() || null,
@@ -403,6 +420,8 @@ function AtivosPage() {
     setOpen(false);
     qc.invalidateQueries({ queryKey: ["ativos"] });
     qc.invalidateQueries({ queryKey: ["dashboard"] });
+    qc.invalidateQueries({ queryKey: ["ativo"] });
+    qc.invalidateQueries({ queryKey: ["vw_tco_ativo"] });
   }
 
   async function remove(row: Ativo) {
@@ -492,6 +511,12 @@ function AtivosPage() {
   }
 
   const columns: Column<Ativo>[] = [
+    {
+      id: "valor_aquisicao", header: "Valor de aquisição",
+      accessor: (r) => <span className="tabular-nums whitespace-nowrap">{formatValorAquisicao(r.valor_aquisicao)}</span>,
+      sortValue: (r) => r.valor_aquisicao ?? -1,
+      exportValue: (r) => r.valor_aquisicao,
+    },
     {
       id: "hostname", header: "Hostname",
       accessor: (r) => (
@@ -607,6 +632,8 @@ function AtivosPage() {
               onImported={() => {
                 qc.invalidateQueries({ queryKey: ["ativos"] });
                 qc.invalidateQueries({ queryKey: ["dashboard"] });
+                qc.invalidateQueries({ queryKey: ["ativo"] });
+                qc.invalidateQueries({ queryKey: ["vw_tco_ativo"] });
               }}
             />
             </Suspense>
@@ -680,6 +707,7 @@ function AtivosPage() {
         }
         bulkActions={canWrite ? (sel, clear) => (
           <>
+            <ValorAquisicaoDialog ids={sel.map((r) => r.id)} bulk onDone={clear} />
             <Button size="sm" variant="outline" onClick={() => bulkBaixar(sel, clear)}>Baixar selecionados</Button>
             <Button size="sm" variant="outline" className="text-destructive" onClick={() => bulkDelete(sel, clear)}>Excluir</Button>
           </>
@@ -696,6 +724,10 @@ function AtivosPage() {
         <div>
           <Label>Hostname</Label>
           <Input required value={form.hostname} onChange={(e) => setForm({ ...form, hostname: e.target.value })} />
+        </div>
+        <div>
+          <Label htmlFor="ativo-valor-aquisicao">Valor de aquisição (R$)</Label>
+          <Input id="ativo-valor-aquisicao" inputMode="decimal" value={form.valor_aquisicao} onChange={(e) => setForm({ ...form, valor_aquisicao: e.target.value })} placeholder="0,00" />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
