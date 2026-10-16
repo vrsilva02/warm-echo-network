@@ -15,6 +15,13 @@
       "when": 1792177970294,
       "tag": "0001_office_2019_pro_plus_dms_match",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792178222550,
+      "tag": "0002_office_2019_auto_vinculo_chave",
+      "breakpoints": true
     }
   ]
 }
