@@ -20,7 +20,7 @@ import { useConfirm } from "@/components/confirm-dialog";
 import { Combobox } from "@/components/combobox";
 import { ComboboxCreatable } from "@/components/combobox-creatable";
 import { comValorAtual } from "@/lib/ativos-opcoes";
-import { parseValorAquisicao, formatValorAquisicao } from "@/lib/valor-aquisicao";
+import { parseValorAquisicao } from "@/lib/valor-aquisicao";
 import { ValorAquisicaoDialog } from "@/components/valor-aquisicao-dialog";
 import {
   useAtivoTipos,
