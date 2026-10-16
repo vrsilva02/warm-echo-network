@@ -20,7 +20,7 @@ import { useConfirm } from "@/components/confirm-dialog";
 import { Combobox } from "@/components/combobox";
 import { ComboboxCreatable } from "@/components/combobox-creatable";
 import { comValorAtual } from "@/lib/ativos-opcoes";
-import { parseValorAquisicao, formatValorAquisicao } from "@/lib/valor-aquisicao";
+import { parseValorAquisicao } from "@/lib/valor-aquisicao";
 import { ValorAquisicaoDialog } from "@/components/valor-aquisicao-dialog";
 import {
   useAtivoTipos,
@@ -77,6 +77,7 @@ type Ativo = {
   centro_custo_id: string | null;
   cliente_id: string | null;
   valor_aquisicao: number | null;
+  comprador: string | null;
   contrato_id?: string | null;
   usuarios?: { nome: string } | null;
   centros_custo?: { nome: string } | null;
@@ -109,7 +110,7 @@ function loadAtivosListState() {
 type ListState = ReturnType<typeof loadAtivosListState>;
 
 const ATIVO_SELECT =
-  "id,hostname,tipo,categoria,marca,modelo,numero_serie,numero_patrimonio,setor,status_ciclo_vida,usuario_responsavel_id,centro_custo_id,cliente_id,valor_aquisicao,usuarios(nome),centros_custo(nome),clientes(nome)";
+  "id,hostname,tipo,categoria,marca,modelo,numero_serie,numero_patrimonio,setor,status_ciclo_vida,usuario_responsavel_id,centro_custo_id,cliente_id,valor_aquisicao,comprador,usuarios(nome),centros_custo(nome),clientes(nome)";
 
 /** Aplica busca e visão salva na query do Supabase. */
 function applyAtivosFilters(query: any, s: ListState) {
@@ -192,6 +193,7 @@ function normalizeStatus(s: string | null | undefined): string {
 const initial = {
   hostname: "",
   valor_aquisicao: "",
+  comprador: "",
   tipo: null as string | null,
   categoria: "",
   marca: "",
@@ -310,6 +312,7 @@ function AtivosPage() {
     setForm({
       hostname: r.hostname,
       valor_aquisicao: r.valor_aquisicao == null ? "" : r.valor_aquisicao.toFixed(2).replace(".", ","),
+      comprador: r.comprador ?? "",
       tipo: r.tipo ?? null,
       categoria: r.categoria ?? "",
       marca: r.marca ?? "",
@@ -369,6 +372,7 @@ function AtivosPage() {
     const payload = {
       hostname,
       valor_aquisicao: valorAquisicao,
+      comprador: form.comprador.trim() || null,
       tipo: form.tipo?.trim() || null,
       categoria: form.categoria.trim() || null,
       marca: form.marca.trim() || null,
@@ -513,12 +517,6 @@ function AtivosPage() {
   }
 
   const columns: Column<Ativo>[] = [
-    {
-      id: "valor_aquisicao", header: "Valor de aquisição",
-      accessor: (r) => <span className="tabular-nums whitespace-nowrap">{formatValorAquisicao(r.valor_aquisicao)}</span>,
-      sortValue: (r) => r.valor_aquisicao ?? -1,
-      exportValue: (r) => r.valor_aquisicao,
-    },
     {
       id: "hostname", header: "Hostname",
       accessor: (r) => (
@@ -727,9 +725,15 @@ function AtivosPage() {
           <Label>Hostname</Label>
           <Input required value={form.hostname} onChange={(e) => setForm({ ...form, hostname: e.target.value })} />
         </div>
-        <div>
-          <Label htmlFor="ativo-valor-aquisicao">Valor de aquisição (R$)</Label>
-          <Input id="ativo-valor-aquisicao" inputMode="decimal" value={form.valor_aquisicao} onChange={(e) => setForm({ ...form, valor_aquisicao: e.target.value })} placeholder="0,00" />
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <Label htmlFor="ativo-valor-aquisicao">Valor de aquisição (R$)</Label>
+            <Input id="ativo-valor-aquisicao" inputMode="decimal" value={form.valor_aquisicao} onChange={(e) => setForm({ ...form, valor_aquisicao: e.target.value })} placeholder="0,00" />
+          </div>
+          <div>
+            <Label htmlFor="ativo-comprador">Comprador</Label>
+            <Input id="ativo-comprador" value={form.comprador} onChange={(e) => setForm({ ...form, comprador: e.target.value })} placeholder="Quem comprou o equipamento" />
+          </div>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
