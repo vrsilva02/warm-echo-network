@@ -10,6 +10,10 @@ export const Route = createFileRoute("/")({
     meta: [
       { title: "GestoraIT — Painel" },
       { name: "description", content: "Acesso ao painel do sistema GestoraIT." },
+      { property: "og:title", content: "GestoraIT — Painel" },
+      { property: "og:description", content: "Acesso à gestão corporativa de ativos e licenças do GestoraIT." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
 });

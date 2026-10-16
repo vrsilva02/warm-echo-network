@@ -77,6 +77,13 @@ describe("parseTabularFile com template XLSX", () => {
     expect(rows).toEqual([]);
   });
 
+  it("preserva valor de compra numérico na planilha de ativos", async () => {
+    const row: (string | number)[] = ativoRow({ hostname: "NB-COMPRA", cliente: "Empresa" });
+    row[ATIVOS_COLUMNS.indexOf("valor_aquisicao")] = 4500.9;
+    const { rows } = await parseTabularFile(xlsxFile("ativos.xlsx", ATIVOS_COLUMNS, [row]));
+    expect(rows[0].valor_aquisicao).toBe("4500.9");
+  });
+
   it("faz round-trip: export -> arquivo -> import preserva os dados", async () => {
     const dados = [
       ativoRow({ hostname: "NB-0001", tipo: "Notebook", numero_patrimonio: "PAT-1", numero_serie: "SN1", setor: "TI", status_ciclo_vida: "em_uso", responsavel_email: "a@e.com" }),
