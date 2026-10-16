@@ -11,3 +11,4 @@
 
 - Key capacity is enforced by database triggers under a key-row lock; allocation capacity preserves the unique single-use index outside the explicitly identified multi-asset product, so concurrent clients cannot exceed capacity.
 - Share product identification and active-key usage counting through `src/lib/chave-capacidade.ts` so allocation choices and the key inventory use the same narrow exception.
+- Keep asset purchase-value parsing shared between forms and imports; reuse the purchase-value dialog for single and selected-asset updates to preserve consistent validation and cache refresh.
