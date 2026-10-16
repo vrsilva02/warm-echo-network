@@ -1,8 +1,7 @@
+/** Exceção multi-ativo: somente Office 2019 Pro Plus (ex.: "Office 2019 Pro Plus DMS"). */
 export function isOffice2019ProfessionalPlus(nome?: string | null): boolean {
-  const normalizado = (nome ?? "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
-  if (normalizado.includes("office") && normalizado.includes("2019")) return true;
-  if (normalizado.includes("office") && (normalizado.includes("pro") || normalizado.includes("professional"))) return true;
-  return normalizado === "office 2019 professional plus" || normalizado === "microsoft office 2019 professional plus";
+  const n = ` ${(nome ?? "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim()} `;
+  return n.includes(" office 2019 ") && (n.includes(" pro plus ") || n.includes(" professional plus "));
 }
 
 export function contarAtivosPorChave(rows: { chave_id: string | null; ativo_id: string | null; data_fim: string | null }[]): Map<string, number> {

@@ -5,6 +5,8 @@ describe("Exceção Office 2019 Professional Plus", () => {
   it("reconhece somente o produto solicitado", () => {
     expect(isOffice2019ProfessionalPlus("Microsoft / Office 2019 Professional Plus")).toBe(true);
     expect(isOffice2019ProfessionalPlus("Office 2019 Professional Plus")).toBe(true);
+    expect(isOffice2019ProfessionalPlus("Microsoft / Office 2019 Pro Plus DMS")).toBe(true);
+    expect(isOffice2019ProfessionalPlus("Office 2021 Pro Plus")).toBe(false);
     for (const nome of ["Microsoft / Office 2021 Professional Plus", "Office 2019 Standard", "Office 365", "Windows 11 OEM", null]) {
       expect(isOffice2019ProfessionalPlus(nome)).toBe(false);
     }
