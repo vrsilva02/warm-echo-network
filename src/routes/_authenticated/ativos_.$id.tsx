@@ -11,6 +11,8 @@ import { Label } from "@/components/ui/label";
 import { CrudDialog } from "@/components/crud-dialog";
 import { StatusPill } from "@/components/status-pill";
 import { TcoCard } from "@/components/tco-card";
+import { ValorAquisicaoDialog } from "@/components/valor-aquisicao-dialog";
+import { formatValorAquisicao } from "@/lib/valor-aquisicao";
 import { EdrBadge, useGapEdrSet } from "@/components/edr-badge";
 import { Trash2, Plus, Server, ServerCog, Boxes, ExternalLink, ArrowLeft, KeyRound, Unlink } from "lucide-react";
 import { toast } from "sonner";
@@ -23,6 +25,10 @@ export const Route = createFileRoute("/_authenticated/ativos_/$id")({
     meta: [
       { title: "Ficha do Ativo — GestoraIT" },
       { name: "description", content: "Visão 360° do ativo: serviços dependentes, topologia e TCO." },
+      { property: "og:title", content: "Ficha do Ativo — GestoraIT" },
+      { property: "og:description", content: "Equipamento, valor de aquisição, serviços, licenças e custos do ativo." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
 });
@@ -199,6 +205,14 @@ function Page() {
           </Button>
         }
       />
+
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b pb-4 mb-4">
+        <div>
+          <div className="text-sm text-muted-foreground">Valor de aquisição</div>
+          <div className="text-xl font-semibold tabular-nums">{formatValorAquisicao(ativo?.valor_aquisicao)}</div>
+        </div>
+        {canWrite && ativo && <ValorAquisicaoDialog ids={[id]} currentValue={ativo.valor_aquisicao} />}
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
         <div className="lg:col-span-1">
