@@ -13,3 +13,4 @@
 - Share product identification and active-key usage counting through `src/lib/chave-capacidade.ts` so allocation choices and the key inventory use the same narrow exception.
 - Load each allocation's key through its explicit foreign-key relationship in the allocation query so the main list and filters do not depend on a separate capped key lookup.
 - Keep asset purchase-value parsing shared between forms and imports; reuse the purchase-value dialog for single and selected-asset updates to preserve consistent validation and cache refresh.
+- Reuse the buyer dialog for inline and selected-asset updates, applying changes only to explicit asset IDs and invalidating asset/detail/dashboard caches to keep buyer totals consistent.
