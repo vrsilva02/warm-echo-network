@@ -17,7 +17,6 @@ import { Trash2, Link2, KeyRound } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
 import { useConfirm } from "@/components/confirm-dialog";
-import { MaskedKey } from "@/components/masked-key";
 import { criarAlocacao, encerrarAlocacao, encerrarAlocacoes } from "@/lib/licencas";
 import { fetchAll } from "@/lib/fetch-all";
 import { AlocacaoLoteDialog } from "@/components/alocacao-lote-dialog";
@@ -48,6 +47,7 @@ type Row = {
   observacao: string | null;
   chave_individual: string | null;
   chave_id: string | null;
+  chave?: { chave_ativacao: string } | null;
   licencas?: {
     id: string;
     chave_ativacao: string | null;
@@ -78,12 +78,6 @@ type ChaveDisponivel = {
     produto_id: string | null;
     produtos_catalogo?: { nome_oficial: string | null; } | null;
   } | null;
-};
-
-type ChaveAssoc = {
-  id: string;
-  software: string;
-  chave_ativacao: string;
 };
 
 const initial = {
@@ -142,7 +136,7 @@ function Page() {
   useRealtimeInvalidate({
     channel: "alocacoes-licenses-live",
     table: "licenses",
-    queryKeys: [["chaves-disponiveis-alocacao"], ["licenses-assoc"]],
+    queryKeys: [["chaves-disponiveis-alocacao"], ["alocacoes"]],
   });
 
   const { data: rows, isLoading } = useQuery({
@@ -152,7 +146,7 @@ function Page() {
     queryFn: async () => {
       const { data, error } = await fetchAll<Row>(
         "alocacoes",
-        "id, licenca_id, usuario_id, ativo_id, data_inicio, data_fim, observacao, chave_individual, chave_id, licencas(id, chave_ativacao, produtos_catalogo(id, nome_oficial, modelo_licenciamento, tipo_licenciamento)), usuarios(nome), ativos(id, hostname, numero_patrimonio, clientes(nome))",
+        "id, licenca_id, usuario_id, ativo_id, data_inicio, data_fim, observacao, chave_individual, chave_id, chave:licenses!alocacoes_chave_id_fkey(chave_ativacao), licencas(id, chave_ativacao, produtos_catalogo(id, nome_oficial, modelo_licenciamento, tipo_licenciamento)), usuarios(nome), ativos(id, hostname, numero_patrimonio, clientes(nome))",
         (q) => q.order("data_inicio", { ascending: false }),
       );
       if (error) throw error;
@@ -249,32 +243,6 @@ function Page() {
       .sort((a, b) => a.chave_ativacao.localeCompare(b.chave_ativacao));
   }, [chavesDisponiveis, chavesUsoCount, office2019, form.licenca_id, form.licenca_nome, licencaSelecionada, produtoSelecionado]);
 
-
-  const chaveIds = useMemo(() => {
-    const set = new Set<string>();
-    (rows ?? []).forEach((r) => {
-      if (r.chave_id) set.add(r.chave_id);
-    });
-    return Array.from(set);
-  }, [rows]);
-
-  const { data: chavesAssociadas = [] } = useQuery({
-    queryKey: ["licenses-assoc", chaveIds],
-    queryFn: async () => {
-      if (chaveIds.length === 0) return [];
-      const { data } = await supabase
-        .from("licenses")
-        .select("id, software, chave_ativacao")
-        .in("id", chaveIds);
-      return (data ?? []) as unknown as ChaveAssoc[];
-    },
-    enabled: chaveIds.length > 0,
-  });
-
-  const chavesById = useMemo(
-    () => new Map(chavesAssociadas.map((c) => [c.id, c])),
-    [chavesAssociadas],
-  );
 
   // Busca indexada no servidor para ATIVOS com debounce de 250ms
   const searchAtivosServer = async (term: string) => {
@@ -468,44 +436,17 @@ function Page() {
     {
       id: "chave", header: "Chave",
       accessor: (r) => {
-        const regAssoc = r.chave_id ? chavesById.get(r.chave_id) : undefined;
         const chave = r.chave_id
-          ? (regAssoc?.chave_ativacao ?? null)
+          ? (r.chave?.chave_ativacao ?? null)
           : r.chave_individual ?? r.licencas?.chave_ativacao ?? null;
         if (!chave) return <span className="text-muted-foreground text-xs">—</span>;
-        const usaChaveModule = !!r.chave_id && !!regAssoc;
-        const usaIndividual = !r.chave_id && !!r.chave_individual;
-        const tabelaOrigem = usaChaveModule
-          ? "licenses"
-          : usaIndividual
-            ? "alocacoes"
-            : "licencas";
-        const origem = usaChaveModule ? "licenses" : usaIndividual ? "chave_individual" : "chave_ativacao";
         return (
-          <MaskedKey
-            value={chave}
-            context={{
-              tabela: tabelaOrigem as any,
-              registroId: (usaChaveModule ? r.chave_id : usaIndividual ? r.id : (r.licencas?.id ?? r.licenca_id ?? r.id)) as string,
-
-              metadata: {
-                origem,
-                alocacao_id: r.id,
-                licenca_id: r.licenca_id,
-                produto_id: r.licencas?.produtos_catalogo?.id ?? null,
-                produto: r.licencas?.produtos_catalogo?.nome_oficial ?? null,
-                ativo_id: r.ativo_id,
-                ativo_hostname: r.ativos?.hostname ?? null,
-                usuario_id: r.usuario_id,
-              },
-            }}
-          />
+          <span className="font-mono text-xs select-all break-all">{chave}</span>
         );
       },
       searchValue: (r) => {
-        const regAssoc = r.chave_id ? chavesById.get(r.chave_id) : undefined;
         return r.chave_id
-          ? (regAssoc?.chave_ativacao ?? "")
+          ? (r.chave?.chave_ativacao ?? "")
           : (r.chave_individual ?? r.licencas?.chave_ativacao ?? "");
       },
       exportValue: () => "(protegida)",
@@ -567,9 +508,8 @@ function Page() {
     if (fStatus === "encerrada" && !r.data_fim) return false;
     if (fChave.trim()) {
       const q = fChave.trim().toLowerCase();
-      const regAssoc = r.chave_id ? chavesById.get(r.chave_id) : undefined;
       const chave = (r.chave_id
-        ? (regAssoc?.chave_ativacao ?? "")
+        ? (r.chave?.chave_ativacao ?? "")
         : (r.chave_individual ?? r.licencas?.chave_ativacao ?? "")
       ).toLowerCase();
       if (!chave.includes(q)) return false;
