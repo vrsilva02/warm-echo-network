@@ -17,6 +17,7 @@ export const ATIVOS_COLUMNS = [
   "responsavel_email",
   "cliente",
   "valor_aquisicao",
+  "comprador",
 ] as const;
 
 

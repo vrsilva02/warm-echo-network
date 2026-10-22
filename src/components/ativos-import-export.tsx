@@ -47,7 +47,7 @@ export async function exportAtivos() {
   const tid = toast.loading("Preparando exportação…");
   const { data, error } = await fetchAll<any>(
     "ativos",
-    "hostname, tipo, categoria, marca, modelo, numero_patrimonio, numero_serie, setor, status_ciclo_vida, usuarios(email), clientes(nome), valor_aquisicao",
+    "hostname, tipo, categoria, marca, modelo, numero_patrimonio, numero_serie, setor, status_ciclo_vida, usuarios(email), clientes(nome), valor_aquisicao, comprador",
     (q) => q.order("hostname"),
     { onProgress: (n) => toast.loading(`Baixando dados… ${n} registro(s)`, { id: tid }) },
   );
@@ -68,6 +68,7 @@ export async function exportAtivos() {
     a.usuarios?.email ?? "",
     a.clientes?.nome ?? "",
     a.valor_aquisicao ?? "",
+    a.comprador ?? "",
   ]);
   toast.loading("Gerando arquivo XLSX…", { id: tid });
   const fname = `ativos_${new Date().toISOString().slice(0, 10)}.xlsx`;
