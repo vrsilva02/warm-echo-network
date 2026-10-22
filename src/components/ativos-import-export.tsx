@@ -361,7 +361,7 @@ export function AtivosImportExport({ canWrite, onImported }: { canWrite: boolean
         onOpenChange={setOpen}
         scope="ativos"
         title="Importar ativos"
-        description="Envie um arquivo XLSX seguindo o template. Somente hostname é obrigatório — Tipo, Categoria e Cliente são opcionais e podem ficar em branco. Ativos existentes (mesmo hostname) são atualizados; novos são criados. O responsável é vinculado quando o e-mail já existe em Usuários; o cliente é vinculado quando o nome já existe em Clientes."
+        description="Envie um arquivo XLSX seguindo o template. Somente hostname é obrigatório — Tipo, Categoria, Cliente e Comprador são opcionais e podem ficar em branco. Ativos existentes (mesmo hostname) são atualizados; novos são criados. O responsável é vinculado quando o e-mail já existe em Usuários; o cliente é vinculado quando o nome já existe em Clientes."
         requiredColumns={COLUMNS.filter((c) => c !== "valor_aquisicao")}
         previewColumns={["hostname", "tipo", "categoria", "marca", "modelo", "status_ciclo_vida", "cliente", "valor_aquisicao", "comprador"]}
         renderPreviewCell={(r, c) =>
