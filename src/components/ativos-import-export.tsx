@@ -93,12 +93,13 @@ export function downloadTemplate() {
     "colaborador@empresa.com",
     "MTR2.TECH",
     "4500,00",
+    "Gerência de TI",
   ];
-  // Exemplo mínimo: apenas hostname — Tipo e Categoria são opcionais e ficam em branco.
+  // Exemplo mínimo: apenas hostname — Tipo, Categoria e Cliente são opcionais e ficam em branco.
   const exemploMinimo = COLUMNS.map((c) => (c === "hostname" ? "SEM-TIPO-0002" : ""));
   const vazia = COLUMNS.map(() => "");
   downloadXLSX("template_ativos.xlsx", COLUMNS as unknown as string[], [exemplo, exemploMinimo, vazia]);
-  toast.success("Template baixado. Apenas hostname é obrigatório; Tipo, Categoria e Cliente podem ficar em branco.");
+  toast.success("Template baixado. Apenas hostname é obrigatório; Tipo, Categoria, Cliente e Comprador podem ficar em branco.");
 }
 
 
@@ -219,6 +220,7 @@ async function importarLinhas(
       status_ciclo_vida: status,
       usuario_responsavel_id: responsavelId,
       cliente_id: clienteId,
+      comprador: nz(r.comprador),
     };
 
     const key = `${clienteId}:::${hostname.toLowerCase()}`;
@@ -361,7 +363,7 @@ export function AtivosImportExport({ canWrite, onImported }: { canWrite: boolean
         title="Importar ativos"
         description="Envie um arquivo XLSX seguindo o template. Somente hostname é obrigatório — Tipo, Categoria e Cliente são opcionais e podem ficar em branco. Ativos existentes (mesmo hostname) são atualizados; novos são criados. O responsável é vinculado quando o e-mail já existe em Usuários; o cliente é vinculado quando o nome já existe em Clientes."
         requiredColumns={COLUMNS.filter((c) => c !== "valor_aquisicao")}
-        previewColumns={["hostname", "tipo", "categoria", "marca", "modelo", "status_ciclo_vida", "cliente", "valor_aquisicao"]}
+        previewColumns={["hostname", "tipo", "categoria", "marca", "modelo", "status_ciclo_vida", "cliente", "valor_aquisicao", "comprador"]}
         renderPreviewCell={(r, c) =>
           c === "numero_patrimonio" ? <span className="font-mono">{r[c]}</span>
           : c === "tipo" && !(r[c] ?? "").trim() ? <span className="text-muted-foreground">Sem tipo</span>
