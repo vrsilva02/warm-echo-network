@@ -6,6 +6,10 @@
 # Chaves na listagem de Alocações
 - [x] Mostrar a chave completa vinculada ao ativo e verificar a listagem autenticada.
 
+# Comprador dos ativos
+- [x] Exibir comprador na listagem principal e permitir edição individual e em massa por seleção.
+- [x] Verificar gravação e leitura na tela com sessão autenticada.
+
 # Ajustes Office 2019 (histórico anterior)
 - [ ] Aplicar limite exclusivo por chave, com validação concorrente no banco.
 - [ ] Exibir todas as chaves da licença com contagem e bloquear as lotadas.

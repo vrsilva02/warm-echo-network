@@ -22,6 +22,7 @@ import { ComboboxCreatable } from "@/components/combobox-creatable";
 import { comValorAtual } from "@/lib/ativos-opcoes";
 import { parseValorAquisicao } from "@/lib/valor-aquisicao";
 import { ValorAquisicaoDialog } from "@/components/valor-aquisicao-dialog";
+import { CompradorAtivoDialog } from "@/components/comprador-ativo-dialog";
 import {
   useAtivoTipos,
   useAtivoCategorias,
@@ -117,7 +118,7 @@ function applyAtivosFilters(query: any, s: ListState) {
   const term = s.query.trim().replace(/[%_,()]/g, " ");
   if (term) {
     query = query.or(
-      `hostname.ilike.%${term}%,numero_patrimonio.ilike.%${term}%,numero_serie.ilike.%${term}%,tipo.ilike.%${term}%,categoria.ilike.%${term}%,marca.ilike.%${term}%,modelo.ilike.%${term}%,setor.ilike.%${term}%,status_ciclo_vida.ilike.%${term}%`,
+      `hostname.ilike.%${term}%,numero_patrimonio.ilike.%${term}%,numero_serie.ilike.%${term}%,tipo.ilike.%${term}%,categoria.ilike.%${term}%,marca.ilike.%${term}%,modelo.ilike.%${term}%,setor.ilike.%${term}%,comprador.ilike.%${term}%,status_ciclo_vida.ilike.%${term}%`,
     );
   }
   if (s.clienteId === "sem_cliente") {
@@ -146,6 +147,7 @@ function ativosPageQuery(s: ListState) {
         hostname: "hostname", patrimonio: "numero_patrimonio", tipo: "tipo", categoria: "categoria",
         marca: "marca", modelo: "modelo", setor: "setor", status: "status_ciclo_vida",
         valor_aquisicao: "valor_aquisicao",
+        comprador: "comprador",
       };
       const sortColumn = (s.sort ? sortColumns[s.sort.id] : "hostname") ?? "hostname";
       const { data, error } = await applyAtivosFilters(
@@ -574,6 +576,17 @@ function AtivosPage() {
       searchValue: (r) => r.clientes?.nome, exportValue: (r) => r.clientes?.nome,
     },
     {
+      id: "comprador", header: "Comprador",
+      accessor: (r) => (
+        <div className="flex items-center gap-1.5">
+          <span className="break-words">{r.comprador || <span className="text-muted-foreground">Não informado</span>}</span>
+          {canWrite && <CompradorAtivoDialog ids={[r.id]} currentValue={r.comprador} />}
+        </div>
+      ),
+      sortValue: (r) => r.comprador ?? "",
+      searchValue: (r) => r.comprador, exportValue: (r) => r.comprador,
+    },
+    {
       id: "centro", header: "Centro de custo", defaultHidden: true,
       accessor: (r) => r.centros_custo?.nome ?? "—",
       sortValue: (r) => r.centros_custo?.nome ?? "",
@@ -708,6 +721,7 @@ function AtivosPage() {
         bulkActions={canWrite ? (sel, clear) => (
           <>
             <ValorAquisicaoDialog ids={sel.map((r) => r.id)} bulk onDone={clear} />
+            <CompradorAtivoDialog ids={sel.map((r) => r.id)} bulk onDone={clear} />
             <Button size="sm" variant="outline" onClick={() => bulkBaixar(sel, clear)}>Baixar selecionados</Button>
             <Button size="sm" variant="outline" className="text-destructive" onClick={() => bulkDelete(sel, clear)}>Excluir</Button>
           </>
