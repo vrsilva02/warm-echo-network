@@ -29,6 +29,13 @@
       "when": 1792180742363,
       "tag": "0003_ativos_comprador",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1792769019535,
+      "tag": "0004_rls_performance_initplan",
+      "breakpoints": true
     }
   ]
 }
