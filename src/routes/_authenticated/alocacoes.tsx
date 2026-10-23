@@ -169,7 +169,7 @@ function Page() {
   });
 
   const { data: chavesDisponiveis = [] } = useQuery({
-    queryKey: ["chaves-disponiveis-alocacao"],
+    queryKey: ["chaves-disponiveis-alocacao", "todas"],
     staleTime: 30_000,
     queryFn: async () =>
       (

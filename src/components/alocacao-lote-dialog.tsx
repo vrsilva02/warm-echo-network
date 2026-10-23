@@ -49,7 +49,8 @@ export function AlocacaoLoteDialog({
   });
 
   const { data: chaves = [] } = useQuery({
-    queryKey: ["chaves-disponiveis-alocacao"],
+    // Chave própria: a Nova alocação usa ["chaves-disponiveis-alocacao"] com TODAS as chaves (Office 2019 multi-ativo).
+    queryKey: ["chaves-disponiveis-alocacao", "lote-somente-disponiveis"],
     queryFn: async () =>
       (
         await fetchAll<Chave>("licenses", "id, software, chave_ativacao, tipo_licenca, licenca_id, status", (q) =>
