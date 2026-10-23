@@ -14,4 +14,6 @@
 - [ ] Aplicar limite exclusivo por chave, com validação concorrente no banco.
 - [ ] Exibir todas as chaves da licença com contagem e bloquear as lotadas.
 - [ ] Sincronizar disponibilidade em Chaves de Licença.
-- [ ] Validar regras e experiência, preservando outras licenças.
+- [ ] Validar regras e experiência, preservando outras licenças.- [x] Teste do fluxo Office 2019 Pro Plus DMS em Nova alocação
+- [x] 3 achados de segurança bloqueantes corrigidos
+- [x] Resumo semanal de desempenho por módulo com IA no painel

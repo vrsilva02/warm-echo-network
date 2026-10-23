@@ -15,3 +15,4 @@
 - Keep asset purchase-value parsing shared between forms and imports; reuse the purchase-value dialog for single and selected-asset updates to preserve consistent validation and cache refresh.
 - Reuse the buyer dialog for inline and selected-asset updates, applying changes only to explicit asset IDs and invalidating asset/detail/dashboard caches to keep buyer totals consistent.
 - Never share a React Query key between queries with different filters/selects (e.g. Nova alocação lists all keys, lote lists only free ones); a shared key lets one overwrite the other's cache.
+- Page load times are recorded per module in metricas_carregamento by a hook in the authenticated layout; the dashboard summary aggregates 7 days server-side before calling AI.

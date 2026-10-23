@@ -49,7 +49,7 @@ export function DesempenhoSemanalCard() {
                 </li>
               ))}
             </ul>
-            {r.analise && <div className="whitespace-pre-line rounded-md bg-muted p-3">{r.analise}</div>}
+            {r.analise && <div className="whitespace-pre-line rounded-md bg-muted p-3">{r.analise.replace(/\*\*/g, "")}</div>}
             {r.erro && <p className="text-destructive">{r.erro}</p>}
           </>
         )}
