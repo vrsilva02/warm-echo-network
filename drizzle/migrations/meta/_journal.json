@@ -36,6 +36,13 @@
       "when": 1792769019535,
       "tag": "0004_rls_performance_initplan",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1792769195907,
+      "tag": "0005_security_fixes_and_load_metrics",
+      "breakpoints": true
     }
   ]
 }
