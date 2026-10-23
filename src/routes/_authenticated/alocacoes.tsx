@@ -156,7 +156,7 @@ function Page() {
 
   // Catálogo de licenças (muda pouco: staleTime 2 minutos)
   const { data: licencas } = useQuery({
-    queryKey: ["licencas-lite"],
+    queryKey: ["licencas-lite", "completo"],
     staleTime: 120_000,
     gcTime: 600_000,
     queryFn: async () =>
