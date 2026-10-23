@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { fetchAll } from "@/lib/fetch-all";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -194,8 +195,8 @@ function NovaOSDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v:
   const [prioridade, setPrioridade] = useState<OS["prioridade"]>("media");
 
   const { data: ativos } = useQuery({
-    queryKey: ["ativos-lite"], enabled: open,
-    queryFn: async () => ((await (supabase as any).from("ativos").select("id, hostname, tipo, setor, status_ciclo_vida, data_aquisicao, vida_util_meses").order("hostname")).data ?? []) as AtivoOpt[],
+    queryKey: ["ativos-lite", "os"], enabled: open,
+    queryFn: async () => ((await fetchAll<any>("ativos", "id, hostname, tipo, setor, status_ciclo_vida, data_aquisicao, vida_util_meses", (q) => q.order("hostname"))).data) as AtivoOpt[],
   });
   const opts = useMemo(() => (ativos ?? []).map((a) => ({ value: a.id, label: a.hostname, hint: a.tipo })), [ativos]);
   const ativo = (ativos ?? []).find((a) => a.id === ativoId) ?? null;

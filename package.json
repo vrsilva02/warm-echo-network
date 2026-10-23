@@ -12,6 +12,7 @@
     "format": "prettier --write ."
   },
   "dependencies": {
+    "@ai-sdk/openai": "^4.0.99",
     "@hookform/resolvers": "^5.2.2",
     "@lovable.dev/email-js": "0.1.0",
     "@lovable.dev/webhooks-js": "^0.0.2",
@@ -51,6 +52,7 @@
     "@tanstack/react-virtual": "^3.14.9",
     "@tanstack/router-plugin": "1.168.42",
     "@types/papaparse": "^5.5.2",
+    "ai": "^7.0.148",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",

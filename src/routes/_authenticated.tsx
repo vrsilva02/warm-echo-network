@@ -7,6 +7,7 @@ import { NotificationsBell } from "@/components/notifications-bell";
 import { ExportJobsTray } from "@/components/export-jobs-tray";
 import { SessionTimeout } from "@/components/session-timeout";
 import { Loader2 } from "lucide-react";
+import { useLoadMetrics } from "@/hooks/use-load-metrics";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -15,6 +16,7 @@ export const Route = createFileRoute("/_authenticated")({
 
 function ProtectedLayout() {
   const { loading, session } = useAuth();
+  useLoadMetrics(loading ? undefined : session?.user.id);
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">

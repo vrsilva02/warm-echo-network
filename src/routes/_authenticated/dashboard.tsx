@@ -30,6 +30,8 @@ import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { useRealtimeInvalidate } from "@/hooks/use-realtime-invalidate";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/lib/auth";
+import { DesempenhoSemanalCard } from "@/components/desempenho-semanal-card";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: DashboardPage,
@@ -444,6 +446,8 @@ function TcoPorCentroCard({ tco, ativos }: { tco: Array<{ ativo_id: string; tco_
 
 // ── Main ─────────────────────────────────────────────────────────────────────
 function DashboardPage() {
+  const { roles } = useAuth();
+  const isGestor = roles.includes("admin") || roles.includes("gestor_ti");
   const { data, isLoading } = useDashboardData();
   const { data: ativosCliente } = useAtivosPorCliente();
 
@@ -542,6 +546,11 @@ function DashboardPage() {
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 lg:gap-5 mb-6">
         <CustoPorCompradorCard />
+        {isGestor && (
+          <div className="lg:col-span-2">
+            <DesempenhoSemanalCard />
+          </div>
+        )}
       </div>
 
       {/* Licenças */}

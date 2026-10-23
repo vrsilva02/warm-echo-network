@@ -1160,6 +1160,33 @@ export type Database = {
           },
         ]
       }
+      metricas_carregamento: {
+        Row: {
+          created_at: string
+          duracao_ms: number
+          id: string
+          modulo: string
+          tipo: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          duracao_ms: number
+          id?: string
+          modulo: string
+          tipo?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          duracao_ms?: number
+          id?: string
+          modulo?: string
+          tipo?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       ordens_servico: {
         Row: {
           aberto_por: string | null
