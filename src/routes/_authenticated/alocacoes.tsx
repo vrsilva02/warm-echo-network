@@ -190,18 +190,15 @@ function Page() {
         .data,
   });
 
-  const { data: ativos } = useQuery({
-    queryKey: ["ativos-lite"],
-    staleTime: 60_000,
-    queryFn: async () =>
-      (
-        await fetchAll<{ id: string; hostname: string; numero_patrimonio: string | null; clientes?: { nome: string } | null }>(
-          "ativos",
-          "id,hostname,numero_patrimonio,clientes(nome)",
-          (q) => q.neq("status_ciclo_vida", "baixado").order("hostname"),
-        )
-      ).data,
-  });
+  // Filtro "Ativo": só ativos que têm alocação (evita baixar os 11 mil ativos ao abrir a tela).
+  const ativos = useMemo(() => {
+    const m = new Map<string, { id: string; hostname: string; numero_patrimonio: string | null; clientes?: { nome: string } | null }>();
+    for (const r of rows ?? []) {
+      const a = (r as any).ativos;
+      if (a?.id && !m.has(a.id)) m.set(a.id, a);
+    }
+    return [...m.values()].sort((x, y) => x.hostname.localeCompare(y.hostname));
+  }, [rows]);
 
   const licencaSelecionada = useMemo<{ produtos_catalogo?: { id: string, nome_oficial: string } | null } | undefined>(
     () => (licencas ?? []).find((l: any) => l.id === form.licenca_id) as any,
